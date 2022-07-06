@@ -1,0 +1,13 @@
+name: "CTE impacts on migration trends in SW Minnesota"
+output_dir: docs
+navbar:
+  title: "CTE impacts on migration trends in SW Minnesota"
+  left:
+    - text: "Summary and data overview"
+      href: index.html
+    - text: "Data prep process"
+      href: data_prep.html
+      
+output:
+  html_document:
+    css: "styles.css"

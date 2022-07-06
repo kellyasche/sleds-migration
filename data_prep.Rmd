@@ -1,0 +1,99 @@
+---
+title: "Data prep"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(extrafont)
+library(readxl)
+library(janitor)
+library(lubridate)
+
+loadfonts()
+
+```
+
+<br>
+
+# K12Enrollment
+
+This dataset is of all the individuals that have graduated from a high school in Southwest Minnesota.
+
+```{r import dataset}
+
+enrollment <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment.csv") 
+
+head(enrollment)
+
+```
+
+<br>
+
+There are 15 columns. 
+
+```{r k12enrollment names}
+
+names(enrollment)
+
+```
+
+<br>
+
+EAch observation does not represent a unique, unduplicated individual, but rather a unique status for the individual. For example, one individual can have multiple observations if they changed schools, for each school year, or if their economic status changed in the middle of a school year. 
+
+My goal is to end up with a dataset where each observation (row) represents a unique (unduplicated) individual. Here's how I will do that.
+
+* PersonID: change to integer
+* K12OrganizationID: change to integer.
+* K12EnrTimeID: Change so it's only the year
+* Grade: eliminate - unimportant since we are mostly concerned about whether they graduated.
+* EconomicStatusIndicator: I will change this to two categories. Whether they were ever eligible for reduce priced or free meal will be coded as 1 (eligible = codes 1, 2, 4, 5) at any point in the dataset. The remaining will be coded as 0.
+* FederalRaceIndicator: eliminate - I'm going to use the RaceEthnicity column instead. 
+* PSEO columns: I'm most concerned about whether they participated in PSEO or not. A new column will be created indicated whether there was a "Y" coded for either the "PSEOConcurrentEnrollmentIndicator" or "PostSecondaryEnrollmentOptionsIndicator" columns at any point in the dataset. The two original columns will be eliminated.
+* StatusEnd: I will only include individuals that have StatusEnd coded as an 8 or 9.
+* Gender: included and not changed.
+* SpecialEdStatus: I will split this into two categories. The first is that a student did not require special education services (codes 1-2) at any point in the dataset. The other category will be that they require special education (codes 4 - 9) at any point in the dataset. 
+* Limited english: keep with no changes.
+* Primary language: I'm going to create two categories. One being that english is the primary language while the other will be that english is NOT the primary langauage at any point in the dataset.
+* Homeless: Keep with no changes.
+
+<br>
+
+```{r K12Enrollment creating final dataset}
+graduates <- enrollment %>%
+  # Change columns to integers
+  mutate(PersonID = as.integer(PersonID),
+         K12OrganizationID = as.integer(K12OrganizationID)) %>%
+  # There are a few NA at the end of the dataset so delete those
+  drop_na(PersonID) %>%
+  # 
+
+```
+
