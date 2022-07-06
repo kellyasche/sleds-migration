@@ -38,5 +38,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# Others
+# folders to ignore
 Data/
+corporate_support_cache/
+location_cache/
+ownership_type_cache/
+staff_compensation_cache/

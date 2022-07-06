@@ -17,7 +17,7 @@ resource_files:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(tidyverse)
 library(sf)
 library(ggrepel)
@@ -46,29 +46,27 @@ loadfonts()
 
 This dataset is of all the individuals that have graduated from a high school in Southwest Minnesota.
 
-```{r import dataset}
-
-enrollment <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment.csv") 
-
-head(enrollment)
-
-```
-
 <br>
 
-There are 15 columns. 
+```{r import dataset}
 
-```{r k12enrollment names}
+enrollment <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment.csv")  %>%
+  mutate(PersonID = as.integer(PersonID),
+         K12OrganizationID = as.integer(K12OrganizationID)) %>%
+  drop_na(PersonID)
+
+head(enrollment)
 
 names(enrollment)
 
 ```
 
+
 <br>
 
-EAch observation does not represent a unique, unduplicated individual, but rather a unique status for the individual. For example, one individual can have multiple observations if they changed schools, for each school year, or if their economic status changed in the middle of a school year. 
+In the dataset there are `r comma(nrow(enrollment), accuracy = 1)` observations along with `r comma(ncol(enrollment), accuracy = 1)` columns. Each observation does not represent a unique, unduplicated individual, but rather a unique status for the individual. For example, one individual can have multiple observations if they changed schools, for each school year, or if their economic status changed in the middle of a school year. 
 
-My goal is to end up with a dataset where each observation (row) represents a unique (unduplicated) individual. Here's how I will do that.
+My goal is to end up with a dataset where each observation (row) represents a unique (unduplicated) individual that's tied to the school from which they graduated. Here's how I will do that.
 
 * PersonID: change to integer
 * K12OrganizationID: change to integer.
@@ -80,20 +78,256 @@ My goal is to end up with a dataset where each observation (row) represents a un
 * StatusEnd: I will only include individuals that have StatusEnd coded as an 8 or 9.
 * Gender: included and not changed.
 * SpecialEdStatus: I will split this into two categories. The first is that a student did not require special education services (codes 1-2) at any point in the dataset. The other category will be that they require special education (codes 4 - 9) at any point in the dataset. 
-* Limited english: keep with no changes.
-* Primary language: I'm going to create two categories. One being that english is the primary language while the other will be that english is NOT the primary langauage at any point in the dataset.
+* Limited English: keep with no changes.
+* Primary language: I'm going to create two categories. One being that English is the primary language while the other will be that English is NOT the primary language at any point in the dataset.
 * Homeless: Keep with no changes.
+
+We first need to create a list of all individuals with the StatusEnd code of 8 or 9 (graduated). This will be the list on which we will bind all the other variables.
 
 <br>
 
-```{r K12Enrollment creating final dataset}
+```{r k12enrollment StatusEnd}
 graduates <- enrollment %>%
-  # Change columns to integers
-  mutate(PersonID = as.integer(PersonID),
-         K12OrganizationID = as.integer(K12OrganizationID)) %>%
-  # There are a few NA at the end of the dataset so delete those
-  drop_na(PersonID) %>%
-  # 
+  filter(StatusEnd %in% c(8,9)) %>%
+  select(PersonID, K12OrganizationID, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator)
+
+duplicates <- graduates %>%
+  group_by(PersonID) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  filter(n > 1)
+```
+
+<br>
+
+Unfortunately, we still end up with duplicates. We will send this to Meredith to figure out. 
+
+Next we need to create new columns for the variables that will indicate a certain status has been met at any point in the dataset for each PersonID. For example, we want a column that indicates a PersonID was enrolled in PSEO at some point in the dataset. The variables that need a new column created are;
+
+* EconomicStatusIndicator
+* PostSecondaryEnrollmentOptionsIndicator & PSEOConcurrentEnrollmentIndicator
+* SpecialEdStatus
+* HomeprimaryLanguage
+
+<br>
+
+```{r K12Enrollment creating new columns}
+
+# Lets start with economic status indicator
+k12.enr.esi.indicator <- enrollment %>%
+  select(PersonID, EconomicStatusIndicator) %>%
+  group_by(PersonID) %>%
+  mutate(economic.status.code = ifelse(EconomicStatusIndicator %in% c(1,2,4,5), 1, 0),
+         economic.status.code.sum = sum(economic.status.code)) %>%
+  ungroup() %>%
+  distinct(PersonID, .keep_all = TRUE) %>%
+  mutate(economic.status = ifelse(economic.status.code.sum > 0, 1, 0)) %>%
+  select(PersonID, economic.status)
+
+# PSEO
+
+k12.enr.pseo.indicator <- enrollment %>%
+  select(PersonID, PostSecondaryEnrollmentOptionsIndicator, PSEOConcurrentEnrollmentIndicator) %>%
+  mutate(PostSecondaryEnrollmentOptionsIndicator = ifelse(PostSecondaryEnrollmentOptionsIndicator == "Y", 1, 0),
+         PSEOConcurrentEnrollmentIndicator = ifelse(PSEOConcurrentEnrollmentIndicator == "Y", 1, 0)) %>%
+  gather(key = "pseo.type", value = "indicator", 2:3) %>%
+  group_by(PersonID) %>%
+  summarise(pseo = sum(indicator)) %>%
+  mutate(pseo.participant = ifelse(pseo > 0, 1, 0)) %>%
+  ungroup() %>%
+  select(PersonID, pseo.participant)
+
+# Special Ed status
+
+k12.enr.spced.indicator <- enrollment %>%
+  select(PersonID, SpecialEdStatus) %>%
+  mutate(SpecialEdStatus.code = ifelse(SpecialEdStatus %in% c(4,5,6,7,8,9), 1, 0)) %>%
+  group_by(PersonID) %>%
+  summarise(SpecialEdStatus.sum = sum(SpecialEdStatus.code)) %>%
+  ungroup() %>%
+  mutate(SpecialEdStatus = ifelse(SpecialEdStatus.sum > 0, 1, 0)) %>%
+  select(PersonID, SpecialEdStatus)
+
+# Home Primary Language
+
+k12.enr.homeprimlang.indicator <- enrollment %>%
+  select(PersonID, HomePrimaryLanguage) %>%
+  mutate(HomePrimaryLanguage.code = ifelse(HomePrimaryLanguage == 11, 0, 1)) %>%
+  group_by(PersonID) %>%
+  summarise(HomePrimaryLanguage.sum = sum(HomePrimaryLanguage.code)) %>%
+  ungroup() %>%
+  mutate(non.english.home = ifelse(HomePrimaryLanguage.sum > 0, 1, 0)) %>%
+  select(PersonID, non.english.home)
 
 ```
 
+<br>
+
+Now we can combine the list of graduates with the status indicators.
+
+<br>
+
+```{r k12enrollment combining all data}
+
+k12.enrollment.master <- graduates %>%
+  left_join(k12.enr.esi.indicator, by = "PersonID") %>%
+  left_join(k12.enr.pseo.indicator, by = "PersonID") %>%
+  left_join(k12.enr.spced.indicator, by = "PersonID") %>%
+  left_join(k12.enr.homeprimlang.indicator, by = "PersonID")
+
+head(k12.enrollment.master)
+
+names(k12.enrollment.master)
+```
+
+<br>
+
+The prepped enrollment data has `r comma(nrow(k12.enrollment.master), accuracy = 1)` observations and `r comma(ncol(k12.enrollment.master), accuracy = 1)` columns.
+
+# K12Orgs
+
+Up next is combining the school locations. The MN Department of Education uses their own codes for Minnesota counties and don't relate to countyfp. So I'm going to import their codes and combine them with the countyfp since that's what I'm used to using. I'm also going to import the zip codes and the EDR and planning regions for each county allowing me to analyze the data at various regional levels.
+
+<br>
+
+```{r k12 orgs county codes and regions}
+k12.county.codes <- read_csv("Data/SLEDS/K12 Org/K12-county-codes.csv")
+
+zip <- read_xlsx("Data/Join docs/zip-city-county.xlsx")
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+```
+
+<br>
+
+Now I'll bring in the K12organization data.
+
+<br>
+
+```{r k12org main data}
+k12.org <- read_xlsx("Data/SLEDS/K12 Org/K12Orgs 20220629.xlsx") %>%
+  distinct(K12OrganizationID, .keep_all = TRUE) %>%
+  drop_na(K12OrganizationID) %>%
+  mutate(K12OrganizationID = as.integer(K12OrganizationID))
+
+head(k12.org)
+
+names(k12.org)
+```
+
+<br>
+
+This dataset provides each school institution as of June 29, 2022. This isn't a list of each school but rather a list of each K12OrganizationID. Each school will have multiple K12OrganizationID. I'm not sure why and this would be something to ask Meredith.
+
+My goal is to join my standardized region and county code data with this document which will then be joined to the master enrollment document. Unfortunatley the main data does not include county name but rather their own code for county. So I will join their codes with the county names and then use my counties.regions data to bring together the remaining regions.
+
+<br>
+
+```{r k12org joining county and regional data}
+k12.org.master <- k12.org %>%
+  select(K12OrganizationID, County, DistrictName) %>%
+  left_join(k12.county.codes[,c(1,2)], by = c("County" = "county.code")) %>%
+  rename(county.name = 4) %>%
+  mutate(county.name = str_replace(county.name, " County", "")) %>%
+  select(K12OrganizationID, DistrictName, county.name) %>%
+  mutate(county.name = str_replace(county.name, "Saint Louis", "St. Louis")) %>%
+  left_join(counties.regions, by = c("county.name" = "Name")) %>%
+  select(-Dem_RUCA, -planning.region, -mif)
+
+head(k12.org.master)
+
+names(k12.org.master)
+```
+
+<br>
+
+The k12org master data has `r comma(nrow(k12.org.master), accuracy = 1)` K12OrganizationIDs and `r comma(ncol(k12.org.master), accuracy = 1)` columns. Now I will join it with our master enrollment data using the k12OrganizationID.
+
+<br>
+
+```{r k12org joining with master enrollment}
+master <- k12.enrollment.master %>%
+  left_join(k12.org.master, by = "K12OrganizationID")
+
+head(master)
+
+names(master)
+```
+
+<br>
+
+The updated master sheet has `r comma(nrow(master), accuracy = 1)` observations. Unfortunately, there are `r sum(is.na(master$edr))` observations that have NA in the location of the school. The K12OrganizationID does not have an associated school name or location. There are `r comma(ncol(master), accuracy = 1)` columns in the master dataset so far.
+
+# ACT
+
+Next up is to join the ACT data. 
+
+<br>
+
+```{r act main data}
+act <- read_csv("Data/SLEDS/ACT/ACT.csv") %>%
+  mutate(PersonID = as.integer(PersonID))
+
+head(act)
+
+names(act)
+```
+
+<br>
+
+There are `r comma(nrow(act), accuracy = 1)` observations in the dataset. Each observation is an ACT test taken by a student in Southwest Minnesota. The unique feature here is the time it was taken. This means that a student could have taken the ACT twice and their PersonID would show up as two observations.
+
+Out of the scores provided, I'm just going to use the composite score. Since an individual may have taken the test multiple times I will only use the highest composite score for each individual. This is how colleges do it as well.
+
+<br>
+
+```{r act highest composite score}
+act.highest.comp <- act %>%
+  select(PersonID, ACTCompositeScore) %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  group_by(PersonID) %>%
+  filter(ACTCompositeScore == max(ACTCompositeScore)) %>%
+  ungroup() %>%
+  distinct(PersonID, .keep_all = TRUE)
+
+head(act.highest.comp)
+
+names(act.highest.comp)
+```
+
+<br>
+
+After filtering for only the highest ACT composite score for each PersonID, the dataset contains `r comma(nrow(act.highest.comp), accuracy = 1)` observations.
+
+Now we will join it up with the master.
+
+<br>
+
+```{r act join with master}
+master.2 <- master %>%
+  left_join(act.highest.comp, by = "PersonID")
+
+head(master.2)
+
+names(master.2)
+
+```
+
+<br>
+
+The updated master dataset contains `r comma(nrow(master.2), accuracy = 1)` observations with `r comma(ncol(master.2), accuracy = 1)` columns.
