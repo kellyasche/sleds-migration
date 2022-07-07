@@ -40,6 +40,25 @@ loadfonts()
 
 ```
 
+```{r join docs, include=FALSE}
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+```
+
 <br>
 
 # Prep Data
@@ -105,3 +124,103 @@ The updated master dataset contains `r comma(nrow(master.2), accuracy = 1)` obse
 
 # Summary of ACT data
 
+First, lets see what percentage of observations took the ACT and what the average composite score was.
+
+<br>
+
+```{r table act summary pct total, echo=FALSE}
+act.pct.taken <- master.2 %>%
+  mutate(act.taken = ifelse(is.na(ACTCompositeScore), "ACT not taken", "ACT taken")) %>%
+  tabyl(act.taken) %>%
+  mutate(percent = scales::percent(percent, accuracy = .1)) %>%
+  rename(`n observations` = 2,
+         `% of total observations` = 3)
+
+datatable(act.pct.taken, class = "cell-border stripe", filter = "top", rownames = FALSE)
+```
+
+<br>
+
+Nearly two-thirds of graduates from Southwest Minnesota have taken the ACT at some point in the dataset. 
+
+Next lets see if the ACT taken rate differs across RUCA, regions and counties.
+
+<br>
+
+```{r prep act taken summary by ruca, echo=FALSE}
+act.taken.ruca <- master.2 %>%
+  mutate(act.taken = ifelse(is.na(ACTCompositeScore), "ACT not taken", "ACT taken")) %>%
+  tabyl(Dem_Desc, act.taken) %>%
+  mutate(`Percent ACT taken` = scales::percent(`ACT taken` / (`ACT not taken` + `ACT taken`), accuracy = .1))
+  
+datatable(act.taken.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE)
+```
+<br>
+
+The percentage of students graduating from high schools in counties within these groups are very close. Nearly two-thirds of students across all RUCA groups take the ACT exam.
+
+<br>
+
+```{r prep act taken summary by edr, echo=FALSE}
+act.taken.edr <- master.2 %>%
+  mutate(act.taken = ifelse(is.na(ACTCompositeScore), "ACT not taken", "ACT taken")) %>%
+  tabyl(edr, act.taken) %>%
+  mutate(`Percent ACT taken` = scales::percent(`ACT taken` / (`ACT not taken` + `ACT taken`), accuracy = .1))
+  
+datatable(act.taken.edr, class = "cell-border stripe", filter = "top", rownames = FALSE)
+```
+
+<br>
+
+Again, the percentages are very close to each other when breaking it down by EDR. 
+
+<br>
+
+```{r prep act taken summary by county, echo=FALSE}
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+act.taken.county <- master.2 %>%
+  mutate(act.taken = ifelse(is.na(ACTCompositeScore), "ACT not taken", "ACT taken")) %>%
+  tabyl(county.name, act.taken) %>%
+  mutate(`Percent ACT taken` =`ACT taken` / (`ACT not taken` + `ACT taken`), accuracy = .1) %>%
+  right_join(counties.regions, by = c("county.name" = "Name")) %>%
+  left_join(mn_counties[,c(4,7)], by = "countyfp")
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+
+act.taken.county.map <- ggplot(act.taken.county) +
+  geom_sf_interactive(color = "grey85", aes(geometry = geometry, fill = `Percent ACT taken`, data_id = countyfp, tooltip = paste(county.name, "\nNumber of students taken the ACT: ", comma(`ACT taken`, accuracy = 1), "\nPercent of students in the county taken ACT: ", percent(`Percent ACT taken`, accuracy = .1), sep = ""))) +
+  theme_sf+
+  scale_fill_fermenter(palette = "PuBu", direction = 1, labels = scales::percent) +
+  labs(title = "Percent of students taken ACT in county location of high school") +
+  theme(legend.box.margin = margin(50, 0, 0, -100),
+        text = element_text(size = 18))
+
+girafe(ggobj = act.taken.county.map, height_svg = 10, width_svg = 10) %>%
+  girafe_options(opts_sizing(rescale = FALSE))
+  
+```
+
+<br>
+
+For the most part, the percentages are pretty close. The percentage of students who've taken the ACT ranges from 54.4% in Chippewa to 71.6% in Lac qui Parle County. 
+
+```{r write master, include=FALSE}
+write_csv(master.2, "Data/SLEDS/Masters/Master-2.csv")
+
+```

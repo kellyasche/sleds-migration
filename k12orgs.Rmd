@@ -127,7 +127,6 @@ head(master)
 
 names(master)
 
-write_csv(master, "Data/SLEDS/Masters/Master-1.csv")
 ```
 
 <br>
@@ -219,3 +218,8 @@ girafe(ggobj = k12.org.summary.county.map, height_svg = 10, width_svg = 10) %>%
 <br>
 
 The schools with the highest percent of graudates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 10% and 13% of high school grduates since 2006. 
+
+```{r write master, include=FALSE}
+write_csv(master, "Data/SLEDS/Masters/Master-1.csv")
+
+```
