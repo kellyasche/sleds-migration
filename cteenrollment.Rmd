@@ -1,0 +1,71 @@
+---
+title: "CTEEnrollment"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(extrafont)
+library(readxl)
+library(janitor)
+library(lubridate)
+
+loadfonts()
+
+```
+
+<br>
+
+# Data prep
+
+The next dataset is individuals that were enrolled in CTE courses.
+
+<br>
+
+```{r cte enrollment original}
+cte.enrollment.original <- read_csv("Data/SLEDS/CTE/CTE_CourseEnrollments.csv") %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  filter(FiscalYearTimeID != "NULL")
+
+head(cte.enrollment.original)
+
+names(cte.enrollment.original)
+```
+
+<br>
+
+This dataset provides each CTE course taken by a student. This means that there were `r comma(nrow(cte.enrollment.original), accuracy = 1)` instances of a student taking a CTE course. There are `r comma(ncol(cte.enrollment.original), accuracy = 1)` columns providing the PersonID taking the course, the fiscal year, the K12 organization, along with details about the actual course itself. 
+
+There are two goals with this dataset. 
+
+1. Format it so each observation represents a single PersonID along with the total number of CTE courses they took.
+2. Format it so each observation represents a single PersonID along with the number of CTE courses taken in each career field.
+
+I could use career cluster but there are 20 different career clusters. The career fields are more broad and there are only 6 categories.
+

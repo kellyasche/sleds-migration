@@ -1,0 +1,110 @@
+---
+title: "AP"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(extrafont)
+library(readxl)
+library(janitor)
+library(lubridate)
+
+loadfonts()
+
+```
+
+<br>
+
+# Data prep
+
+
+The next dataset to merge with the master is the enrollment in AP courses. 
+
+<br>
+
+```{r ap original data}
+ap.original <- read_csv("Data/SLEDS/AP/AP.csv") %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  drop_na(PersonID)
+
+head(ap.original)
+
+names(ap.original)
+
+```
+
+<br>
+
+The AP dataset has `r comma(nrow(ap.original), accuracy = 1)` observations and `r comma(ncol(ap.original), accuracy = 1)` columns. Each observation represents an AP exam taken so this means that a PersonID can be listed multiple times if the individual took multiple AP exams. The ExamGrade is on a 1 - 5 scale with the highest scores being better. According to Meredith at OHE, colleges give credit if the score is 3 or higher. 
+
+I'm a bit torn here. There seems to be three approaches to how I can utilize this data in the model. 
+
+1. I could either just create a category of whether an individual took an AP course and not care what the grade was.
+2. I could only use individuals who scored 3 or higher.
+3. I could keep all the data and change it so that each observation represents a PersonID and new columns created for each AP exam and their score. 
+
+For now, I think I'm going to just utilize option 1 - whether they took an AP exam or not. 
+
+<br>
+
+```{r ap took exam}
+ap.tookexam <- ap.original %>%
+  distinct(PersonID) %>%
+  mutate(ap.exam = 1)
+
+head(ap.tookexam)
+
+names(ap.tookexam)
+
+```
+
+<br>
+
+The updated AP dataset shows that `r comma(nrow(ap.tookexam), accuracy = 1)` took at least one AP exam. Now it's time to merge it with the master list. For the PersonID that didn't take an AP exam, they will receive a value of 0 in that column.
+
+<br>
+
+```{r ap join with master}
+master.3 <- master.2 %>%
+  left_join(ap.tookexam, by = "PersonID") %>%
+  mutate(ap.exam = ifelse(is.na(ap.exam), 0, ap.exam))
+
+head(master.3)
+
+names(master.3)
+```
+
+<br>
+
+The updated master spreadsheet continues to have `r comma(nrow(master.3), accuracy = 1)` observations and now has `r comma(ncol(master.3), accuracy = 1)` columns.
+
+<br>
+
+# Summary of AP data

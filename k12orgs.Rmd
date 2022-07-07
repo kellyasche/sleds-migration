@@ -1,0 +1,221 @@
+---
+title: "K12Orgs"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(extrafont)
+library(readxl)
+library(janitor)
+library(lubridate)
+
+loadfonts()
+
+```
+
+<br>
+
+# Prep data
+
+Up next is combining the school locations. The MN Department of Education uses their own codes for Minnesota counties and don't relate to countyfp. So I'm going to import their codes and combine them with the countyfp since that's what I'm used to using. I'm also going to import the EDR and planning regions for each county allowing me to analyze the data at various regional levels.
+
+<br>
+
+```{r k12 orgs county codes and regions}
+k12.county.codes <- read_csv("Data/SLEDS/K12 Org/K12-county-codes.csv")
+
+zip <- read_xlsx("Data/Join docs/zip-city-county.xlsx")
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+```
+
+<br>
+
+Now I'll bring in the K12organization data.
+
+<br>
+
+```{r k12org original data}
+k12.org.original <- read_xlsx("Data/SLEDS/K12 Org/K12Orgs 20220629.xlsx") %>%
+  distinct(K12OrganizationID, .keep_all = TRUE) %>%
+  drop_na(K12OrganizationID) %>%
+  mutate(K12OrganizationID = as.integer(K12OrganizationID))
+
+head(k12.org.original)
+
+names(k12.org.original)
+```
+
+<br>
+
+This dataset provides each school institution as of June 29, 2022. This isn't a list of each school but rather a list of each K12OrganizationID. Each school will have multiple K12OrganizationID. I'm not sure why and this would be something to ask Meredith.
+
+My goal is to join my standardized region and county code data with this document which will then be joined to the master enrollment document. Unfortunatley the main data does not include county name but rather their own code for county. So I will join their codes with the county names and then use my counties.regions data to bring together the remaining regions.
+
+<br>
+
+```{r k12org joining county and regional data}
+k12.org.master <- k12.org.original %>%
+  select(K12OrganizationID, County, DistrictName) %>%
+  left_join(k12.county.codes[,c(1,2)], by = c("County" = "county.code")) %>%
+  rename(county.name = 4) %>%
+  mutate(county.name = str_replace(county.name, " County", "")) %>%
+  select(K12OrganizationID, DistrictName, county.name) %>%
+  mutate(county.name = str_replace(county.name, "Saint Louis", "St. Louis")) %>%
+  left_join(counties.regions, by = c("county.name" = "Name")) %>%
+  select(-Dem_RUCA, -planning.region, -mif)
+
+head(k12.org.master)
+
+names(k12.org.master)
+```
+
+<br>
+
+The k12org master data has `r comma(nrow(k12.org.master), accuracy = 1)` K12OrganizationIDs and `r comma(ncol(k12.org.master), accuracy = 1)` columns. Now I will join it with our master enrollment data using the k12OrganizationID. I will also make sure that all observations from EDR 6E, 6W and 8.
+
+<br>
+
+```{r k12org joining with master enrollment}
+master <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment-master.csv") %>%
+  left_join(k12.org.master, by = "K12OrganizationID") %>%
+  filter(edr %in% c("EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 8 - Southwest"))
+
+head(master)
+
+names(master)
+
+write_csv(master, "Data/SLEDS/Masters/Master-1.csv")
+```
+
+<br>
+
+After filtering the dataset so that all observations are from EDR 6E, 6W or 8, there are `r comma(nrow(master), accuracy = 1)` observations. There are `r comma(ncol(master), accuracy = 1)` columns in the master dataset so far.
+
+
+<br>
+
+# Summary of K12Org 
+
+Lets breakdown the graduates by which regions they graduated from.
+
+<br>
+
+```{r prep k12orgs summary, include=FALSE}
+k12.org.summary.ruca <- master %>%
+  tabyl(Dem_Desc) %>%
+  select(Dem_Desc, n, percent) %>%
+  mutate(percent = scales::percent(percent, accuracy = .1))
+
+k12.org.summary.edr <- master %>%
+  tabyl(edr) %>%
+  select(edr, n, percent) %>%
+  mutate(percent = scales::percent(percent, accuracy = .1)) %>%
+  filter(edr != "Minnesota")
+```
+
+```{r table k12orgs ruca summary, echo=FALSE}
+datatable(k12.org.summary.ruca, class = "cell-border stripe", filter = "top")
+
+```
+
+<br>
+
+Nearly three-quarters of the observations graduated from a county categorized as "town/rural mix". The next highest was 16% from urban/town/rural mix and 14.7% from entirely rural.
+
+<br>
+
+```{r table k12orgs eddr summary, echo=FALSE}
+
+datatable(k12.org.summary.edr, class = "cell-border stripe", filter = "top")
+```
+
+<br>
+
+The percentage of graduates coming from EDR 8 and EDR 6E are pretty evenly split with 44% coming from EDR 8 and 37% coming from 6E. EDR 6W had the fewest with 19% of observations originating from a high school in that region.
+
+<br>
+
+```{r map k12orgs summary county, echo=FALSE}
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+
+k12.org.summary.county <- master %>%
+  tabyl(county.name) %>%
+  left_join(counties.regions, by = c("county.name" = "Name")) %>%
+  right_join(mn_counties[,c(4,7)], by = "countyfp")
+
+k12.org.summary.county.map <- ggplot(k12.org.summary.county) +
+  geom_sf_interactive(color = "grey85", aes(geometry = geometry, fill = percent, data_id = countyfp, tooltip = paste(county.name, "\nNumber of observations: ", comma(n, accuracy = 1), "\nPercent of total observations: ", percent(percent, accuracy = .1), sep = ""))) +
+  theme_sf+
+  scale_fill_fermenter(palette = "PuBu", direction = 1, labels = scales::percent) +
+  labs(title = "Percent of high school graduates by county location of school") +
+  theme(legend.box.margin = margin(50, 0, 0, -100),
+        text = element_text(size = 18))
+
+girafe(ggobj = k12.org.summary.county.map, height_svg = 10, width_svg = 10) %>%
+  girafe_options(opts_sizing(rescale = FALSE))
+
+```
+
+<br>
+
+The schools with the highest percent of graudates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 10% and 13% of high school grduates since 2006. 

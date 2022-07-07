@@ -3,10 +3,21 @@ output_dir: docs
 navbar:
   title: "CTE impacts on migration trends in SW Minnesota"
   left:
-    - text: "Summary and data overview"
+    - text: "Summary of results"
       href: index.html
-    - text: "Data prep process"
-      href: data_prep.html
+    - text: "Data prep and summaries"
+      icon: fa-gear
+      menu:
+        - text: "K12Enrollment"
+          href: k12enrollment.html
+        - text: "K12Orgs"
+          href: k12orgs.html
+        - text: "ACT"
+          href: act.html
+        - text: "AP"
+          href: ap.html
+        - text: "CTEEnrollment"
+          href: cteenrollment.html
       
 output:
   html_document:

@@ -11,7 +11,7 @@
 
 
 
-<title>Summary</title>
+<title>CTEEnrollment</title>
 
 <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -29,6 +29,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -225,6 +228,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#section-TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#section-TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -232,6 +298,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="section-TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -289,15 +365,65 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Summary</h1>
+<h1 class="title toc-ignore">CTEEnrollment</h1>
 
 </div>
 
 
+<p><br></p>
+<div id="section-data-prep" class="section level1">
+<h1>Data prep</h1>
+<p>The next dataset is individuals that were enrolled in CTE
+courses.</p>
+<p><br></p>
+<pre class="r"><code>cte.enrollment.original &lt;- read_csv(&quot;Data/SLEDS/CTE/CTE_CourseEnrollments.csv&quot;) %&gt;%
+  mutate(PersonID = as.integer(PersonID)) %&gt;%
+  filter(FiscalYearTimeID != &quot;NULL&quot;)
+
+head(cte.enrollment.original)</code></pre>
+<pre><code>## # A tibble: 6 × 18
+##   PersonID FiscalYearTimeID K12OrganizationID CTEK12Org DistrictNumber Type 
+##      &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;             &lt;chr&gt;     &lt;chr&gt;          &lt;chr&gt;
+## 1       68 20070630         124084            124060    177            1    
+## 2      161 20070630         NULL              77441     NULL           NULL 
+## 3      161 20080630         NULL              77441     NULL           NULL 
+## 4      641 20070630         38383             38351     640            1    
+## 5      641 20080630         38384             38351     640            1    
+## 6      641 20090630         38385             38351     640            1    
+## # … with 12 more variables: SchoolNumber &lt;chr&gt;, OrganizationName &lt;chr&gt;,
+## #   CTECourseID &lt;chr&gt;, ProgramCode &lt;chr&gt;, ProgramCourseName &lt;chr&gt;,
+## #   CourseCode &lt;chr&gt;, CourseTitle &lt;chr&gt;, CareerCluster &lt;chr&gt;,
+## #   CareerClusterName &lt;chr&gt;, CareerField &lt;chr&gt;, CareerFieldName &lt;chr&gt;,
+## #   ...18 &lt;lgl&gt;</code></pre>
+<pre class="r"><code>names(cte.enrollment.original)</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;          &quot;FiscalYearTimeID&quot;  &quot;K12OrganizationID&quot;
+##  [4] &quot;CTEK12Org&quot;         &quot;DistrictNumber&quot;    &quot;Type&quot;             
+##  [7] &quot;SchoolNumber&quot;      &quot;OrganizationName&quot;  &quot;CTECourseID&quot;      
+## [10] &quot;ProgramCode&quot;       &quot;ProgramCourseName&quot; &quot;CourseCode&quot;       
+## [13] &quot;CourseTitle&quot;       &quot;CareerCluster&quot;     &quot;CareerClusterName&quot;
+## [16] &quot;CareerField&quot;       &quot;CareerFieldName&quot;   &quot;...18&quot;</code></pre>
+<p><br></p>
+<p>This dataset provides each CTE course taken by a student. This means
+that there were 226,487 instances of a student taking a CTE course.
+There are 18 columns providing the PersonID taking the course, the
+fiscal year, the K12 organization, along with details about the actual
+course itself.</p>
+<p>There are two goals with this dataset.</p>
+<ol style="list-style-type: decimal">
+<li>Format it so each observation represents a single PersonID along
+with the total number of CTE courses they took.</li>
+<li>Format it so each observation represents a single PersonID along
+with the number of CTE courses taken in each career field.</li>
+</ol>
+<p>I could use career cluster but there are 20 different career
+clusters. The career fields are more broad and there are only 6
+categories.</p>
+</div>
 
 
 
-
+</div>
+</div>
 
 </div>
 
@@ -330,6 +456,35 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#section-TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

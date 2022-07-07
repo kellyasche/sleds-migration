@@ -1,0 +1,107 @@
+---
+title: "ACT"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(extrafont)
+library(readxl)
+library(janitor)
+library(lubridate)
+
+loadfonts()
+
+```
+
+<br>
+
+# Prep Data
+
+Next up is to join the ACT data. 
+
+<br>
+
+```{r act original data}
+act.original <- read_csv("Data/SLEDS/ACT/ACT.csv") %>%
+  mutate(PersonID = as.integer(PersonID))
+
+head(act.original)
+
+names(act.original)
+```
+
+<br>
+
+There are `r comma(nrow(act.original), accuracy = 1)` observations in the dataset. Each observation is an ACT test taken by a student in Southwest Minnesota. The unique feature here is the time it was taken. This means that a student could have taken the ACT twice and their PersonID would show up as two observations.
+
+Out of the scores provided, I'm just going to use the composite score. Since an individual may have taken the test multiple times I will only use the highest composite score for each individual. This is how colleges do it as well.
+
+<br>
+
+```{r act highest composite score}
+act.highest.comp <- act.original %>%
+  select(PersonID, ACTCompositeScore) %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  group_by(PersonID) %>%
+  filter(ACTCompositeScore == max(ACTCompositeScore)) %>%
+  ungroup() %>%
+  distinct(PersonID, .keep_all = TRUE)
+
+head(act.highest.comp)
+
+names(act.highest.comp)
+```
+
+<br>
+
+After filtering for only the highest ACT composite score for each PersonID, the dataset contains `r comma(nrow(act.highest.comp), accuracy = 1)` observations.
+
+Now we will join it up with the master.
+
+<br>
+
+```{r act join with master}
+master.2 <- read_csv("Data/SLEDS/Masters/master-1.csv") %>%
+  left_join(act.highest.comp, by = "PersonID")
+
+head(master.2)
+
+names(master.2)
+
+```
+
+<br>
+
+The updated master dataset contains `r comma(nrow(master.2), accuracy = 1)` observations with `r comma(ncol(master.2), accuracy = 1)` columns.
+
+<br>
+
+# Summary of ACT data
+
