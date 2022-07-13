@@ -119,7 +119,9 @@ The k12org master data has `r comma(nrow(k12.org.master), accuracy = 1)` K12Orga
 <br>
 
 ```{r k12org joining with master enrollment}
-master <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment-master.csv") %>%
+graduates <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment-master.csv")
+
+master <- graduates %>%
   left_join(k12.org.master, by = "K12OrganizationID") %>%
   filter(edr %in% c("EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 8 - Southwest"))
 
@@ -217,7 +219,7 @@ girafe(ggobj = k12.org.summary.county.map, height_svg = 10, width_svg = 10) %>%
 
 <br>
 
-The schools with the highest percent of graudates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 10% and 13% of high school grduates since 2006. 
+The schools with the highest percent of graduates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 10% and 13% of high school grduates since 2006. 
 
 ```{r write master, include=FALSE}
 write_csv(master, "Data/SLEDS/Masters/Master-1.csv")

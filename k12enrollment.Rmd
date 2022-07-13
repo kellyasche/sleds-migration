@@ -89,18 +89,15 @@ We first need to create a list of all individuals with the StatusEnd code of 8 o
 ```{r k12enrollment StatusEnd}
 graduates <- enrollment.original %>%
   filter(StatusEnd %in% c(8,9)) %>%
-  select(PersonID, K12OrganizationID, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator)
-
-duplicates <- graduates %>%
-  group_by(PersonID) %>%
-  summarise(n = n()) %>%
-  ungroup() %>%
-  filter(n > 1)
+  mutate(year = str_sub(K12EnrTimeID, 1, 4),
+         year = as.integer(year)) %>%
+  select(PersonID, K12OrganizationID, year, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator) %>%
+  distinct(PersonID, .keep_all = TRUE)
 ```
 
 <br>
 
-Unfortunately, we still end up with duplicates. We will send this to Meredith to figure out. 
+Unfortunately, we still end up with duplicates so I just did a distinct on PersonID. We will send this to Meredith to figure out. 
 
 Next we need to create new columns for the variables that will indicate a certain status has been met at any point in the dataset for each PersonID. For example, we want a column that indicates a PersonID was enrolled in PSEO at some point in the dataset. The variables that need a new column created are;
 
@@ -206,14 +203,14 @@ k12.enr.pct.total <- k12.enrollment.master %>%
   mutate(Gender = ifelse(Gender == "F", 1, 0),
          LimitedEnglishProficiencyIndicator = ifelse(LimitedEnglishProficiencyIndicator == "Y", 1, 0),
          HomelessIndicator = ifelse(HomelessIndicator == "Y", 1, 0)) %>%
-  rename(Female = 3,
-         `Limited English Proficiency` = 4,
-         Homeless = 5,
-         `Free or reduced lunch` = 6,
-         `PSEO participant` = 7,
-         `Special Ed` = 8,
-         `Non-english in home` = 9) %>%
-  gather(key = "indicator", value = "value", 3:9) %>%
+  rename(Female = 4,
+         `Limited English Proficiency` = 5,
+         Homeless = 6,
+         `Free or reduced lunch` = 7,
+         `PSEO participant` = 8,
+         `Special Ed` = 9,
+         `Non-english in home` = 10) %>%
+  gather(key = "indicator", value = "value", 4:10) %>%
   group_by(indicator) %>%
   summarise(confirmed.indicator = sum(value),
             total.observations = n()) %>%

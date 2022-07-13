@@ -40,6 +40,43 @@ loadfonts()
 
 ```
 
+```{r themes and join docs, include=FALSE}
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+```
+
 <br>
 
 # Data prep
@@ -69,3 +106,108 @@ There are two goals with this dataset.
 
 I could use career cluster but there are 20 different career clusters. The career fields are more broad and there are only 6 categories.
 
+<br>
+
+```{r cteenrollment n total cte courses}
+graduate <- read_csv("Data/SLEDS/Masters/Master-3.csv") %>%
+  select(PersonID)
+
+cte.n.total.courses <- cte.enrollment.original %>%
+  group_by(PersonID) %>%
+  summarise(total.cte.courses.taken = n()) %>%
+  ungroup() %>%
+  right_join(graduate, by = "PersonID") %>%
+  mutate(total.cte.courses.taken = ifelse(is.na(total.cte.courses.taken), 0, total.cte.courses.taken))
+
+head(cte.n.total.courses)
+
+names(cte.n.total.courses)
+```
+
+<br>
+
+A total of `r cte.n.total.courses %>% filter(total.cte.courses.taken > 0) %>% nrow() %>% scales::comma(accuracy = 1) ` individuals took at least one CTE course in the dataset. 
+
+Next I'm going to create a dataset that calculates the number of CTE courses each individual has taken by CareerField. 
+
+<br>
+
+```{r cteenrollment by careerfield}
+cte.n.careerfield <- cte.enrollment.original %>%
+  mutate(CareerField = str_replace(CareerField, "Information Technology", "6")) %>%
+  group_by(PersonID, CareerField) %>%
+  summarise(cte.n.careerfield = n()) %>%
+  ungroup() %>%
+  right_join(graduate, by = "PersonID") %>%
+  complete(PersonID, CareerField, fill = list(cte.n.careerfield = 0)) %>%
+  drop_na(CareerField) %>%
+  mutate(CareerField = paste("cte.careerfield.", CareerField, sep = "")) %>%
+  spread(key = CareerField, value = cte.n.careerfield)
+
+head(cte.n.careerfield)
+
+names(cte.n.careerfield)
+```
+
+<br>
+
+There seems to be a minor coding error in the careerfield column. For one particular class, it was consistently labeled "Information Technology" even though the field requires a number value. In addition, "information Technology" doesn't seem to match the course due to the following information;
+
+Program Course Name: Family and Consumer Science
+Course title: Apparrel
+CareerCluster: Design
+CareerFieldName: 6 (which should be a letter value, not a code).
+
+Due to this information, I recoded anything that was "Information Technology" for that particular course as a "6".
+
+After doing this, the dataset has all individuals/graduates with a column for each CTE course careerfield containing the number of courses they took within that CareerField. I will summarise below to see how many students took courses within each CareerField.
+
+Now lets join the CTE enrollment data with the master dataset.
+
+<br>
+
+```{r join cte enrollment with master}
+master.3 <- read_csv("Data/SLEDS/Masters/Master-3.csv")
+
+master.4 <- master.3 %>%
+  left_join(cte.n.total.courses, by = "PersonID") %>%
+  left_join(cte.n.careerfield, by = "PersonID")
+
+head(master.4)
+
+names(master.4)
+```
+
+<br>
+
+After joining the CTE enrollment data with the master dataset we continue to have `r master.4 %>% nrow() %>% comma(accuracy = 1)` with an updated number of `r master.4 %>% ncol() %>% comma(accuracy = 1)` columns.
+
+<br>
+
+# Summary of CTE enrollment data
+
+<br>
+
+We'll start with summarising the number of cte courses the observations have taken.
+
+<br>
+
+```{r summarise n CTE courses taken, echo=FALSE}
+cte.n.courses.summary.total <- master.4 %>%
+  summarise(mean = mean(total.cte.courses.taken),
+            median = median(total.cte.courses.taken),
+            sd = sd(total.cte.courses.taken),
+            n = comma(n(), accuracy = 1)) %>%
+  mutate()
+
+cte.n.courses.summary.ctestudents <- master.4 %>%
+  filter(total.cte.courses.taken > 0) %>%
+  summarise(mean = mean(total.cte.courses.taken),
+            median = median(total.cte.courses.taken),
+            sd = sd(total.cte.courses.taken),
+            n = comma(n(), accuracy = 1))
+  
+names(master.4)
+
+
+```
