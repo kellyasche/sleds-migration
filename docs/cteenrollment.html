@@ -418,6 +418,144 @@ with the number of CTE courses taken in each career field.</li>
 <p>I could use career cluster but there are 20 different career
 clusters. The career fields are more broad and there are only 6
 categories.</p>
+<p><br></p>
+<pre class="r"><code>graduate &lt;- read_csv(&quot;Data/SLEDS/Masters/Master-3.csv&quot;) %&gt;%
+  select(PersonID)
+
+cte.n.total.courses &lt;- cte.enrollment.original %&gt;%
+  group_by(PersonID) %&gt;%
+  summarise(total.cte.courses.taken = n()) %&gt;%
+  ungroup() %&gt;%
+  right_join(graduate, by = &quot;PersonID&quot;) %&gt;%
+  mutate(total.cte.courses.taken = ifelse(is.na(total.cte.courses.taken), 0, total.cte.courses.taken))
+
+head(cte.n.total.courses)</code></pre>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID total.cte.courses.taken
+##      &lt;dbl&gt;                   &lt;dbl&gt;
+## 1       68                       1
+## 2      161                       2
+## 3      641                       4
+## 4      676                       2
+## 5      758                       5
+## 6      786                       9</code></pre>
+<pre class="r"><code>names(cte.n.total.courses)</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;                &quot;total.cte.courses.taken&quot;</code></pre>
+<p><br></p>
+<p>A total of 37,082 individuals took at least one CTE course in the
+dataset.</p>
+<p>Next I’m going to create a dataset that calculates the number of CTE
+courses each individual has taken by CareerField.</p>
+<p><br></p>
+<pre class="r"><code>cte.n.careerfield &lt;- cte.enrollment.original %&gt;%
+  mutate(CareerField = str_replace(CareerField, &quot;Information Technology&quot;, &quot;6&quot;)) %&gt;%
+  group_by(PersonID, CareerField) %&gt;%
+  summarise(cte.n.careerfield = n()) %&gt;%
+  ungroup() %&gt;%
+  right_join(graduate, by = &quot;PersonID&quot;) %&gt;%
+  complete(PersonID, CareerField, fill = list(cte.n.careerfield = 0)) %&gt;%
+  drop_na(CareerField) %&gt;%
+  mutate(CareerField = paste(&quot;cte.careerfield.&quot;, CareerField, sep = &quot;&quot;)) %&gt;%
+  spread(key = CareerField, value = cte.n.careerfield)
+
+head(cte.n.careerfield)</code></pre>
+<pre><code>## # A tibble: 6 × 11
+##   PersonID cte.careerfield.1 cte.careerfield.2 cte.careerfield… cte.careerfield…
+##      &lt;dbl&gt;             &lt;int&gt;             &lt;int&gt;            &lt;int&gt;            &lt;int&gt;
+## 1       68                 0                 0                1                0
+## 2      161                 0                 1                1                0
+## 3      641                 3                 0                0                0
+## 4      676                 2                 0                0                0
+## 5      758                 1                 0                4                0
+## 6      786                 0                 0                6                0
+## # … with 6 more variables: cte.careerfield.5 &lt;int&gt;, cte.careerfield.6 &lt;int&gt;,
+## #   cte.careerfield.7 &lt;int&gt;, cte.careerfield.8 &lt;int&gt;, cte.careerfield.9 &lt;int&gt;,
+## #   cte.careerfield.NULL &lt;int&gt;</code></pre>
+<pre class="r"><code>names(cte.n.careerfield)</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;             &quot;cte.careerfield.1&quot;    &quot;cte.careerfield.2&quot;   
+##  [4] &quot;cte.careerfield.3&quot;    &quot;cte.careerfield.4&quot;    &quot;cte.careerfield.5&quot;   
+##  [7] &quot;cte.careerfield.6&quot;    &quot;cte.careerfield.7&quot;    &quot;cte.careerfield.8&quot;   
+## [10] &quot;cte.careerfield.9&quot;    &quot;cte.careerfield.NULL&quot;</code></pre>
+<p><br></p>
+<p>There seems to be a minor coding error in the careerfield column. For
+one particular class, it was consistently labeled “Information
+Technology” even though the field requires a number value. In addition,
+“information Technology” doesn’t seem to match the course due to the
+following information;</p>
+<p>Program Course Name: Family and Consumer Science Course title:
+Apparrel CareerCluster: Design CareerFieldName: 6 (which should be a
+letter value, not a code).</p>
+<p>Due to this information, I recoded anything that was “Information
+Technology” for that particular course as a “6”.</p>
+<p>After doing this, the dataset has all individuals/graduates with a
+column for each CTE course careerfield containing the number of courses
+they took within that CareerField. I will summarise below to see how
+many students took courses within each CareerField.</p>
+<p>Now lets join the CTE enrollment data with the master dataset.</p>
+<p><br></p>
+<pre class="r"><code>master.3 &lt;- read_csv(&quot;Data/SLEDS/Masters/Master-3.csv&quot;)
+
+master.4 &lt;- master.3 %&gt;%
+  left_join(cte.n.total.courses, by = &quot;PersonID&quot;) %&gt;%
+  left_join(cte.n.careerfield, by = &quot;PersonID&quot;)
+
+head(master.4)</code></pre>
+<pre><code>## # A tibble: 6 × 28
+##   PersonID K12OrganizationID  year Gender LimitedEnglishProfic… HomelessIndicat…
+##      &lt;dbl&gt;             &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                 &lt;chr&gt;           
+## 1       68            124084  2007 F      N                     N               
+## 2      161             77452  2009 M      N                     N               
+## 3      641             38385  2009 M      N                     N               
+## 4      676             55598  2008 M      N                     N               
+## 5      758             22675  2007 M      N                     N               
+## 6      786             56633  2010 F      N                     N               
+## # … with 22 more variables: economic.status &lt;dbl&gt;, pseo.participant &lt;dbl&gt;,
+## #   SpecialEdStatus &lt;dbl&gt;, non.english.home &lt;dbl&gt;, DistrictName &lt;chr&gt;,
+## #   county.name &lt;chr&gt;, countyfp &lt;chr&gt;, Dem_Desc &lt;chr&gt;, edr &lt;chr&gt;,
+## #   ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;, total.cte.courses.taken &lt;dbl&gt;,
+## #   cte.careerfield.1 &lt;int&gt;, cte.careerfield.2 &lt;int&gt;, cte.careerfield.3 &lt;int&gt;,
+## #   cte.careerfield.4 &lt;int&gt;, cte.careerfield.5 &lt;int&gt;, cte.careerfield.6 &lt;int&gt;,
+## #   cte.careerfield.7 &lt;int&gt;, cte.careerfield.8 &lt;int&gt;, …</code></pre>
+<pre class="r"><code>names(master.4)</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
+##  [3] &quot;year&quot;                               &quot;Gender&quot;                            
+##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
+##  [7] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
+##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;                  
+## [11] &quot;DistrictName&quot;                       &quot;county.name&quot;                       
+## [13] &quot;countyfp&quot;                           &quot;Dem_Desc&quot;                          
+## [15] &quot;edr&quot;                                &quot;ACTCompositeScore&quot;                 
+## [17] &quot;ap.exam&quot;                            &quot;total.cte.courses.taken&quot;           
+## [19] &quot;cte.careerfield.1&quot;                  &quot;cte.careerfield.2&quot;                 
+## [21] &quot;cte.careerfield.3&quot;                  &quot;cte.careerfield.4&quot;                 
+## [23] &quot;cte.careerfield.5&quot;                  &quot;cte.careerfield.6&quot;                 
+## [25] &quot;cte.careerfield.7&quot;                  &quot;cte.careerfield.8&quot;                 
+## [27] &quot;cte.careerfield.9&quot;                  &quot;cte.careerfield.NULL&quot;</code></pre>
+<p><br></p>
+<p>After joining the CTE enrollment data with the master dataset we
+continue to have 45,449 with an updated number of 28 columns.</p>
+<p><br></p>
+</div>
+<div id="section-summary-of-cte-enrollment-data" class="section level1">
+<h1>Summary of CTE enrollment data</h1>
+<p><br></p>
+<p>We’ll start with summarising the number of cte courses the
+observations have taken.</p>
+<p><br></p>
+<pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
+##  [3] &quot;year&quot;                               &quot;Gender&quot;                            
+##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
+##  [7] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
+##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;                  
+## [11] &quot;DistrictName&quot;                       &quot;county.name&quot;                       
+## [13] &quot;countyfp&quot;                           &quot;Dem_Desc&quot;                          
+## [15] &quot;edr&quot;                                &quot;ACTCompositeScore&quot;                 
+## [17] &quot;ap.exam&quot;                            &quot;total.cte.courses.taken&quot;           
+## [19] &quot;cte.careerfield.1&quot;                  &quot;cte.careerfield.2&quot;                 
+## [21] &quot;cte.careerfield.3&quot;                  &quot;cte.careerfield.4&quot;                 
+## [23] &quot;cte.careerfield.5&quot;                  &quot;cte.careerfield.6&quot;                 
+## [25] &quot;cte.careerfield.7&quot;                  &quot;cte.careerfield.8&quot;                 
+## [27] &quot;cte.careerfield.9&quot;                  &quot;cte.careerfield.NULL&quot;</code></pre>
 </div>
 
 

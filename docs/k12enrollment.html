@@ -470,16 +470,13 @@ all the other variables.</p>
 <p><br></p>
 <pre class="r"><code>graduates &lt;- enrollment.original %&gt;%
   filter(StatusEnd %in% c(8,9)) %&gt;%
-  select(PersonID, K12OrganizationID, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator)
-
-duplicates &lt;- graduates %&gt;%
-  group_by(PersonID) %&gt;%
-  summarise(n = n()) %&gt;%
-  ungroup() %&gt;%
-  filter(n &gt; 1)</code></pre>
+  mutate(year = str_sub(K12EnrTimeID, 1, 4),
+         year = as.integer(year)) %&gt;%
+  select(PersonID, K12OrganizationID, year, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator) %&gt;%
+  distinct(PersonID, .keep_all = TRUE)</code></pre>
 <p><br></p>
-<p>Unfortunately, we still end up with duplicates. We will send this to
-Meredith to figure out.</p>
+<p>Unfortunately, we still end up with duplicates so I just did a
+distinct on PersonID. We will send this to Meredith to figure out.</p>
 <p>Next we need to create new columns for the variables that will
 indicate a certain status has been met at any point in the dataset for
 each PersonID. For example, we want a column that indicates a PersonID
@@ -549,26 +546,26 @@ indicators.</p>
   left_join(k12.enr.homeprimlang.indicator, by = &quot;PersonID&quot;)
 
 head(k12.enrollment.master)</code></pre>
-<pre><code>## # A tibble: 6 × 9
-##   PersonID K12OrganizationID Gender LimitedEnglishProficiencyI… HomelessIndicat…
-##      &lt;int&gt;             &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;                       &lt;chr&gt;           
-## 1       68            124084 F      N                           N               
-## 2      161             77452 M      N                           N               
-## 3      641             38385 M      N                           N               
-## 4      676             55598 M      N                           N               
-## 5      758             22675 M      N                           N               
-## 6      786             56633 F      N                           N               
+<pre><code>## # A tibble: 6 × 10
+##   PersonID K12OrganizationID  year Gender LimitedEnglishProfic… HomelessIndicat…
+##      &lt;int&gt;             &lt;int&gt; &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;                 &lt;chr&gt;           
+## 1       68            124084  2007 F      N                     N               
+## 2      161             77452  2009 M      N                     N               
+## 3      641             38385  2009 M      N                     N               
+## 4      676             55598  2008 M      N                     N               
+## 5      758             22675  2007 M      N                     N               
+## 6      786             56633  2010 F      N                     N               
 ## # … with 4 more variables: economic.status &lt;dbl&gt;, pseo.participant &lt;dbl&gt;,
 ## #   SpecialEdStatus &lt;dbl&gt;, non.english.home &lt;dbl&gt;</code></pre>
 <pre class="r"><code>names(k12.enrollment.master)</code></pre>
-<pre><code>## [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
-## [3] &quot;Gender&quot;                             &quot;LimitedEnglishProficiencyIndicator&quot;
-## [5] &quot;HomelessIndicator&quot;                  &quot;economic.status&quot;                   
-## [7] &quot;pseo.participant&quot;                   &quot;SpecialEdStatus&quot;                   
-## [9] &quot;non.english.home&quot;</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
+##  [3] &quot;year&quot;                               &quot;Gender&quot;                            
+##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
+##  [7] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
+##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;</code></pre>
 <pre class="r"><code>write_csv(k12.enrollment.master, &quot;Data/SLEDS/K12 Enrollment/K12Enrollment-master.csv&quot;)</code></pre>
 <p><br></p>
-<p>The prepped enrollment data has 45,689 observations and 9
+<p>The prepped enrollment data has 45,502 observations and 10
 columns.</p>
 <p><br></p>
 </div>
@@ -585,8 +582,8 @@ dataset</li>
 <li>Participated in a PSEO course at some point in the dataset.</li>
 </ul>
 <p><br></p>
-<div id="htmlwidget-376edef0a22f1b9f8afc" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-376edef0a22f1b9f8afc">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"164\" data-max=\"22529\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Female","Free or reduced lunch","Homeless","Limited English Proficiency","Non-english in home","PSEO participant","Special Ed"],[22529,17068,164,914,3735,13476,6147],[45689,45689,45689,45689,45689,45689,45689],["49.3%","37.4%","0.4%","2.0%","8.2%","29.5%","13.5%"]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>indicator<\/th>\n      <th>confirmed.indicator<\/th>\n      <th>total.observations<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-b9c57c5590f9d76bdcd9" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b9c57c5590f9d76bdcd9">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"163\" data-max=\"22454\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Female","Free or reduced lunch","Homeless","Limited English Proficiency","Non-english in home","PSEO participant","Special Ed"],[22454,16937,163,904,3701,13448,6052],[45502,45502,45502,45502,45502,45502,45502],["49.3%","37.2%","0.4%","2.0%","8.1%","29.6%","13.3%"]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>indicator<\/th>\n      <th>confirmed.indicator<\/th>\n      <th>total.observations<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":[],"jsHooks":[]}</script>
 <p><br></p>
 <p>As expected, nearly half (49.3%) of the observations are female. Over
 a third (37.4%) of the observations have been eligible for free or
