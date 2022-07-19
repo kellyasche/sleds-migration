@@ -41,6 +41,19 @@ loadfonts()
 ```
 
 ```{r themes and join docs, include=FALSE}
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
 theme_sf <- theme_bw() +
   theme(axis.text.x=element_blank(),
         axis.text.y=element_blank(),
@@ -188,6 +201,10 @@ After joining the CTE enrollment data with the master dataset we continue to hav
 
 <br>
 
+## Summary - Number of CTE courses taken by a student
+
+<br>
+
 We'll start with summarising the number of cte courses the observations have taken.
 
 <br>
@@ -197,17 +214,158 @@ cte.n.courses.summary.total <- master.4 %>%
   summarise(mean = mean(total.cte.courses.taken),
             median = median(total.cte.courses.taken),
             sd = sd(total.cte.courses.taken),
-            n = comma(n(), accuracy = 1)) %>%
-  mutate()
+            n = comma(n(), accuracy = 1),
+            min = min(total.cte.courses.taken),
+            max = max(total.cte.courses.taken)) %>%
+  mutate(population = "All graduates",
+         mean = comma(mean, accuracy = .01),
+         sd = comma(sd, accuracy = .01))
 
 cte.n.courses.summary.ctestudents <- master.4 %>%
   filter(total.cte.courses.taken > 0) %>%
   summarise(mean = mean(total.cte.courses.taken),
             median = median(total.cte.courses.taken),
             sd = sd(total.cte.courses.taken),
-            n = comma(n(), accuracy = 1))
+            n = comma(n(), accuracy = 1),
+            min = min(total.cte.courses.taken),
+            max = max(total.cte.courses.taken)) %>%
+  mutate(population = "Only graduates with CTE courses > 0",
+         mean = comma(mean, accuracy = .01),
+         sd = comma(sd, accuracy = .01))
   
-names(master.4)
+cte.n.courses.summary.total.ctestudents <- cte.n.courses.summary.total %>%
+  rbind(cte.n.courses.summary.ctestudents) %>%
+  select(population, n, mean, median, sd, min, max)
+
+datatable(cte.n.courses.summary.total.ctestudents, class = "cell-border stripe", filter = "top")
+
+```
+
+<br>
+
+The average number of CTE courses taken by all PersonID in the master dataset is 4.98 with a standard deviation of +/-4.9. This is a high standard deviation meaning there are values quite far from the mean. 
+
+The average number of CTE courses taken by all PersonID that have taken at least one CTE course was 6.10 with a standard deviation of +/-4.75. So the standard deviation decreases a bit with this population likely because we got rid of all the "0" values that are in the full dataset.
+
+The highest number of CTE courses taken is 69. That is quite high so I will check with Meredith on that one.
+
+Lets look at the distribution to see if that value is an outlier.
+
+
+
+<br>
+
+```{r summarise n CTE courses taken distribution, echo=FALSE}
+master.4.hist <- master.4 %>%
+  mutate(key = seq(n())) %>%
+  select(key, total.cte.courses.taken)
+
+cte.n.courses.taken.dist.plot <- ggplot(master.4.hist, aes(total.cte.courses.taken)) +
+  geom_histogram_interactive(aes(data_id = key, tooltip = paste("N = ", comma(..count.., accuracy = 1), "\nPercent: ", percent(..count.. / sum(..count..), accuracy = .1)))) +
+  labs(x="", y = "", color="", title = "Histogram - N CTE courses")+
+  scale_y_continuous(labels=scales::comma)+
+  theme_line+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = cte.n.courses.taken.dist.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
 
 
 ```
+
+<br>
+
+Up next is to see if the percentage of students taking a CTE course varies significantly by RUCA group.
+
+<br>
+
+```{r cte n courses ruca, echo=FALSE}
+cte.yes.ruca <- master.4 %>%
+  mutate(cte.yes = ifelse(total.cte.courses.taken > 0, "Yes", "No")) %>%
+  tabyl(Dem_Desc, cte.yes) %>%
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 1)
+
+cte.n.ruca <- master.4 %>%
+  filter(total.cte.courses.taken > 0 ) %>%
+  group_by(Dem_Desc) %>%
+  summarise(mean = comma(mean(total.cte.courses.taken), accuracy = .1),
+            median = comma(median(total.cte.courses.taken), accuracy = 1),
+            sd = comma(sd(total.cte.courses.taken), accuracy = .1),
+            n = comma(n(), accuracy = 1),
+            min = comma(min(total.cte.courses.taken), accuracy = 1),
+            max = comma(max(total.cte.courses.taken), accuracy = 1)) %>%
+  ungroup()
+
+datatable(cte.yes.ruca, class = "cell-border stripe", filter = "top")
+
+tags$br()
+
+datatable(cte.n.ruca, class = "cell-border stripe", filter = "top")
+
+```
+
+<br>
+
+There isn't significant variation by RUCA group. About 80% of the students within in each RUCA group have taken at least 1 CTE course. The percentage does increase as a county is categorized more rural.
+
+Of those students that took at least 1 CTE course, the average number of CTE courses taken ranged from 5.2 in urban/town/rural mix counties to 6.3 in town/rural mix county group. 
+
+Now lets check everything by planning region.
+
+<br>
+
+```{r cte n courses planning region, echo=FALSE}
+cte.yes.edr <- master.4 %>%
+  mutate(cte.yes = ifelse(total.cte.courses.taken > 0, "Yes", "No")) %>%
+  tabyl(edr, cte.yes) %>%
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 1)
+
+cte.n.edr <- master.4 %>%
+  filter(total.cte.courses.taken > 0 ) %>%
+  group_by(edr) %>%
+  summarise(mean = comma(mean(total.cte.courses.taken), accuracy = .1),
+            median = comma(median(total.cte.courses.taken), accuracy = 1),
+            sd = comma(sd(total.cte.courses.taken), accuracy = .1),
+            n = comma(n(), accuracy = 1),
+            min = comma(min(total.cte.courses.taken), accuracy = 1),
+            max = comma(max(total.cte.courses.taken), accuracy = 1)) %>%
+  ungroup()
+
+datatable(cte.yes.edr, class = "cell-border stripe", filter = "top")
+
+tags$br()
+
+datatable(cte.n.ruca, class = "cell-border stripe", filter = "top")
+
+```
+
+<br>
+
+## Summary - Career field of CTE courses taken
+
+<br>
+
+Now we will take a look at the breakdown of CTE courses taken by career field for each PersonID. I expect there to be a lot of variation in this data since different schools might focus on different types of CTE offerings depending on the local employment makeup.
+
+First, lets look at the concentrations of courses taken across career fields.
+
+<br>
+
+```{r cte career fields concentration, echo=FALSE}
+cte.cf.concentration.total <- master.4 %>%
+  select(PersonID, cte.careerfield.1, cte.careerfield.2, cte.careerfield.3, cte.careerfield.4, cte.careerfield.5, cte.careerfield.6, cte.careerfield.7, cte.careerfield.8, cte.careerfield.9, cte.careerfield.NULL) %>%
+  gather(key = "cte.careerfield", value = "n.courses", 2:11) %>%
+  group_by(cte.careerfield) %>%
+  summarise(n = sum(n.courses)) %>%
+  ungroup() %>%
+  mutate(pct = percent(n / sum(n), accuracy = .1))
+
+names(cte.cf.concentration.total)
+```
+
+
