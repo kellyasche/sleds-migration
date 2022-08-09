@@ -91,6 +91,14 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
 
 ```
 
+```{r cte careerfields joined with names}
+cte.careerfield.names <- read_csv("Data/SLEDS/CTE/career-field-names.csv") %>%
+  select(1,2) %>%
+  mutate(cf.code = paste("cte.careerfield.", cf.code, sep = ""))
+  
+
+```
+
 <br>
 
 # Data prep
@@ -364,9 +372,119 @@ cte.cf.concentration.total <- master.4 %>%
   group_by(cte.careerfield) %>%
   summarise(n = sum(n.courses)) %>%
   ungroup() %>%
-  mutate(pct = percent(n / sum(n), accuracy = .1))
+  mutate(pct = percent(n / sum(n), accuracy = .1)) %>%
+  left_join(cte.careerfield.names, by = c("cte.careerfield" = "cf.code")) %>%
+  select(4, 1, 2, 3)
 
-names(cte.cf.concentration.total)
+datatable(cte.cf.concentration.total, class = "cell-border stripe", filter = "top", rownames = FALSE)
+
+```
+<br>
+
+Not surprisingly, Agriculture, Food & Natural Resources was the careerfield with the highest percentage of courses taken with 34.5%. This was followed by business, management & administration with 24.9% and human services with 20.5% of CTE courses taken in that career field. 
+
+Next we will see if there's any significant differences by region.
+
+<br>
+
+```{r cte career fields concentration  by EDR, echo=FALSE}
+cte.cf.concentration.edr <- master.4 %>%
+  select(PersonID, edr,cte.careerfield.1, cte.careerfield.2, cte.careerfield.3, cte.careerfield.4, cte.careerfield.5, cte.careerfield.6, cte.careerfield.7, cte.careerfield.8, cte.careerfield.9, cte.careerfield.NULL) %>%
+  gather(key = "cte.careerfield", value = "n.courses", 3:12) %>%
+  group_by(edr, cte.careerfield) %>%
+  summarise(n = sum(n.courses)) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = percent(n / sum(n), accuracy = .1)) %>%
+  left_join(cte.careerfield.names, by = c("cte.careerfield" = "cf.code")) %>%
+  select(1,5,4) %>%
+  spread(key = edr, value = pct)
+
+  datatable(cte.cf.concentration.edr, class = "cell-border stripe", filter = "top", rownames = FALSE)
+
+```
+
+<br>
+
+There is one significant difference when looking at the breakdown of CTE courses taken within careerfield by EDR. EDR 8 - Southwest had a significantly higher percentage of courses taken within the Agriculture, Food & Natural Resources career field with 44.4% compared to 28.5% and 26.1% in EDR 6E and 6W respectively. 
+
+There was also a significantly lower percentage of courses taken in Engineering, Manufacturing and Technology with 4.1% of courses taken compared to 13.4% in both EDR 6E and 6W.
+
+Lets see how this looks broken down by county.
+
+<br>
+
+```{r cte career fields concentration  by county, echo=FALSE}
+cte.cf.concentration.county <- master.4 %>%
+  select(PersonID, county.name, countyfp, cte.careerfield.1, cte.careerfield.2, cte.careerfield.3, cte.careerfield.4, cte.careerfield.5, cte.careerfield.6, cte.careerfield.7, cte.careerfield.8, cte.careerfield.9, cte.careerfield.NULL) %>%
+  gather(key = "cte.careerfield", value = "n.courses", 4:13) %>%
+  group_by(county.name, countyfp, cte.careerfield) %>%
+  summarise(n = sum(n.courses)) %>%
+  ungroup() %>%
+  group_by(county.name, countyfp) %>%
+  mutate(pct = n / sum(n)) %>%
+  left_join(cte.careerfield.names, by = c("cte.careerfield" = "cf.code")) %>%
+  select(1,2,6,5) %>%
+  left_join(mn_counties[,c(4,7)], by = "countyfp")
+
+cte.cf.concentration.county.map <- ggplot(cte.cf.concentration.county) +
+  facet_wrap(~cf.name, ncol = 2,
+             labeller = label_wrap_gen(15)) +
+  geom_sf_interactive(color = "grey85", aes(geometry = geometry, fill = pct, data_id = countyfp, tooltip = paste(county.name, "\nCareer field: ", cf.name, "\nPercent of courses taken in this careerfield: ", percent(pct, accuracy = .1), sep = ""))) +
+  theme_sf+
+  scale_fill_fermenter(palette = "PuBu", direction = 1, labels = scales::percent) +
+  labs(title = str_wrap("Percent of CTE courses taken within each career field by county", 39)) +
+  theme(legend.box.margin = margin(0, 0, 0, 0),
+        text = element_text(size = 18))
+
+girafe(ggobj = cte.cf.concentration.county.map, height_svg = 20) %>%
+  girafe_options(opts_sizing(rescale = FALSE))
+
+```
+<br>
+
+The county maps do show some differences in percentages. A significantly higher percentage of CTE courses taken were in Jackson (94.8%), Pipestone (63.6%) Cottonwood (55.2%), and Lincoln (53.7%) counties. 
+
+There were also higher percentages of courses taken in business, management and administration in Big Stone (53.7%), Murray (43.4%), and Renville (40.1%) counties. 
+
+The next big question is whether these percentages vary by year. Are there any trends?
+
+<br>
+
+```{r cte career fields concentration  by year, echo=FALSE}
+cte.cf.concentration.year <- master.4 %>%
+  select(PersonID, year, cte.careerfield.1, cte.careerfield.2, cte.careerfield.3, cte.careerfield.4, cte.careerfield.5, cte.careerfield.6, cte.careerfield.7, cte.careerfield.8, cte.careerfield.9, cte.careerfield.NULL) %>%
+  gather(key = "cte.careerfield", value = "n.courses", 3:12) %>%
+  group_by(year, cte.careerfield) %>%
+  summarise(n = sum(n.courses)) %>%
+  ungroup() %>%
+  group_by(year) %>%
+  mutate(pct = n / sum(n)) %>%
+  left_join(cte.careerfield.names, by = c("cte.careerfield" = "cf.code")) %>%
+  select(1,5,4) %>%
+  filter(year > 2006) %>%
+  mutate(data_id = seq(n()))
+
+cte.cf.concentration.year.plot <- ggplot(cte.cf.concentration.year, aes(year, pct, color = cf.name)) +
+  geom_point_interactive(size = 3, aes(data_id = data_id, tooltip = paste(cf.name, "\nYear: ", year, "\nCareer field: ", cf.name, "\nPercent of CTE courses taken: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_line() +
+  labs(x="", y = "", color="", title = "Percent of taken CTE courses")+
+  geom_label(data = filter(cte.cf.concentration.year, year == max(cte.cf.concentration.year$year)), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  scale_x_continuous(breaks = seq(1900, 2050, 2),
+                     guide = guide_axis(n.dodge = 2)) +
+  theme_line+
+  scale_color_manual(values= brewer.pal(n = 9, "Set1"),
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = cte.cf.concentration.year.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
 ```
 
 ```{r write master}
