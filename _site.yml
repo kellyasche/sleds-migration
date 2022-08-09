@@ -18,6 +18,8 @@ navbar:
           href: ap.html
         - text: "CTEEnrollment"
           href: cteenrollment.html
+        - text: "CTEDemographics"
+          href: ctedemographics.html
       
 output:
   html_document:

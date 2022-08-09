@@ -1,0 +1,132 @@
+---
+title: "CTEDemographics"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(systemfonts)
+reset_font_cache()
+library(ggtext)
+
+
+```
+
+```{r themes and join docs, include=FALSE}
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+```
+
+<br>
+
+Now I'm going to prep the CTE demographics dataset to join with the master.
+
+<br>
+
+```{r cte demographics original}
+cte.demographics.original <- read_csv("Data/SLEDS/CTE/CTE_Demographics.csv")
+
+head(cte.demographics.original)
+
+names(cte.demographics.original)
+
+```
+
+<br> 
+
+The original dataset provides whether the student was a basic participant, basic concentrator, basic completor, and/or a centrentrator 150 when taking a CTE course. It looks like each observation is unique by grade of the student. This means that one PersonID can have multiple observations.
+
+In order to determine how I want to organize this data so that each observation represents the full characteristics of each PersonID I need to understand how these values are defined.
+
+* Basic Participant: Any grade 9-12 student who successfully completes one or more state-approved CTE course(s).
+* Basic Concentrator: this is the old standard for years and required the student complete 240 hours. Any student successfully enrolled in a single CTE field for more than 240 hours (successful is defined as passing grade). 
+* Basic Completor: any concentrator who attains academic and technical knowledge and skills and graduates from high school.
+* Concentrator 150: This is the new standard - Any grade 9-12 student who successfully completes 150+ course hours (or more) as part of a state-approved secondary CTE program, within one career field.
+
+Judging by these definitions, it seems that two categories are most appropriate; 
+
+1. Basic participant is the highest level of the PersonID, and
+2. basic concentrator, basic completor and concentrator 150 is the highest level of the PersonID.
+
+<br>
+
+```{r cte concentrator}
+cte.concentrator.cat <- cte.demographics.original 
+  
+
+names(cte.concentrator.cat)
+```
