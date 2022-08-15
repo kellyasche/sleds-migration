@@ -37,6 +37,7 @@ library(lubridate)
 library(systemfonts)
 reset_font_cache()
 library(ggtext)
+library(gmodels)
 
 
 ```
@@ -284,6 +285,10 @@ cte.n.courses.taken.dist.plot <- ggplot(master.4.hist, aes(total.cte.courses.tak
 
 Up next is to see if the percentage of students taking a CTE course varies significantly by RUCA group.
 
+There isn't significant variation by RUCA group. About 80% of the students within in each RUCA group have taken at least 1 CTE course. The percentage does increase as a county is categorized more rural.
+
+Of those students that took at least 1 CTE course, the average number of CTE courses taken ranged from 5.2 in urban/town/rural mix counties to 6.3 in town/rural mix county group.
+
 <br>
 
 ```{r cte n courses ruca, echo=FALSE}
@@ -313,10 +318,6 @@ datatable(cte.n.ruca, class = "cell-border stripe", filter = "top")
 ```
 
 <br>
-
-There isn't significant variation by RUCA group. About 80% of the students within in each RUCA group have taken at least 1 CTE course. The percentage does increase as a county is categorized more rural.
-
-Of those students that took at least 1 CTE course, the average number of CTE courses taken ranged from 5.2 in urban/town/rural mix counties to 6.3 in town/rural mix county group.
 
 Now lets check everything by planning region.
 

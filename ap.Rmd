@@ -37,7 +37,7 @@ library(lubridate)
 library(systemfonts)
 reset_font_cache()
 library(ggtext)
-
+library(gmodels)
 
 ```
 
@@ -149,6 +149,8 @@ The updated master spreadsheet continues to have `r comma(nrow(master.3), accura
 
 Similar to ACT, lets check on whether the rates of students taking an AP exam differ across regions, RUCA groups or counties.
 
+From the table below we can see that out of the total observations in our dataset, 15% have taken an AP exam.
+
 <br>
 
 ```{r table ap summary total, echo=FALSE}
@@ -162,9 +164,17 @@ datatable(ap.summary.total, class = "cell-border stripe", filter = "top", rownam
 ```
 <br>
 
-Out of the total observations in our dataset, 15% have taken an AP exam.
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Now lets check to see if there are any statistically significant differences by RUCA category.
+
+Interestingly, there was significant difference between the percentage of students who took an AP exam in entirely rural schools vs. the other RUCA categories. Although, nearly 16% of all students took the AP exam, only 2% of students that graduated from an entirely rural school took an AP exam compared to 17% and 20% in town/rural mix and urban/town/rural mix schools.
+
+
 
 <br>
+
+## RUCA table
 
 ```{r table ap exam ruca, echo=FALSE}
 ap.summary.ruca <- master.3 %>%
@@ -177,12 +187,27 @@ ap.summary.ruca <- master.3 %>%
 datatable(ap.summary.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE)
   
 ```
+
+## RUCA Cross-tabs
+
+```{r cross tabs ap exam ruca}
+ap.crosstabs.ruca <- master.3 %>%
+  select(Dem_Desc, ap.exam) %>%
+  mutate(ap.exam = ifelse(ap.exam == 0, "Did not take AP exam", "Took AP exam")) 
+
+CrossTable(ap.crosstabs.ruca$Dem_Desc, ap.crosstabs.ruca$ap.exam, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
 <br>
 
-Interestingly, there was significant difference between the percentage of students who took an AP exam in entirely rural schools vs. the other RUCA categories. Only 2% of students that graduated from an entirely rural school took an AP exam compared to 17% and 20% in town/rural mix and urban/town/rural mix schools.
+Not surprisingly, the cross tabs of the EDR also indicate significant relationship between region an the percentage of students who have taken the AP exame. EDR 6W had the lowest percentage of graduates in the dataset that took an AP exam with 8%. This was quite a bit lower than EDR 6E and 8 which had 18% and 16% of their students take one, respectively. This corresponds to the RUCA data since EDR 6W is going to have quite a bit more entirely rural schools.
 
 <br>
 
+## EDR table
 ```{r table ap summary edr, echo=FALSE}
 ap.summary.edr <- master.3 %>%
   select(edr, ap.exam) %>%
@@ -194,11 +219,28 @@ ap.summary.edr <- master.3 %>%
 datatable(ap.summary.edr, class = "cell-border stripe", filter = "top", rownames = FALSE)
 ```
 
+## EDR cross-tabs
+
+```{r cross tabs ap edr}
+ap.crosstabs.edr <- master.3 %>%
+  select(edr, ap.exam) %>%
+  mutate(ap.exam = ifelse(ap.exam == 0, "Did not take AP exam", "Took AP exam")) 
+
+CrossTable(ap.crosstabs.edr$edr, ap.crosstabs.edr$ap.exam, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
 <br>
 
-EDR 6W had the lowest percentage of graduates in the dataset that took an AP exam with 8%. This was quite a bit lower than EDR 6E and 8 which had 18% and 16% of their students take one, respectively. This corresponds to the RUCA data since EDR 6W is going to have quite a bit more entirely rural schools.
+There is significant variation in the percent of students who've taken an AP exam across counties. It ranges from 0.1% in Murray County to 26.0% in Redwood County. 
+
+
 
 <br>
+
+## County map
 
 ```{r map ap exam county, echo=FALSE}
 ap.summary.county <- master.3 %>%
@@ -222,9 +264,16 @@ girafe(ggobj = ap.summary.county.map, height_svg = 10, width_svg = 10) %>%
 
 ```
 
-<br>
+## County cross-tabs
 
-There is significant variation in the percent of students who've taken an AP exam across counties. It ranges from 0.1% in Murray County to 26.0% in Redwood County. 
+```{r cross tabs ap exam county}
+ap.crosstabs.county <- master.3 %>%
+  select(county.name, ap.exam) %>%
+  mutate(ap.exam = ifelse(ap.exam == 0, "Did not take AP exam", "Took AP exam")) 
+
+CrossTable(ap.crosstabs.county$county.name, ap.crosstabs.county$ap.exam, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
 
 <br>
 
