@@ -328,7 +328,7 @@ The next thing to check is to determine whether there is a significant differenc
 ```{r summary cte demographics year table}
 cte.dem.summary.year.table <- master.5 %>%
   mutate(cte.achievement = as.factor(cte.achievement)) %>%
-  tabyl(year, cte.achievement) %>%
+  tabyl(grad.year, cte.achievement) %>%
   adorn_percentages("row")
 
 datatable(cte.dem.summary.year.table, class = "cell-border stripe", filter = "top", rownames = FALSE) %>%
@@ -339,7 +339,7 @@ datatable(cte.dem.summary.year.table, class = "cell-border stripe", filter = "to
 
 ```{r summary cte demographics year crosstabs}
 
-CrossTable(master.5$year, master.5$cte.achievement, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+CrossTable(master.5$grad.year, master.5$cte.achievement, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
 
 ```
 
@@ -350,4 +350,10 @@ CrossTable(master.5$year, master.5$cte.achievement, expected = TRUE, prop.t = FA
 Okay, so it appears that 2006 is not a good year. This means I will have to get rid of 2006 in the entire data set. 
 
 
+```{r checking 2006}
+cte.con.2006 <- cte.demographics.original %>%
+  mutate(year = str_sub(CTEDemogTimeID, 1,4),
+         year = as.integer(year))
 
+names(cte.con.2006)
+```

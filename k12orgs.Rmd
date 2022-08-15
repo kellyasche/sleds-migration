@@ -37,6 +37,7 @@ library(lubridate)
 library(systemfonts)
 reset_font_cache()
 library(ggtext)
+library(gmodels)
 
 
 ```
@@ -46,8 +47,6 @@ library(ggtext)
 # Prep data
 
 Up next is combining the school locations. The MN Department of Education uses their own codes for Minnesota counties and don't relate to countyfp. So I'm going to import their codes and combine them with the countyfp since that's what I'm used to using. I'm also going to import the EDR and planning regions for each county allowing me to analyze the data at various regional levels.
-
-<br>
 
 ```{r k12 orgs county codes and regions}
 k12.county.codes <- read_csv("Data/SLEDS/K12 Org/K12-county-codes.csv")
@@ -71,10 +70,6 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
          mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
 
 ```
-
-<br>
-
-Now I'll bring in the K12organization data.
 
 <br>
 
@@ -139,7 +134,13 @@ After filtering the dataset so that all observations are from EDR 6E, 6W or 8, t
 
 <br>
 
-# Summary of K12Org 
+# Summary of K12Org
+
+Lets summarize the graduates to see their high schools rural-ness and location. In addition, now that we have joined the graduates and high school location together, we can see if there are any statistically significant differences in the percentage of students based on the demographic information (female, free or reduced free lunch, etc...).
+
+## 
+
+## Summary of high school location
 
 Lets breakdown the graduates by which regions they graduated from.
 
@@ -221,6 +222,87 @@ girafe(ggobj = k12.org.summary.county.map, height_svg = 10, width_svg = 10) %>%
 <br>
 
 The schools with the highest percent of graduates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 10% and 13% of high school grduates since 2006. 
+
+## Summary of student demographics{.tabset}
+
+<br>
+
+The following analysis looks to see if there are any statistical differences due to rural-ness and geographic location of the high school for the following graduate demographics;
+
+* Were eligible for free or reduced lunch at some point in the dataset
+* Are Female
+* Have been homeless at some point in the dataset
+* Had limited english proficiency at some point in the dataset
+* Had non english speakders in home at some point in the dataset
+* Participated in a PSEO course at some point in the dataset.
+
+Lets start with the cross-tabs based on RUCA categories. 
+
+The cross-tabs below indicate that there are 4 demographic variables that have proportions statistically different across RUCA categories. Each of the variables are indicated with an asterisk.
+
+<br>
+
+
+### Free or reduced lunch*
+
+<br>
+
+Although 37.2% of the total number of graduates in the dataset receive free or reduced lunch, only 27.2% of graduates from high schools in urban/town/rural mix counties were  The largest difference is the percentage of students attending urban/town/rural mix county high schools and receiving free or reduced lunch is significantly lower than expected. 
+```{r cross-tabs free and reduced lunch}
+CrossTable(master$Dem_Desc, master$economic.status, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### Female
+
+<br>
+
+```{r cross-tabs female}
+CrossTable(master$Dem_Desc, master$Gender, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### Homeless
+
+<br>
+
+```{r cross-tabs homeless}
+CrossTable(master$Dem_Desc, master$HomelessIndicator, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### Limited english*
+
+<br>
+
+```{r cross-tabs limited english}
+CrossTable(master$Dem_Desc, master$LimitedEnglishProficiencyIndicator, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### Non-english in home*
+
+<br>
+
+```{r cross-tabs non english at home}
+CrossTable(master$Dem_Desc, master$non.english.home, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### PSEO*
+
+<br>
+
+```{r cross-tabs PSEO}
+CrossTable(master$Dem_Desc, master$pseo.participant, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
 
 ```{r write master, include=FALSE}
 write_csv(master, "Data/SLEDS/Masters/Master-1.csv")

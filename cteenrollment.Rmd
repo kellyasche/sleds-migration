@@ -450,23 +450,23 @@ The next big question is whether these percentages vary by year. Are there any t
 
 ```{r cte career fields concentration  by year, echo=FALSE}
 cte.cf.concentration.year <- master.4 %>%
-  select(PersonID, year, cte.careerfield.1, cte.careerfield.2, cte.careerfield.3, cte.careerfield.4, cte.careerfield.5, cte.careerfield.6, cte.careerfield.7, cte.careerfield.8, cte.careerfield.9, cte.careerfield.NULL) %>%
+  select(PersonID, grad.year, cte.careerfield.1, cte.careerfield.2, cte.careerfield.3, cte.careerfield.4, cte.careerfield.5, cte.careerfield.6, cte.careerfield.7, cte.careerfield.8, cte.careerfield.9, cte.careerfield.NULL) %>%
   gather(key = "cte.careerfield", value = "n.courses", 3:12) %>%
-  group_by(year, cte.careerfield) %>%
+  group_by(grad.year, cte.careerfield) %>%
   summarise(n = sum(n.courses)) %>%
   ungroup() %>%
-  group_by(year) %>%
+  group_by(grad.year) %>%
   mutate(pct = n / sum(n)) %>%
   left_join(cte.careerfield.names, by = c("cte.careerfield" = "cf.code")) %>%
   select(1,5,4) %>%
-  filter(year > 2006) %>%
+  filter(grad.year > 2006) %>%
   mutate(data_id = seq(n()))
 
-cte.cf.concentration.year.plot <- ggplot(cte.cf.concentration.year, aes(year, pct, color = cf.name)) +
-  geom_point_interactive(size = 3, aes(data_id = data_id, tooltip = paste(cf.name, "\nYear: ", year, "\nCareer field: ", cf.name, "\nPercent of CTE courses taken: ", percent(pct, accuracy = .1), sep = ""))) +
+cte.cf.concentration.year.plot <- ggplot(cte.cf.concentration.year, aes(grad.year, pct, color = cf.name)) +
+  geom_point_interactive(size = 3, aes(data_id = data_id, tooltip = paste(cf.name, "\nYear: ", grad.year, "\nCareer field: ", cf.name, "\nPercent of CTE courses taken: ", percent(pct, accuracy = .1), sep = ""))) +
   geom_line() +
   labs(x="", y = "", color="", title = "Percent of taken CTE courses")+
-  geom_label(data = filter(cte.cf.concentration.year, year == max(cte.cf.concentration.year$year)), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  geom_label(data = filter(cte.cf.concentration.year, grad.year == max(cte.cf.concentration.year$grad.year)), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
   scale_y_continuous(labels=scales::percent)+
   scale_x_continuous(breaks = seq(1900, 2050, 2),
                      guide = guide_axis(n.dodge = 2)) +

@@ -90,9 +90,9 @@ We first need to create a list of all individuals with the StatusEnd code of 8 o
 ```{r k12enrollment StatusEnd}
 graduates <- enrollment.original %>%
   filter(StatusEnd %in% c(8,9)) %>%
-  mutate(year = str_sub(K12EnrTimeID, 1, 4),
-         year = as.integer(year)) %>%
-  select(PersonID, K12OrganizationID, year, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator) %>%
+  mutate(grad.year = str_sub(K12EnrTimeID, 1, 4),
+         grad.year = as.integer(grad.year)) %>%
+  select(PersonID, K12OrganizationID, grad.year, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator) %>%
   distinct(PersonID, .keep_all = TRUE)
 
 ```
