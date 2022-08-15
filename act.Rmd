@@ -37,6 +37,7 @@ library(lubridate)
 library(systemfonts)
 reset_font_cache()
 library(ggtext)
+library(gmodels)
 
 
 ```
@@ -140,13 +141,20 @@ act.pct.taken <- master.2 %>%
 datatable(act.pct.taken, class = "cell-border stripe", filter = "top", rownames = FALSE)
 ```
 
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
 <br>
 
 Nearly two-thirds of graduates from Southwest Minnesota have taken the ACT at some point in the dataset. 
 
 Next lets see if the ACT taken rate differs across RUCA, regions and counties.
 
+The cross-tabs for the percentage of students who have taken the ACT by RUCA category has a p-value of less than .01, indicating that RUCA category is related. However, the percentage of students graduating from high schools in counties within these RUCA groups are very close. Nearly two-thirds of students across all RUCA groups take the ACT exam. The significant difference seems to be in the higher percentages in the entirely rural and urban/town/rural mix county group, which are closer to 70% of all students.
+
+
 <br>
+
+## RUCA table
 
 ```{r prep act taken summary by ruca, echo=FALSE}
 act.taken.ruca <- master.2 %>%
@@ -156,11 +164,26 @@ act.taken.ruca <- master.2 %>%
   
 datatable(act.taken.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE)
 ```
+
+## RUCA Cross-tabs
+
+```{r cross tabs ACT ruca}
+
+act.taken.ruca.cross.tabs <- master.2 %>%
+  mutate(act.taken = ifelse(is.na(ACTCompositeScore), "ACT not taken", "ACT taken"))
+
+CrossTable(act.taken.ruca.cross.tabs$Dem_Desc, act.taken.ruca.cross.tabs$act.taken, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
 <br>
 
-The percentage of students graduating from high schools in counties within these groups are very close. Nearly two-thirds of students across all RUCA groups take the ACT exam.
+Again, the cross-tabs indicate that EDR and the percentage of students taking the ACT are related but the percentages are very close to each other when breaking it down by EDR. 
 
-<br>
+
+## EDR Table
 
 ```{r prep act taken summary by edr, echo=FALSE}
 act.taken.edr <- master.2 %>%
@@ -173,9 +196,23 @@ datatable(act.taken.edr, class = "cell-border stripe", filter = "top", rownames 
 
 <br>
 
-Again, the percentages are very close to each other when breaking it down by EDR. 
+## EDR Cross-tabs
+
+```{r cross tabs ACT edr}
+
+act.taken.edr.cross.tabs <- master.2 %>%
+  mutate(act.taken = ifelse(is.na(ACTCompositeScore), "ACT not taken", "ACT taken"))
+
+CrossTable(act.taken.edr.cross.tabs$edr, act.taken.edr.cross.tabs$act.taken, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
 
 <br>
+
+Finally, here's a look at the percentages by county. For the most part, the percentages are pretty close. The percentage of students who've taken the ACT ranges from 54.4% in Chippewa to 71.6% in Lac qui Parle County. 
 
 ```{r prep act taken summary by county, echo=FALSE}
 mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
@@ -217,9 +254,7 @@ girafe(ggobj = act.taken.county.map, height_svg = 10, width_svg = 10) %>%
   
 ```
 
-<br>
 
-For the most part, the percentages are pretty close. The percentage of students who've taken the ACT ranges from 54.4% in Chippewa to 71.6% in Lac qui Parle County. 
 
 ```{r write master, include=FALSE}
 write_csv(master.2, "Data/SLEDS/Masters/Master-2.csv")

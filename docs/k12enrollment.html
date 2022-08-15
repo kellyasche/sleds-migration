@@ -463,8 +463,13 @@ NOT the primary language at any point in the dataset.</li>
 <li>Homeless: Keep with no changes.</li>
 </ul>
 <p>We first need to create a list of all individuals with the StatusEnd
-code of 8 or 9 (graduated). This will be the list on which we will bind
-all the other variables.</p>
+code of 8 or 9 (graduated). In addition, we need to remove any student
+that graduated before 2008. This is because we will not have their full
+Sophmore - Senior records which is especially important when attempting
+to identify whether the number of CTE courses taken predicts
+migration.</p>
+<p>This “graduates list” will be the list on which we will bind all the
+other variables.</p>
 <p><br></p>
 <p><br></p>
 <p>Unfortunately, we still end up with duplicates so I just did a
@@ -487,24 +492,24 @@ PSEOConcurrentEnrollmentIndicator</li>
 indicators.</p>
 <p><br></p>
 <pre><code>## # A tibble: 6 × 10
-##   PersonID K12Org…¹  year Gender Limit…² Homel…³ econo…⁴ pseo.…⁵ Speci…⁶ non.e…⁷
-##      &lt;int&gt;    &lt;int&gt; &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
-## 1       68   124084  2007 F      N       N             0       0       0       0
-## 2      161    77452  2009 M      N       N             0       1       0       0
-## 3      641    38385  2009 M      N       N             1       0       0       0
-## 4      676    55598  2008 M      N       N             0       0       1       0
-## 5      758    22675  2007 M      N       N             0       0       0       0
-## 6      786    56633  2010 F      N       N             0       0       0       0
-## # … with abbreviated variable names ¹​K12OrganizationID,
-## #   ²​LimitedEnglishProficiencyIndicator, ³​HomelessIndicator, ⁴​economic.status,
-## #   ⁵​pseo.participant, ⁶​SpecialEdStatus, ⁷​non.english.home</code></pre>
+##   Perso…¹ K12Or…² grad.…³ Gender Limit…⁴ Homel…⁵ econo…⁶ pseo.…⁷ Speci…⁸ non.e…⁹
+##     &lt;int&gt;   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1     161   77452    2009 M      N       N             0       1       0       0
+## 2     641   38385    2009 M      N       N             1       0       0       0
+## 3     676   55598    2008 M      N       N             0       0       1       0
+## 4     786   56633    2010 F      N       N             0       0       0       0
+## 5    1162  181770    2019 M      N       N             1       0       0       1
+## 6    2292   55659    2010 F      N       N             0       1       0       0
+## # … with abbreviated variable names ¹​PersonID, ²​K12OrganizationID, ³​grad.year,
+## #   ⁴​LimitedEnglishProficiencyIndicator, ⁵​HomelessIndicator, ⁶​economic.status,
+## #   ⁷​pseo.participant, ⁸​SpecialEdStatus, ⁹​non.english.home</code></pre>
 <pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
-##  [3] &quot;year&quot;                               &quot;Gender&quot;                            
+##  [3] &quot;grad.year&quot;                          &quot;Gender&quot;                            
 ##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
 ##  [7] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
 ##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;</code></pre>
 <p><br></p>
-<p>The prepped enrollment data has 45,502 observations and 10
+<p>The prepped enrollment data has 38,184 observations and 10
 columns.</p>
 <p><br></p>
 </div>
@@ -521,13 +526,13 @@ dataset</li>
 <li>Participated in a PSEO course at some point in the dataset.</li>
 </ul>
 <p><br></p>
-<div id="htmlwidget-1af3c5fbff9bbd0dc2f0" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1af3c5fbff9bbd0dc2f0">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"163\" data-max=\"22454\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Female","Free or reduced lunch","Homeless","Limited English Proficiency","Non-english in home","PSEO participant","Special Ed"],[22454,16937,163,904,3701,13448,6052],[45502,45502,45502,45502,45502,45502,45502],["49.3%","37.2%","0.4%","2.0%","8.1%","29.6%","13.3%"]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>indicator<\/th>\n      <th>confirmed.indicator<\/th>\n      <th>total.observations<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-a589233002bfd1155fd9" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a589233002bfd1155fd9">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"161\" data-max=\"18861\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Female","Free or reduced lunch","Homeless","Limited English Proficiency","Non-english in home","PSEO participant","Special Ed"],[18861,14977,161,809,3326,13235,5266],[38184,38184,38184,38184,38184,38184,38184],["49.4%","39.2%","0.4%","2.1%","8.7%","34.7%","13.8%"]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>indicator<\/th>\n      <th>confirmed.indicator<\/th>\n      <th>total.observations<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":[],"jsHooks":[]}</script>
 <p><br></p>
-<p>As expected, nearly half (49.3%) of the observations are female. Over
-a third (37.4%) of the observations have been eligible for free or
-reduced lunch at some point in the dataset. Also, nearly a third (29.5%)
-of observations participated in a PSEO course. 8.2% of observations
+<p>As expected, nearly half (49.4%) of the observations are female. Over
+a third (39.2%) of the observations have been eligible for free or
+reduced lunch at some point in the dataset. Also, nearly a third (34.7%)
+of observations participated in a PSEO course. 8.7% of observations
 indicated that there was a non-english speaker at home, 2% had limited
 english proficiency and 0.4% indicated that were homeless at some
 point.</p>

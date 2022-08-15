@@ -60,7 +60,7 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
          Name = str_replace(Name, "Q", "q"),
          Name = str_replace(Name, "Of The", "of the"),
          Name = str_replace(Name, "Mcleod", "McLeod"),
-         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = ifelse(Name == "Minnesota", "Minnesota", edr) ,
          edr = str_replace(edr, "  ", " "),
          planning.region = str_replace(planning.region, " Minnesota", ""),
          planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
@@ -68,6 +68,52 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
          mif = ifelse(is.na(mif), "TC", mif),
          mif = as.factor(mif),
          mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial"))
+
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+
+color.ruca <- c("Entirely rural" = "#009933", "Town/rural mix" = "#99CC33", "Urban/town/rural mix" = "#CC9966", "Entirely urban" = "#754C29")
+
+color.edr <- c("EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365")
 
 ```
 
@@ -166,7 +212,7 @@ datatable(k12.org.summary.ruca, class = "cell-border stripe", filter = "top")
 
 <br>
 
-Nearly three-quarters of the observations graduated from a county categorized as "town/rural mix". The next highest was 16% from urban/town/rural mix and 14.7% from entirely rural.
+Nearly three-quarters of the observations graduated from a county categorized as "town/rural mix". The next highest was 15.7% from urban/town/rural mix and 14.5% from entirely rural.
 
 <br>
 
@@ -221,7 +267,7 @@ girafe(ggobj = k12.org.summary.county.map, height_svg = 10, width_svg = 10) %>%
 
 <br>
 
-The schools with the highest percent of graduates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 10% and 13% of high school grduates since 2006. 
+The schools with the highest percent of graduates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 11% and 12% of high school graduates since 2008. 
 
 ## Summary of student demographics{.tabset}
 
@@ -238,68 +284,456 @@ The following analysis looks to see if there are any statistical differences due
 
 Lets start with the cross-tabs based on RUCA categories. 
 
-The cross-tabs below indicate that there are 4 demographic variables that have proportions statistically different across RUCA categories. Each of the variables are indicated with an asterisk.
+The cross-tabs below indicate that there are 4 demographic variables that have proportions statistically different across RUCA categories. Each of the variables are indicated with an asterisk. 
+
+* Free or reduced lunch: a statistically significant lower percentage of graduates from high schools in urban/town/rural mix counties receive free or reduced lunch.
+* Limited english proficiency: statistically significantly lower percentage of graduates from high schools in urban/town/rural mix and entirely rural counties were categorized as having limited english proficiency.
+*Non-english speaker at home: a significantly lower percentage of graduates from high schools in urban/town/rural mix and entirely rural counties were categorized as having someone in the household where english wasn't the primary language.
+* PSEO: a siginficantly higher percentage of graduates from high schools in Urban/town/rural mix counties participated in a PSEO program.
 
 <br>
 
 
-### Free or reduced lunch*
+### RUCA Free or reduced lunch*
+
+Although 39.2% of the total number of graduates in the dataset receive free or reduced lunch, only 29.2% of graduates from high schools in urban/town/rural mix counties did. 
 
 <br>
 
-Although 37.2% of the total number of graduates in the dataset receive free or reduced lunch, only 27.2% of graduates from high schools in urban/town/rural mix counties were  The largest difference is the percentage of students attending urban/town/rural mix county high schools and receiving free or reduced lunch is significantly lower than expected. 
-```{r cross-tabs free and reduced lunch}
+```{r cross-tabs free and reduced lunch ruca}
 CrossTable(master$Dem_Desc, master$economic.status, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
 ```
 
 <br>
 
-### Female
+```{r chart free and reduced lunch ruca}
+k12.dem.free.lunch.ruca <- master %>%
+  group_by(Dem_Desc) %>%
+  summarise(n = n(),
+           free.lunch = sum(economic.status)) %>%
+  ungroup() %>%
+  mutate(pct = free.lunch / n,
+         total.pct = sum(free.lunch) / sum(n),
+         data_id = as.character(seq(n()))) 
 
-<br>
+k12.dem.free.lunch.ruca.plot <- ggplot(k12.dem.free.lunch.ruca, aes(Dem_Desc, pct, fill = Dem_Desc)) +
+  geom_hline(yintercept = k12.dem.free.lunch.ruca$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(Dem_Desc, "\nTotal graduates: ", comma(n, accuracy = 1), "\nGraduates received free or reduced lunch: ", comma(free.lunch, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 3,
+           y = .42,
+           label = "All graduates percent, 39.2%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates receiving free or reduced lunch")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.ruca,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
 
-```{r cross-tabs female}
-CrossTable(master$Dem_Desc, master$Gender, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+  girafe(ggobj = k12.dem.free.lunch.ruca.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
 ```
 
 <br>
 
-### Homeless
+### RUCA Female
 
 <br>
 
-```{r cross-tabs homeless}
-CrossTable(master$Dem_Desc, master$HomelessIndicator, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```{r cross-tabs female ruca}
+CrossTable(master$edr, master$Gender, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
 ```
 
 <br>
 
-### Limited english*
+### RUCA Homeless
 
 <br>
 
-```{r cross-tabs limited english}
+```{r cross-tabs homeless ruca}
+CrossTable(master$edr, master$HomelessIndicator, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### RUCA Limited english*
+
+Although 2.1% of all graduates since 2008 were categorized as having limited english proficiency at least once from their Sophomore to Senior grade levels, the percentage was significantly lower at high schools in urban/town/rural mix counties (.8%) and entirely rural counties (1.2%).
+
+<br>
+
+```{r cross-tabs limited english ruca}
 CrossTable(master$Dem_Desc, master$LimitedEnglishProficiencyIndicator, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
 ```
 
 <br>
 
-### Non-english in home*
+```{r chart limited english ruca}
+k12.limited.english.ruca <- master %>%
+  group_by(Dem_Desc, LimitedEnglishProficiencyIndicator) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  spread(key = LimitedEnglishProficiencyIndicator,
+         value = n) %>%
+  mutate(pct = Y / (Y+N),
+         total.pct = sum(Y) / (sum(N) + sum(Y)),
+         data_id = as.character(seq(n())))
 
-<br>
+k12.limited.english.ruca.plot <- ggplot(k12.limited.english.ruca, aes(Dem_Desc, pct, fill = Dem_Desc)) +
+  geom_hline(yintercept = k12.limited.english.ruca$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(Dem_Desc, "\nTotal graduates: ", comma(N+Y, accuracy = 1), "\nGraduates with limited english proficiency: ", comma(Y, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 3,
+           y = .023,
+           label = "All graduates percent, 2.1%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates with limited english proficiency")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.ruca,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
 
-```{r cross-tabs non english at home}
-CrossTable(master$Dem_Desc, master$non.english.home, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+  girafe(ggobj = k12.limited.english.ruca.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
 ```
 
 <br>
 
-### PSEO*
+### RUCA Non-english in home*
+
+This is the same as limited english proficiency. Statistically lower percentages in urban/town/rural mix and entirely rural counties.
 
 <br>
 
-```{r cross-tabs PSEO}
-CrossTable(master$Dem_Desc, master$pseo.participant, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```{r cross-tabs non english at home ruca}
+CrossTable(master$edr, master$non.english.home, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+```{r chart non-english at home ruca}
+k12.non.english.home.ruca <- master %>%
+  group_by(Dem_Desc) %>%
+  summarise(n = n(),
+            non.english = sum(non.english.home)) %>%
+  ungroup() %>%
+  mutate(pct = non.english / n,
+         total.pct = sum(non.english) / sum(n),
+         data_id = seq(n()))
+  
+k12.non.english.home.ruca.plot <- ggplot(k12.non.english.home.ruca, aes(Dem_Desc, pct, fill = Dem_Desc)) +
+  geom_hline(yintercept = k12.non.english.home.ruca$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(Dem_Desc, "\nTotal graduates: ", comma(n, accuracy = 1), "\nGraduates with non-english speaker at home: ", comma(non.english, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 3,
+           y = .09,
+           label = "All graduates percent, 8.7%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates with non-english speaker at home")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.ruca,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = k12.non.english.home.ruca.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
+```
+
+<br>
+
+### RUCA PSEO*
+
+Although 34.7% of all graduates participating in PSEO, there was a significantly higher percentage from high schools in urban/town/rural mix counties (39.9%)
+
+<br>
+
+```{r cross-tabs PSEO ruca}
+CrossTable(master$edr, master$pseo.participant, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+```{r chart pseo ruca}
+k12.pseo.ruca<- master %>%
+  group_by(Dem_Desc) %>%
+  summarise(n = n(),
+            pseo.participant = sum(pseo.participant)) %>%
+  ungroup() %>%
+  mutate(pct = pseo.participant / n,
+         total.pct = sum(pseo.participant) / sum(n),
+         data_id = seq(n()))
+  
+k12.pseo.ruca.plot <- ggplot(k12.pseo.ruca, aes(Dem_Desc, pct, fill = Dem_Desc)) +
+  geom_hline(yintercept = k12.pseo.ruca$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(Dem_Desc, "\nTotal graduates: ", comma(n, accuracy = 1), "\nGraduates participated in PSEO: ", comma(pseo.participant, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 2,
+           y = .37,
+           label = "All graduates percent, 34.7%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates participated in PSEO")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.ruca,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = k12.pseo.ruca.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next we will look at the cross-tabs by EDR. As expected, the variables with relationships are the same as the RUCA categories (indicated by the asterisk).
+
+* Free or reduced lunch: a statistically significant lower percentage of graduates from high schools in EDR 6E receive free or reduced lunch.
+* Limited english proficiency: statistically significantly lower percentage of graduates from high schools in EDR 6W were categorized as having limited english proficiency.
+* Non-english speaker at home: a significantly lower percentage of graduates from high schools in EDR 6W  were categorized as having someone in the household where english wasn't the primary language.
+* PSEO: a significantly higher percentage of graduates from high schools in EDR 6E counties participated in a PSEO program.
+
+
+### EDR Free or reduced lunch*
+
+Although 39.2% of the total number of graduates in the dataset receive free or reduced lunch, only 35.2% of graduates from high schools in EDR 6E did.
+
+<br>
+
+```{r cross-tabs free and reduced lunch edr}
+CrossTable(master$edr, master$economic.status, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+```{r chart free and reduced lunch edr}
+k12.dem.free.lunch.edr <- master %>%
+  group_by(edr) %>%
+  summarise(n = n(),
+           free.lunch = sum(economic.status)) %>%
+  ungroup() %>%
+  mutate(pct = free.lunch / n,
+         total.pct = sum(free.lunch) / sum(n),
+         data_id = as.character(seq(n()))) 
+
+k12.dem.free.lunch.edr.plot <- ggplot(k12.dem.free.lunch.edr, aes(edr, pct, fill = edr)) +
+  geom_hline(yintercept = k12.dem.free.lunch.edr$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(edr, "\nTotal graduates: ", comma(n, accuracy = 1), "\nGraduates received free or reduced lunch: ", comma(free.lunch, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 1,
+           y = .42,
+           label = "All graduates percent, 39.2%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates receiving free or reduced lunch")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.edr,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = k12.dem.free.lunch.edr.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
+```
+
+<br>
+
+### EDR Female
+
+<br>
+
+```{r cross-tabs female edr}
+CrossTable(master$edr, master$Gender, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### EDR Homeless
+
+<br>
+
+```{r cross-tabs homeless edr}
+CrossTable(master$edr, master$HomelessIndicator, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+### EDR Limited english*
+
+Although 2.1% of all graduates since 2008 were categorized as having limited english proficiency at least once from their Sophomore to Senior grade levels, the percentage was significantly lower at high schools in EDR 6W with .6%.
+
+<br>
+
+```{r cross-tabs limited english edr}
+CrossTable(master$edr, master$LimitedEnglishProficiencyIndicator, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+```{r chart limited english edr}
+k12.limited.english.edr <- master %>%
+  group_by(edr, LimitedEnglishProficiencyIndicator) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  spread(key = LimitedEnglishProficiencyIndicator,
+         value = n) %>%
+  mutate(pct = Y / (Y+N),
+         total.pct = sum(Y) / (sum(N) + sum(Y)),
+         data_id = as.character(seq(n())))
+
+k12.limited.english.edr.plot <- ggplot(k12.limited.english.edr, aes(edr, pct, fill = edr)) +
+  geom_hline(yintercept = k12.limited.english.edr$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(edr, "\nTotal graduates: ", comma(N+Y, accuracy = 1), "\nGraduates with limited english proficiency: ", comma(Y, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 2,
+           y = .023,
+           label = "All graduates percent, 2.1%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates with limited english proficiency")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.edr,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = k12.limited.english.edr.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
+```
+
+<br>
+
+### EDR Non-english in home*
+
+This is the same as limited english proficiency. Statistically lower percentages in EDR 6W.
+
+<br>
+
+```{r cross-tabs non english at home edr}
+CrossTable(master$edr, master$non.english.home, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+```{r chart non-english at home edr}
+k12.non.english.home.edr <- master %>%
+  group_by(edr) %>%
+  summarise(n = n(),
+            non.english = sum(non.english.home)) %>%
+  ungroup() %>%
+  mutate(pct = non.english / n,
+         total.pct = sum(non.english) / sum(n),
+         data_id = seq(n()))
+  
+k12.non.english.home.edr.plot <- ggplot(k12.non.english.home.edr, aes(edr, pct, fill = edr)) +
+  geom_hline(yintercept = k12.non.english.home.edr$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(edr, "\nTotal graduates: ", comma(n, accuracy = 1), "\nGraduates with non-english speaker at home: ", comma(non.english, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 2,
+           y = .09,
+           label = "All graduates percent, 8.7%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates with non-english speaker at home")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.edr,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = k12.non.english.home.edr.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
+```
+
+<br>
+
+### EDR PSEO*
+
+Although 34.7% of all graduates participating in PSEO, there was a significantly higher percentage from high schools in EDR 6E with 36.0%.
+
+<br>
+
+```{r cross-tabs PSEO edr}
+CrossTable(master$edr, master$pseo.participant, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+```{r chart pseo edr}
+k12.pseo.edr<- master %>%
+  group_by(edr) %>%
+  summarise(n = n(),
+            pseo.participant = sum(pseo.participant)) %>%
+  ungroup() %>%
+  mutate(pct = pseo.participant / n,
+         total.pct = sum(pseo.participant) / sum(n),
+         data_id = seq(n()))
+  
+k12.pseo.edr.plot <- ggplot(k12.pseo.edr, aes(edr, pct, fill = edr)) +
+  geom_hline(yintercept = k12.pseo.edr$total.pct, color = "black") +
+  geom_col_interactive(size = 5, aes(data_id = data_id, tooltip = paste(edr, "\nTotal graduates: ", comma(n, accuracy = 1), "\nGraduates participated in PSEO: ", comma(pseo.participant, accuracy = 1), "\nPercent of total graduates: ", percent(pct, accuracy = .1), sep = ""))) +
+  annotate(geom = "text",
+           x = 2,
+           y = .37,
+           label = "All graduates percent, 34.7%",
+           size = 5) +
+  labs(x="", y = "", color="", title = "Percent of graduates participated in PSEO")+
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_line+
+  scale_fill_manual(values= color.edr,
+                     guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+  girafe(ggobj = k12.pseo.edr.plot, width_svg = 10, height_svg = 7) %>%
+    girafe_options(opts_selection(type = "none"),
+                   opts_toolbar(saveaspng = FALSE),
+                   opts_sizing(rescale = FALSE))
+
+
 ```
 
 <br>

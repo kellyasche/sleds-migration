@@ -83,7 +83,9 @@ My goal is to end up with a dataset where each observation (row) represents a un
 * Primary language: I'm going to create two categories. One being that English is the primary language while the other will be that English is NOT the primary language at any point in the dataset.
 * Homeless: Keep with no changes.
 
-We first need to create a list of all individuals with the StatusEnd code of 8 or 9 (graduated). This will be the list on which we will bind all the other variables.
+We first need to create a list of all individuals with the StatusEnd code of 8 or 9 (graduated). In addition, we need to remove any student that graduated before 2008. This is because we will not have their full Sophmore - Senior records which is especially important when attempting to identify whether the number of CTE courses taken predicts migration. 
+
+This "graduates list" will be the list on which we will bind all the other variables.
 
 <br>
 
@@ -93,7 +95,9 @@ graduates <- enrollment.original %>%
   mutate(grad.year = str_sub(K12EnrTimeID, 1, 4),
          grad.year = as.integer(grad.year)) %>%
   select(PersonID, K12OrganizationID, grad.year, Gender, LimitedEnglishProficiencyIndicator, HomelessIndicator) %>%
-  distinct(PersonID, .keep_all = TRUE)
+  distinct(PersonID, .keep_all = TRUE) %>%
+  filter(grad.year > 2007)
+
 
 ```
 
@@ -228,5 +232,5 @@ datatable(k12.enr.pct.total, class = "cell-border stripe", filter = "top", rowna
 
 <br>
 
-As expected, nearly half (49.3%) of the observations are female. Over a third (37.4%) of the observations have been eligible for free or reduced lunch at some point in the dataset. Also, nearly a third (29.5%) of observations participated in a PSEO course. 8.2% of observations indicated that there was a non-english speaker at home, 2% had limited english proficiency and 0.4% indicated that were homeless at some point.
+As expected, nearly half (49.4%) of the observations are female. Over a third (39.2%) of the observations have been eligible for free or reduced lunch at some point in the dataset. Also, nearly a third (34.7%) of observations participated in a PSEO course. 8.7% of observations indicated that there was a non-english speaker at home, 2% had limited english proficiency and 0.4% indicated that were homeless at some point.
 
