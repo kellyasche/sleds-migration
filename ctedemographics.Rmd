@@ -149,11 +149,15 @@ cte.concentrator.cat <- cte.demographics.original %>%
   select(PersonID, cte.achievement) %>%
   right_join(graduate, by = "PersonID") %>%
   mutate(cte.achievement = ifelse(is.na(cte.achievement), "No CTE", cte.achievement))
+
+head(cte.concentrator.cat)
+
+names(cte.concentrator.cat)
 ```
 
 <br>
 
-In this dataset, there were `r comma(cte.concentrator.cat %>% nrow(), accuracy = 1)` that were either a CTE participant or concentrator. This is below the ~37,000 that took at least one CTE course. This could mean that there 5,000 students that took a CTE course but did not graduate.
+When joined with the master file, there were `r comma(cte.concentrator.cat %>% filter(cte.achievement != "No CTE") %>% nrow(), accuracy = 1)` that were either a CTE participant or concentrator. This is below the ~34,000 that took at least one CTE course according to the CTE enrollment dataset. This could mean that there roughly 5,000 students that took a CTE course but did not graduate.
 
 Lets join this dataset with the master to confirm this thought.
 
@@ -181,6 +185,9 @@ We will summarize the CTE demographics data by rural-ness and region to see if t
 
 First, lets see what percentage of the graduates by cte demographics categories.
 
+The table below shows that of the total graduates from Southwest high schools, nearly half (47%) were a CTE concentrator or completor. This is a bit surprising. Lets see if there are any differences by rural-ness.
+
+
 <br>
 
 ```{r summary cte demographics total}
@@ -196,9 +203,13 @@ datatable(cte.dem.summary.total, class = "cell-border stripe", filter = "top", r
 
 <br>
 
-Of the total graduates from Southwest high schools, nearly half (46%) were a CTE concentrator or completor. This is a bit surprising. Lets see if there are any differences by rural-ness.
-
 # {.unnumbered .unlisted .toc-ignore .tabset}
+
+The cross-tabs show a significant difference between the percentage of students by categorization and RUCA categories. Our most rural counties have a significantly higher percentage of graduates that are CTE concentrators/completors (55%) than the other RUCA categories. The percentage decreases as the county group becomes more urban - the urban/town/rural mix county group had 38% of their graduates categorized as a CTE concentrator or completor. 
+
+Our most rural counties also has a smaller percentage of graduates that took no CTE courses (17%) compared to the other RUCA groups. Urban/town/rural mix had the highest percentage with 28%. 
+
+<br>
 
 ## RUCA Table
 
@@ -225,11 +236,9 @@ CrossTable(master.5$Dem_Desc, master.5$cte.achievement, expected = TRUE, prop.t 
 
 # {.unnumbered .unlisted .toc-ignore .tabset}
 
-The cross-tabs show a significant difference between the percentage of students by categorization and RUCA categories. Our most rural counties have a significantly higher percentage of graduates that are CTE concentrators/completors (53%) than the other RUCA categories. The percentage decreases as the county group becomes more urban - the urban/town/rural mix county group had 39% of their graduates categorized as a CTE concentrator or completor. 
-
-Our most rural counties also has a smaller percentage of graduates that took no CTE courses (23%) compared to the other RUCA groups. Urban/town/rural mix had the highest percentage with 32%. 
-
 Next we will take a look to see if there are any differences by EDR.
+
+Again we see a statistically significant difference in the cross-tabulations. EDR 6W has the most rural counties within it's region so it's not surprising to see that they have the highest percentage of graduates categorized as a CTE completor or concentrator. The lower percentage is EDR 6E which has Mankato.
 
 <br>
 
@@ -258,9 +267,11 @@ CrossTable(master.5$edr, master.5$cte.achievement, expected = TRUE, prop.t = FAL
 
 <br>
 
-Again we see a statistically significant difference in the cross-tabulations. EDR 6W has the most rural counties within it's region so it's not surprising to see that they have the highest percentage of graduates categorized as a CTE completor or concentrator. The lower percentage is EDR 6E which has Mankato.
-
 Lets take a look at the county map.
+
+The cross tabulations show that there is a statistically significant difference in the percent of graduates in each CTE category by county. 
+
+Swift, Murray, Big Stone and Lac qui Parle counties all have over 50% of their graduates categorized as a CTE concentrator or completor compared to counties such as Pipestone and McLeod who have less than 40%. In fact, Swift and Murray have over 70% of their graduates with the CTE concentrator or completor category. 
 
 <br>
 
@@ -315,11 +326,9 @@ CrossTable(master.5$county.name, master.5$cte.achievement, expected = TRUE, prop
 
 <br>
 
-The cross tabulations show that there is a statistically significant difference in the percent of graduates in each CTE category by county. 
-
-Swift, Murray, Big Stone and Lac qui Parle counties all have over 50% of their graduates categorized as a CTE concentrator or completor compared to counties such as Pipestone and McLeod who have less than 40%. In fact, Swift and Murray have over 70% of their graduates with the CTE concentrator or completor category. 
-
 The next thing to check is to determine whether there is a significant difference by year.
+
+The cross-tabs indicate a relationship, but this is largely due to the significantly large percentage in 2008 and 2009. Both of these years had roughly 70% of the graduates as a CTE concentrator or completor. This is odd and I'll have to show this to Meredith to see if it makes sense.
 
 <br>
 
@@ -347,13 +356,7 @@ CrossTable(master.5$grad.year, master.5$cte.achievement, expected = TRUE, prop.t
 
 <br>
 
-Okay, so it appears that 2006 is not a good year. This means I will have to get rid of 2006 in the entire data set. 
 
-
-```{r checking 2006}
-cte.con.2006 <- cte.demographics.original %>%
-  mutate(year = str_sub(CTEDemogTimeID, 1,4),
-         year = as.integer(year))
-
-names(cte.con.2006)
+```{r master 5}
+write_csv(master.5, "Data/SLEDS/Masters/Master-5.csv")
 ```
