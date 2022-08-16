@@ -128,6 +128,8 @@ The updated master dataset contains `r comma(nrow(master.2), accuracy = 1)` obse
 
 First, lets see what percentage of observations took the ACT and what the average composite score was.
 
+The table below shows that nearly two-thirds of graduates from Southwest Minnesota have taken the ACT at some point in the dataset. 
+
 <br>
 
 ```{r table act summary pct total, echo=FALSE}
@@ -144,8 +146,6 @@ datatable(act.pct.taken, class = "cell-border stripe", filter = "top", rownames 
 # {.unnumbered .unlisted .toc-ignore .tabset}
 
 <br>
-
-Nearly two-thirds of graduates from Southwest Minnesota have taken the ACT at some point in the dataset. 
 
 Next lets see if the ACT taken rate differs across RUCA, regions and counties.
 
@@ -180,7 +180,7 @@ CrossTable(act.taken.ruca.cross.tabs$Dem_Desc, act.taken.ruca.cross.tabs$act.tak
 
 <br>
 
-Again, the cross-tabs indicate that EDR and the percentage of students taking the ACT are related but the percentages are very close to each other when breaking it down by EDR. 
+Again the cross-tabs indicate that EDR and the percentage of students taking the ACT are related but the percentages are very close to each other when breaking it down by EDR. 
 
 
 ## EDR Table

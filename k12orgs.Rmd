@@ -188,7 +188,9 @@ Lets summarize the graduates to see their high schools rural-ness and location. 
 
 ## Summary of high school location
 
-Lets breakdown the graduates by which regions they graduated from.
+Lets breakdown the graduates by which regions they graduated from. 
+
+Nearly three-quarters of the observations graduated from a county categorized as "town/rural mix". The next highest was 15.7% from urban/town/rural mix and 14.5% from entirely rural.
 
 <br>
 
@@ -212,7 +214,7 @@ datatable(k12.org.summary.ruca, class = "cell-border stripe", filter = "top")
 
 <br>
 
-Nearly three-quarters of the observations graduated from a county categorized as "town/rural mix". The next highest was 15.7% from urban/town/rural mix and 14.5% from entirely rural.
+The percentage of graduates coming from EDR 8 and EDR 6E are pretty evenly split with 44% coming from EDR 8 and 37% coming from 6E. EDR 6W had the fewest with 19% of observations originating from a high school in that region.
 
 <br>
 
@@ -223,7 +225,7 @@ datatable(k12.org.summary.edr, class = "cell-border stripe", filter = "top")
 
 <br>
 
-The percentage of graduates coming from EDR 8 and EDR 6E are pretty evenly split with 44% coming from EDR 8 and 37% coming from 6E. EDR 6W had the fewest with 19% of observations originating from a high school in that region.
+Below is a map with the percentages of graduates graduating from high schools located within each county. The schools with the highest percent of graduates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 11% and 12% of high school graduates since 2008. 
 
 <br>
 
@@ -267,7 +269,6 @@ girafe(ggobj = k12.org.summary.county.map, height_svg = 10, width_svg = 10) %>%
 
 <br>
 
-The schools with the highest percent of graduates/observations are located in Kandiyohi, Lyon and McLeod counties. Each of those have between 11% and 12% of high school graduates since 2008. 
 
 ## Summary of student demographics{.tabset}
 

@@ -202,6 +202,8 @@ Below is the percentage of total observations that;
 * Had non english speakders in home at some point in the dataset
 * Participated in a PSEO course at some point in the dataset.
 
+As expected, nearly half (49.4%) of the observations are female. Over a third (39.2%) of the observations have been eligible for free or reduced lunch at some point in the dataset. Also, nearly a third (34.7%) of observations participated in a PSEO course. 8.7% of observations indicated that there was a non-english speaker at home, 2% had limited english proficiency and 0.4% indicated that were homeless at some point.
+
 <br>
 
 ```{r prep k12enrollment summary, include=FALSE}
@@ -231,6 +233,4 @@ datatable(k12.enr.pct.total, class = "cell-border stripe", filter = "top", rowna
 ```
 
 <br>
-
-As expected, nearly half (49.4%) of the observations are female. Over a third (39.2%) of the observations have been eligible for free or reduced lunch at some point in the dataset. Also, nearly a third (34.7%) of observations participated in a PSEO course. 8.7% of observations indicated that there was a non-english speaker at home, 2% had limited english proficiency and 0.4% indicated that were homeless at some point.
 
