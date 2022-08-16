@@ -20,7 +20,10 @@ navbar:
           href: cteenrollment.html
         - text: "CTEDemographics"
           href: ctedemographics.html
-      
+        - text: "CTEIntensity"
+          href: cteintensity.html
+        - text: "Employment"
+          href: employment.html
 output:
   html_document:
     css: "styles.css"
