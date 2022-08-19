@@ -98,3 +98,135 @@ The next dataset we want to join together is the indicator into how "intense" of
 
 Okay, lets import the dataset and see what we have.
 
+<br>
+
+```{r cte intensity original}
+cte.intensity.original <- read_csv("Data/SLEDS/Intensity/Master-cte-intensity.csv") 
+
+head(cte.intensity.original)
+
+names(cte.intensity.original)
+
+```
+
+<br>
+
+The original cte intensity dataset has `r comma(cte.intensity.original %>% nrow(), accuracy = 1)` rows and `r comma(cte.intensity.original %>% ncol(), accuracy = 1)` columns. The column definitions are;
+
+* DistrictNumber: Number identifying a district within a given district type. Mappings to names can be found in K12Organization.
+* DistrictType: Number used to identify the type of district.
+* DistrictName: Name of district.
+* SchoolNumber: A three character 'number' which when combined with OrganizationNumber and OrganizationTypeCode, uniquely identifies a particular site, school, or program within the larger organization.
+* Institution: The name of a K12 organization.
+* StateFiscalYear: Year
+* CountEnrolledGrades9_12: 
+* CountCTEPersons:
+* CountCTECourses: 
+* CountCTEEnrollments:
+* Participation %: CountCTEPersons/CountEnrolledGrades9_12
+* Participation Stdev: standard deviation of the Participation % (population standard deviation used rather than sample standard deviation)
+* Participation Mean: mean of of Participation % for the year
+* Participation % z-score: (Participation % for school/Participation Mean)/Participation Stdev
+* Courses/Student:  CountCTEEnrollments/CountCTEPersons per school (if zero CountCTEPersons, reported as 0)
+* Course/Student Stdev: standard deviation of the Course/Student calculation (population standard deviation used rather than sample standard deviation)
+* Course/Student Mean: mean of Course/Student for the year
+* Course/Student z-score: (Course/Student for school/(Course/Student Mean))/(Course/Student Stdev)
+* CTE Intensity: sum of Participation % z-score and Course/Student z-score
+
+The purpose of the CTE intensity measure is to determine whether a strong presence of CTE programming and participation impacts migration patterns. The thinking is that there will be plenty of students that may not dive deep into CTE coursework, but just seeing it in your school and constantly being reminded of all the local opportunities and occupational needs in the local area might impact how a student views employment opportunities for themselves in the future.
+
+We needed to come up with a measure of what the CTE "intensity" was for each school by each year. To do this, Eric Shwankl, Education Consultant with the Southwest West Central Service Cooperative, came up with an ingenious way to measure "CTE intensity" using the z-score (also called standard score). The z-score calculates how far a value is (in terms of standard deviation) from the average in the population. In this case z-score is used to measure how far one schools CTE student participation % is from the mean of the percentage of all schools that year, and how far one schools CTE courses offered per student % is from the percentage of all schools for that year.
+
+Let's use an example. In 2007 at Benson Secondary high school, 96%.5% of the students participated in a CTE course, compared to the average of 60.6% of students in all schools that year. The z-score (using the standard deviation for all schools) was 1.52. This tells us that Benson's mean was 1.52 standard deviations away from the average of all the schools. In probability terms, this converts to a 94% probability that another school would have a lower percentage of students participating in a CTE course and a 6% chance of having a lower percentage of having a percentage of students participating in a CTE course. This means that Benson Secondary had a sizable percentage of students participating in a CTE course compared to other schools in Southwest Minnesota that year.
+
+For the CTE intensity calculation, Eric Schwankl calculated the z-score for both the percentage of students enrolled 9-12 grades that participated in a CTE course and the number of CTE courses offered per student. These two z-scores were then summed.
+
+For the master dataset, we are going to convert the CTE intensity value to an average of the duration that a student was attending a school. For example, if a student attended Benson Secondary from 2007 - 2009 (Sophomore - Senior years) then that student will be assigned a CTE intensity value of 
+
+(4.784288 + 3.705463 + 3.059385) / 3 = 3.849712.
+
+There is also the situation where a student changes schools. This CTE intensity average will have to utilize the CTE intensity from another school rather than the one they may have graduated. We will use the same calculation as above and just use the CTE intensity value from the other school. 
+
+The last case is when a student may have graduated from a Southwest Minnesota high school but did not go to school in Minnesota. Therefore, we would not have any information related for those years in which to calculate the average CTE intensity. In this case, we will just move forward as is and use the CTE intensity values that we do have.
+
+To do all of this, we will need to create a whole other dataset with the original k12enrollment data which will be used to create the average CTE intensity value for each graduate as well as the number of years they spent in a Southwest MN high school.
+
+First, lets create the dataset that will have all the students that attended a Southwest MN High School from 2006 - 2019, and manipulate it so it provides the years a studened attended and the schools attended.
+
+<br>
+
+```{r cte enrollment by year attended}
+enrollment.original <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment.csv")  %>%
+  mutate(PersonID = as.integer(PersonID),
+         K12OrganizationID = as.integer(K12OrganizationID)) %>%
+  drop_na(PersonID)
+
+enrollment <- enrollment.original %>%
+  select(PersonID, K12OrganizationID, K12EnrTimeID) %>%
+  mutate(year.attended = as.integer(str_sub(K12EnrTimeID, 1, 4))) %>%
+  select(PersonID, K12OrganizationID, year.attended)
+
+head(enrollment)
+
+names(enrollment)
+
+```
+
+<br>
+
+This dataset has `r comma(enrollment %>% nrow(), accuracy = 1)` observations and `r comma(enrollment %>% ncol(), accuracy = 1)` columns. 
+
+Next, we need to join this up with the CTE intensity dataset by using the DistrictNumber and year. To do this, we will need to add the DistrictNumber from the K12OrganizationID dataset to our enrollment dataset. We can then use DistrictNumber as the joining variable between enrollment and CTE intensity.
+
+<br>
+
+```{r k12orgID join with CTE intensity}
+k12.county.codes <- read_csv("Data/SLEDS/K12 Org/K12-county-codes.csv")
+
+k12.org.original <- read_xlsx("Data/SLEDS/K12 Org/K12Orgs 20220629.xlsx") %>%
+  distinct(K12OrganizationID, .keep_all = TRUE) %>%
+  drop_na(K12OrganizationID) %>%
+  mutate(K12OrganizationID = as.integer(K12OrganizationID))
+
+k12.org.master <- k12.org.original %>%
+  select(K12OrganizationID, County, DistrictName, DistrictNumber, SchoolNumber) %>%
+  left_join(k12.county.codes[,c(1,2)], by = c("County" = "county.code")) %>%
+  rename(county.name = 6) %>%
+  mutate(county.name = str_replace(county.name, " County", "")) %>%
+  select(K12OrganizationID, DistrictName, county.name, DistrictNumber, SchoolNumber) %>%
+  mutate(county.name = str_replace(county.name, "Saint Louis", "St. Louis")) %>%
+  left_join(counties.regions, by = c("county.name" = "Name")) %>%
+  select(-Dem_RUCA, -planning.region, -mif)
+
+k12.org.enrollment.join <- k12.org.master %>%
+  select(K12OrganizationID, DistrictNumber, SchoolNumber, edr) %>%
+  right_join(enrollment, by = "K12OrganizationID")
+
+cte.intensity.enrollment <- k12.org.enrollment.join %>%
+  left_join(cte.intensity.original[,c(1,4,6, 19)], by = c("DistrictNumber", "SchoolNumber", "year.attended" = "StateFiscalYear")) %>%
+  drop_na(DistrictNumber) %>%
+   filter(edr %in% c("EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 8 - Southwest")) %>%
+  droplevels() 
+
+head(cte.intensity.enrollment)
+
+names(cte.intensity.enrollment)
+
+```
+
+<br>
+
+In this dataset we have `r comma(cte.intensity.enrollment %>% nrow(), accuracy = 1)` observations and `r comma(cte.intensity.enrollment %>% ncol(), accuracy = 1)` columns. 
+
+Next we will summarise the dataset to provide us the average CTE intensity value during their time attending a Southwest MN high school, as well as the number of years they attended a high school in Southwest Minnesota.
+
+```{r cte intensity summarise by cte intensity and years attended}
+cte.intensity.summarise <- cte.intensity.enrollment %>%
+  group_by(PersonID) %>%
+  summarise(n.years.attended = n(),
+            avg.cte.intensity = mean(`CTE Intensity`, na.rm = TRUE)) %>%
+  ungroup()
+
+```
+
+I need to figure something out for Marshall/MACTEC

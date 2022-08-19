@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>CTEIntensity</title>
+
+<script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#section-TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#section-TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="section-TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">CTE impacts on migration trends in SW Minnesota</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Summary of results</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="fa fa-gear"></span>
+     
+    Data prep and summaries
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="k12enrollment.html">K12Enrollment</a>
+    </li>
+    <li>
+      <a href="k12orgs.html">K12Orgs</a>
+    </li>
+    <li>
+      <a href="act.html">ACT</a>
+    </li>
+    <li>
+      <a href="ap.html">AP</a>
+    </li>
+    <li>
+      <a href="cteenrollment.html">CTEEnrollment</a>
+    </li>
+    <li>
+      <a href="ctedemographics.html">CTEDemographics</a>
+    </li>
+    <li>
+      <a href="cteintensity.html">CTEIntensity</a>
+    </li>
+    <li>
+      <a href="employment.html">Employment</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="section-header">
+
+
+
+<h1 class="title toc-ignore">CTEIntensity</h1>
+
+</div>
+
+
+<p><br></p>
+<div id="section-data-prep" class="section level1">
+<h1>Data prep</h1>
+<p>The next dataset we want to join together is the indicator into how
+“intense” of CTE programming a school provides. This dataset was put
+together by Erik Schwankl, Education Consultant with the Southwest West
+Central Service Cooperative.</p>
+<p>Okay, lets import the dataset and see what we have.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 19
+##   DistrictNumber Distr…¹ Distr…² Schoo…³ Insti…⁴ State…⁵ Count…⁶ Count…⁷ Count…⁸
+##            &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1            777       1 BENSON…     101 BENSON…    2007     338     326      28
+## 2           2884       1 RED RO…      20 RED RO…    2007     160     157      20
+## 3           2853       1 LAC QU…      40 LAC QU…    2007     376     356      19
+## 4            518       1 WORTHI…       8 WORTHI…    2007     724     617      28
+## 5            465       1 LITCHF…      40 LITCHF…    2007     594     555      20
+## 6           2184       1 LUVERN…       4 LUVERN…    2007     391     365      16
+## # … with 10 more variables: CountCTEEnrollments &lt;dbl&gt;, `Participation %` &lt;dbl&gt;,
+## #   `Participation Stdev` &lt;dbl&gt;, `Participation Mean` &lt;dbl&gt;,
+## #   `Participation % z-score` &lt;dbl&gt;, `Courses/Student` &lt;dbl&gt;,
+## #   `Course/Student Stdev` &lt;dbl&gt;, `Course/Student Mean` &lt;dbl&gt;,
+## #   `Course/Student z-score` &lt;dbl&gt;, `CTE Intensity` &lt;dbl&gt;, and abbreviated
+## #   variable names ¹​DistrictType, ²​DistrictName, ³​SchoolNumber, ⁴​Institution,
+## #   ⁵​StateFiscalYear, ⁶​CountEnrolledGrades9_12, ⁷​CountCTEPersons, …
+## # ℹ Use `colnames()` to see all variable names</code></pre>
+<pre><code>##  [1] &quot;DistrictNumber&quot;          &quot;DistrictType&quot;           
+##  [3] &quot;DistrictName&quot;            &quot;SchoolNumber&quot;           
+##  [5] &quot;Institution&quot;             &quot;StateFiscalYear&quot;        
+##  [7] &quot;CountEnrolledGrades9_12&quot; &quot;CountCTEPersons&quot;        
+##  [9] &quot;CountCTECourses&quot;         &quot;CountCTEEnrollments&quot;    
+## [11] &quot;Participation %&quot;         &quot;Participation Stdev&quot;    
+## [13] &quot;Participation Mean&quot;      &quot;Participation % z-score&quot;
+## [15] &quot;Courses/Student&quot;         &quot;Course/Student Stdev&quot;   
+## [17] &quot;Course/Student Mean&quot;     &quot;Course/Student z-score&quot; 
+## [19] &quot;CTE Intensity&quot;</code></pre>
+<p><br></p>
+<p>The original cte intensity dataset has 983 rows and 19 columns. The
+column definitions are;</p>
+<ul>
+<li>DistrictNumber: Number identifying a district within a given
+district type. Mappings to names can be found in K12Organization.</li>
+<li>DistrictType: Number used to identify the type of district.</li>
+<li>DistrictName: Name of district.</li>
+<li>SchoolNumber: A three character ‘number’ which when combined with
+OrganizationNumber and OrganizationTypeCode, uniquely identifies a
+particular site, school, or program within the larger organization.</li>
+<li>Institution: The name of a K12 organization.</li>
+<li>StateFiscalYear: Year</li>
+<li>CountEnrolledGrades9_12:</li>
+<li>CountCTEPersons:</li>
+<li>CountCTECourses:</li>
+<li>CountCTEEnrollments:</li>
+<li>Participation %: CountCTEPersons/CountEnrolledGrades9_12</li>
+<li>Participation Stdev: standard deviation of the Participation %
+(population standard deviation used rather than sample standard
+deviation)</li>
+<li>Participation Mean: mean of of Participation % for the year</li>
+<li>Participation % z-score: (Participation % for school/Participation
+Mean)/Participation Stdev</li>
+<li>Courses/Student: CountCTEEnrollments/CountCTEPersons per school (if
+zero CountCTEPersons, reported as 0)</li>
+<li>Course/Student Stdev: standard deviation of the Course/Student
+calculation (population standard deviation used rather than sample
+standard deviation)</li>
+<li>Course/Student Mean: mean of Course/Student for the year</li>
+<li>Course/Student z-score: (Course/Student for school/(Course/Student
+Mean))/(Course/Student Stdev)</li>
+<li>CTE Intensity: sum of Participation % z-score and Course/Student
+z-score</li>
+</ul>
+<p>The purpose of the CTE intensity measure is to determine whether a
+strong presence of CTE programming and participation impacts migration
+patterns. The thinking is that there will be plenty of students that may
+not dive deep into CTE coursework, but just seeing it in your school and
+constantly being reminded of all the local opportunities and
+occupational needs in the local area might impact how a student views
+employment opportunities for themselves in the future.</p>
+<p>We needed to come up with a measure of what the CTE “intensity” was
+for each school by each year. To do this, Eric Shwankl, Education
+Consultant with the Southwest West Central Service Cooperative, came up
+with an ingenious way to measure “CTE intensity” using the z-score (also
+called standard score). The z-score calculates how far a value is (in
+terms of standard deviation) from the average in the population. In this
+case z-score is used to measure how far one schools CTE student
+participation % is from the mean of the percentage of all schools that
+year, and how far one schools CTE courses offered per student % is from
+the percentage of all schools for that year.</p>
+<p>Let’s use an example. In 2007 at Benson Secondary high school, 96%.5%
+of the students participated in a CTE course, compared to the average of
+60.6% of students in all schools that year. The z-score (using the
+standard deviation for all schools) was 1.52. This tells us that
+Benson’s mean was 1.52 standard deviations away from the average of all
+the schools. In probability terms, this converts to a 94% probability
+that another school would have a lower percentage of students
+participating in a CTE course and a 6% chance of having a lower
+percentage of having a percentage of students participating in a CTE
+course. This means that Benson Secondary had a sizable percentage of
+students participating in a CTE course compared to other schools in
+Southwest Minnesota that year.</p>
+<p>For the CTE intensity calculation, Eric Schwankl calculated the
+z-score for both the percentage of students enrolled 9-12 grades that
+participated in a CTE course and the number of CTE courses offered per
+student. These two z-scores were then summed.</p>
+<p>For the master dataset, we are going to convert the CTE intensity
+value to an average of the duration that a student was attending a
+school. For example, if a student attended Benson Secondary from 2007 -
+2009 (Sophomore - Senior years) then that student will be assigned a CTE
+intensity value of</p>
+<p>(4.784288 + 3.705463 + 3.059385) / 3 = 3.849712.</p>
+<p>There is also the situation where a student changes schools. This CTE
+intensity average will have to utilize the CTE intensity from another
+school rather than the one they may have graduated. We will use the same
+calculation as above and just use the CTE intensity value from the other
+school.</p>
+<p>The last case is when a student may have graduated from a Southwest
+Minnesota high school but did not go to school in Minnesota. Therefore,
+we would not have any information related for those years in which to
+calculate the average CTE intensity. In this case, we will just move
+forward as is and use the CTE intensity values that we do have.</p>
+<p>To do all of this, we will need to create a whole other dataset with
+the original k12enrollment data which will be used to create the average
+CTE intensity value for each graduate as well as the number of years
+they spent in a Southwest MN high school.</p>
+<p>First, lets create the dataset that will have all the students that
+attended a Southwest MN High School from 2006 - 2019, and manipulate it
+so it provides the years a studened attended and the schools
+attended.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 3
+##   PersonID K12OrganizationID year.attended
+##      &lt;int&gt;             &lt;int&gt;         &lt;int&gt;
+## 1       68            124096          2005
+## 2       68            124083          2006
+## 3       68            124084          2007
+## 4      161             77457          2006
+## 5      161             77450          2007
+## 6      161             77451          2008</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;          &quot;K12OrganizationID&quot; &quot;year.attended&quot;</code></pre>
+<p><br></p>
+<p>This dataset has 200,350 observations and 3 columns.</p>
+<p>Next, we need to join this up with the CTE intensity dataset by using
+the DistrictNumber and year. To do this, we will need to add the
+DistrictNumber from the K12OrganizationID dataset to our enrollment
+dataset. We can then use DistrictNumber as the joining variable between
+enrollment and CTE intensity.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 7
+##   K12OrganizationID DistrictNumber SchoolNumber edr      Perso…¹ year.…² CTE I…³
+##               &lt;int&gt;          &lt;dbl&gt;        &lt;dbl&gt; &lt;fct&gt;      &lt;int&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1              2215            891           10 EDR 6W-…   14591    2006      NA
+## 2              2215            891           10 EDR 6W-…  143468    2006      NA
+## 3              2215            891           10 EDR 6W-…  216295    2006      NA
+## 4              2215            891           10 EDR 6W-…  264093    2006      NA
+## 5              2215            891           10 EDR 6W-…  273978    2006      NA
+## 6              2215            891           10 EDR 6W-…  282820    2006      NA
+## # … with abbreviated variable names ¹​PersonID, ²​year.attended, ³​`CTE Intensity`</code></pre>
+<pre><code>## [1] &quot;K12OrganizationID&quot; &quot;DistrictNumber&quot;    &quot;SchoolNumber&quot;     
+## [4] &quot;edr&quot;               &quot;PersonID&quot;          &quot;year.attended&quot;    
+## [7] &quot;CTE Intensity&quot;</code></pre>
+<p><br></p>
+<p>In this dataset we have 180,849 observations and 7 columns.</p>
+<p>Next we will summarise the dataset to provide us the average CTE
+intensity value during their time attending a Southwest MN high school,
+as well as the number of years they attended a high school in Southwest
+Minnesota.</p>
+<p>I need to figure something out for Marshall/MACTEC</p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("section-TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#section-TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
