@@ -541,11 +541,45 @@ enrollment and CTE intensity.</p>
 ## [7] &quot;CTE Intensity&quot;</code></pre>
 <p><br></p>
 <p>In this dataset we have 180,849 observations and 7 columns.</p>
-<p>Next we will summarise the dataset to provide us the average CTE
-intensity value during their time attending a Southwest MN high school,
-as well as the number of years they attended a high school in Southwest
-Minnesota.</p>
-<p>I need to figure something out for Marshall/MACTEC</p>
+<p>With this dataset we can determine both the number of years each
+PersonID attended a school in Southwest Minnesota and their average CTE
+intensity during those years. But we will need to do them
+separately.</p>
+<p>Lets start with calculating the number of years each PersonID
+attended a Southwest MN high school. We will do this by counting the
+number of distinct PersonIDs when group by PersonID and year.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID n.years.attended
+##      &lt;int&gt;            &lt;int&gt;
+## 1       68                2
+## 2      161                4
+## 3      641                4
+## 4      676                3
+## 5      758                2
+## 6      786                3</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;         &quot;n.years.attended&quot;</code></pre>
+<p><br></p>
+<p>In this dataset we have 45,502 rows and 2 columns.</p>
+<p>Next, we will calculate the average CTE intensity for all the schools
+in Southwest MN that each PersonID attended across all the years.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID avg.cte.intensity
+##      &lt;int&gt;             &lt;dbl&gt;
+## 1       68             1.42 
+## 2      161            -2.22 
+## 3      641            -0.690
+## 4      676            -2.16 
+## 5      758            -0.448
+## 6      786             1.67</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;          &quot;avg.cte.intensity&quot;</code></pre>
+<p><br></p>
+<p>In this dataset we have 45,502 rows and 2 columns.</p>
+<p>Next is to join this dataset with the master dataset.</p>
+<p><br></p>
+<p><br></p>
+<p>In the master 6 dataset we have 38,154 rows and 31 columns.</p>
 </div>
 
 

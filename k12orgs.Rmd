@@ -156,7 +156,39 @@ names(k12.org.master)
 
 <br>
 
-The k12org master data has `r comma(nrow(k12.org.master), accuracy = 1)` K12OrganizationIDs and `r comma(ncol(k12.org.master), accuracy = 1)` columns. Now I will join it with our master enrollment data using the k12OrganizationID. I will also make sure that all observations from EDR 6E, 6W and 8.
+The k12org master data has `r comma(nrow(k12.org.master), accuracy = 1)` K12OrganizationIDs and `r comma(ncol(k12.org.master), accuracy = 1)` columns. 
+
+Now, I want to calculate how many years each PersonID attended a school in Southwest Minnesota. To do this, I will need to import the original k12Enrollment dataset, join with the K12Organization dataset so I can filter it by EDR and sum up the years by each distinct PersonID.
+
+<br>
+
+```{r years attended SW high school}
+enrollment.original <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment.csv")  %>%
+  mutate(PersonID = as.integer(PersonID),
+         K12OrganizationID = as.integer(K12OrganizationID)) %>%
+  drop_na(PersonID)
+
+enrollment.k12org <- enrollment.original %>%
+  left_join(k12.org.master[,c(1, 6)], by = "K12OrganizationID") %>%
+  filter(edr %in% c("EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 8 - Southwest")) %>%
+  mutate(year.attended = as.integer(str_sub(K12EnrTimeID, 1, 4)))
+
+years.attended <- enrollment.k12org %>%
+  group_by(PersonID, year.attended) %>%
+  distinct(PersonID) %>%
+  ungroup() %>%
+  group_by(PersonID) %>%
+  summarise(n.years.attended = n()) %>%
+  ungroup()
+
+head(years.attended)
+
+names(years.attended)
+```
+
+<br>
+
+Next, I will join both the Organization dataset and the years attended dataset with our master enrollment data using the K12OrganizationID. I will also make sure that all observations from EDR 6E, 6W and 8.
 
 <br>
 
@@ -165,6 +197,7 @@ graduates <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment-master.csv")
 
 master <- graduates %>%
   left_join(k12.org.master, by = "K12OrganizationID") %>%
+  left_join(years.attended, by = "PersonID") %>%
   filter(edr %in% c("EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 8 - Southwest"))
 
 head(master)
@@ -738,6 +771,12 @@ k12.pseo.edr.plot <- ggplot(k12.pseo.edr, aes(edr, pct, fill = edr)) +
 ```
 
 <br>
+
+# Summary of years attended
+
+<br>
+
+
 
 ```{r write master, include=FALSE}
 write_csv(master, "Data/SLEDS/Masters/Master-1.csv")

@@ -101,7 +101,8 @@ Okay, lets import the dataset and see what we have.
 <br>
 
 ```{r cte intensity original}
-cte.intensity.original <- read_csv("Data/SLEDS/Intensity/Master-cte-intensity.csv") 
+cte.intensity.original <- read_csv("Data/SLEDS/Intensity/Master-cte-intensity.csv") %>%
+  mutate(SchoolNumber = ifelse(DistrictNumber == 413 & SchoolNumber == 18, 1, SchoolNumber))
 
 head(cte.intensity.original)
 
@@ -200,7 +201,8 @@ k12.org.master <- k12.org.original %>%
 
 k12.org.enrollment.join <- k12.org.master %>%
   select(K12OrganizationID, DistrictNumber, SchoolNumber, edr) %>%
-  right_join(enrollment, by = "K12OrganizationID")
+  right_join(enrollment, by = "K12OrganizationID") %>%
+  mutate(SchoolNumber = ifelse(DistrictNumber == 413 & SchoolNumber == 8, 1, SchoolNumber))
 
 cte.intensity.enrollment <- k12.org.enrollment.join %>%
   left_join(cte.intensity.original[,c(1,4,6, 19)], by = c("DistrictNumber", "SchoolNumber", "year.attended" = "StateFiscalYear")) %>%
@@ -218,15 +220,62 @@ names(cte.intensity.enrollment)
 
 In this dataset we have `r comma(cte.intensity.enrollment %>% nrow(), accuracy = 1)` observations and `r comma(cte.intensity.enrollment %>% ncol(), accuracy = 1)` columns. 
 
-Next we will summarise the dataset to provide us the average CTE intensity value during their time attending a Southwest MN high school, as well as the number of years they attended a high school in Southwest Minnesota.
+With this dataset we can determine both the number of years each PersonID attended a school in Southwest Minnesota and their average CTE intensity during those years. But we will need to do them separately. 
+
+Lets start with calculating the number of years each PersonID attended a Southwest MN high school. We will do this by counting the number of distinct PersonIDs when group by PersonID and year.
+
+<br>
+
+```{r number of years attended}
+years.attended <- cte.intensity.enrollment %>%
+  group_by(PersonID, year.attended) %>%
+  distinct(PersonID) %>%
+  ungroup() %>%
+  group_by(PersonID) %>%
+  summarise(n.years.attended = n()) %>%
+  ungroup()
+
+head(years.attended)
+
+names(years.attended)
+
+```
+
+<br>
+
+In this dataset we have `r comma(years.attended %>% nrow(), accuracy = 1)` rows and `r comma(years.attended %>% ncol(), accuracy = 1)` columns.
+
+Next, we will calculate the average CTE intensity for all the schools in Southwest MN that each PersonID attended across all the years.
+
+<br>
 
 ```{r cte intensity summarise by cte intensity and years attended}
 cte.intensity.summarise <- cte.intensity.enrollment %>%
   group_by(PersonID) %>%
-  summarise(n.years.attended = n(),
-            avg.cte.intensity = mean(`CTE Intensity`, na.rm = TRUE)) %>%
+  summarise(avg.cte.intensity = mean(`CTE Intensity`, na.rm = TRUE)) %>%
   ungroup()
+
+head(cte.intensity.summarise)
+
+names(cte.intensity.summarise)
 
 ```
 
-I need to figure something out for Marshall/MACTEC
+<br>
+
+In this dataset we have `r comma(cte.intensity.summarise %>% nrow(), accuracy = 1)` rows and `r comma(cte.intensity.summarise %>% ncol(), accuracy = 1)` columns.
+
+Next is to join this dataset with the master dataset.
+
+<br>
+
+```{r cte intensity join with master}
+master.6 <- read_csv("Data/SLEDS/Masters/Master-5.csv") %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  left_join(cte.intensity.summarise, by = "PersonID")
+
+```
+
+<br>
+
+In the master 6 dataset we have `r comma(master.6 %>% nrow(), accuracy = 1)` rows and `r comma(master.6 %>% ncol, accuracy = 1)` columns.
