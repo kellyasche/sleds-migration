@@ -38,6 +38,90 @@ library(systemfonts)
 reset_font_cache()
 library(ggtext)
 library(gmodels)
+library(infer)
+
+
+```
+
+```{r themes and shapefiles}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial"))
+
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+    select(5,6) %>%
+    unique() %>%
+    mutate(edr = str_replace(edr, "  ", " "),
+           planning.region = str_replace(planning.region, " Minnesota", ""),
+           planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+           edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"))
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+
+color.ruca <- c("Entirely rural" = "#009933", "Town/rural mix" = "#99CC33", "Urban/town/rural mix" = "#CC9966", "Entirely urban" = "#754C29", "Minnesota" = "black")
+
+color.pr <- c("Northwest" = 	"#4575b4", "Northeast" = "grey", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black")
+
+color.edr <- c("EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365", "Minnesota" = "black")
+
+color.pr.edr <- c ("Northwest" = "#4575b4","Northeast" = "#e0f3f8", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black", "EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365")
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
 
 
 ```
@@ -774,9 +858,124 @@ k12.pseo.edr.plot <- ggplot(k12.pseo.edr, aes(edr, pct, fill = edr)) +
 
 # Summary of years attended
 
+First, lets see the distribution of the number of years attending a Southwest High School within this dataset.
+
+A large majority of students (~30,000 students) attended a Southwest MN High School for 4 years. A few attended for longer than that, which is largely due to students who attended a CTE course after they graduated for special training.
+
+<br>
+
+```{r n years attending distribution}
+  n.years.distribution.map <- ggplot(master, aes(n.years.attended)) +
+    geom_histogram() +
+    labs(x="", y = "", color="", title = "Distribution of the number of years attending a\nSouthwest MN High School in dataset")+
+    scale_y_continuous(labels=scales::comma)+
+  theme_bar + 
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = n.years.distribution.map, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+
+```
+
+<br>
+
+Next, we will look at the summary statistics for the entire dataset.
+
+As expected, the median is 4 years while the average was just a bit lower with 3.78 years.
+
 <br>
 
 
+```{r years attended summary statisics}
+n.years.attended.summary.total <- master %>%
+  summarise(n = comma(n(), accuracy = 1),
+            mean = comma(mean(n.years.attended), accuracy = .01),
+            median = comma(median(n.years.attended), accuracy = 1),
+            standard.deviation = comma(sd(n.years.attended), accuracy = 0.01)) 
+
+datatable(n.years.attended.summary.total,
+          options = list(
+            columnDefs = list(list(className = "dt-center", targets = 1:4))
+          ))
+```
+
+<br>
+
+Next we will check to see if there are any significant differences by using the t-test for the mean by RUCA groups as well as a summary for each of the RUCA groups.
+
+The ANOVA table indicates that there is a statistically significant difference in the average number of years students attended a Southwest MN High School in the dataset between RUCA groups. In particular, the mean for the Entirely Rural group is significantly different than both the town/rural mix and urban/town/rural mix county group.
+
+The table shows that the average number of years attended for entirely rural high schools is 3.72 vs. 3.80 and 3.79 for town/rura mix and urban/town/rural mix county groups. 
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+## Summary table - RUCA
+
+```{r n years attended summary ruca}
+n.years.attended.summary.ruca <- master %>%
+  group_by(Dem_Desc) %>%
+  summarise(n = comma(n(), accuracy = 1),
+            mean = comma(mean(n.years.attended), accuracy = .01),
+            median = comma(median(n.years.attended), accuracy = 1),
+            sd = comma(sd(n.years.attended), accuracy = .01)) %>%
+  ungroup()
+
+datatable(n.years.attended.summary.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE, options = list(
+  columnDefs = list(list(className = "dt-center", targets = 1:4))
+))
+```
+
+## ANOVA - RUCA
+
+```{r n years attended t test average ruca}
+summary <- aov(n.years.attended ~ Dem_Desc, data = master)
+
+summary(summary)
+
+TukeyHSD(summary)
+```
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next we will do the same analysis for EDRs.
+
+The ANOVA test shows that the p-value isn't at the threshold to reject the NULL hypothesis (p-value < .01). Therefore, we consider the means of the number of years attended by students at a Southwest MN High School to not be different between EDRs. 
+
+<br>
+
+## Summary table - EDR
+
+```{r n years attended summary edr}
+n.years.attended.summary.edr <- master %>%
+  group_by(edr) %>%
+  summarise(n = comma(n(), accuracy = 1),
+            mean = comma(mean(n.years.attended), accuracy = .01),
+            median = comma(median(n.years.attended), accuracy = 1),
+            sd = comma(sd(n.years.attended), accuracy = .01)) %>%
+  ungroup()
+
+datatable(n.years.attended.summary.edr, class = "cell-border stripe", filter = "top", rownames = FALSE, options = list(
+  columnDefs = list(list(className = "dt-center", targets = 1:4))
+))
+```
+
+## ANOVA - EDR
+
+```{r n years attended t test average edr}
+summary.edr <- aov(n.years.attended ~ edr, data = master)
+
+summary(summary.edr)
+
+TukeyHSD(summary.edr)
+```
+
+
+<br>
 
 ```{r write master, include=FALSE}
 write_csv(master, "Data/SLEDS/Masters/Master-1.csv")

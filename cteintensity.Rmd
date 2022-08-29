@@ -68,6 +68,21 @@ theme_sf <- theme_bw() +
         legend.key.size = unit(1, "lines"),
         text = element_text(family = "Arial"))
 
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial"))
+
+
 mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
   ms_simplify(keep = .01, keep_shapes = TRUE) %>%
   rename(countyfp = FIPS_CODE)
@@ -152,7 +167,7 @@ The last case is when a student may have graduated from a Southwest Minnesota hi
 
 To do all of this, we will need to create a whole other dataset with the original k12enrollment data which will be used to create the average CTE intensity value for each graduate as well as the number of years they spent in a Southwest MN high school.
 
-First, lets create the dataset that will have all the students that attended a Southwest MN High School from 2006 - 2019, and manipulate it so it provides the years a studened attended and the schools attended.
+First, lets create the dataset that will have all the students that attended a Southwest MN High School from 2006 - 2019, and manipulate it so it provides the years a student attended and the schools attended.
 
 <br>
 
@@ -220,30 +235,6 @@ names(cte.intensity.enrollment)
 
 In this dataset we have `r comma(cte.intensity.enrollment %>% nrow(), accuracy = 1)` observations and `r comma(cte.intensity.enrollment %>% ncol(), accuracy = 1)` columns. 
 
-With this dataset we can determine both the number of years each PersonID attended a school in Southwest Minnesota and their average CTE intensity during those years. But we will need to do them separately. 
-
-Lets start with calculating the number of years each PersonID attended a Southwest MN high school. We will do this by counting the number of distinct PersonIDs when group by PersonID and year.
-
-<br>
-
-```{r number of years attended}
-years.attended <- cte.intensity.enrollment %>%
-  group_by(PersonID, year.attended) %>%
-  distinct(PersonID) %>%
-  ungroup() %>%
-  group_by(PersonID) %>%
-  summarise(n.years.attended = n()) %>%
-  ungroup()
-
-head(years.attended)
-
-names(years.attended)
-
-```
-
-<br>
-
-In this dataset we have `r comma(years.attended %>% nrow(), accuracy = 1)` rows and `r comma(years.attended %>% ncol(), accuracy = 1)` columns.
 
 Next, we will calculate the average CTE intensity for all the schools in Southwest MN that each PersonID attended across all the years.
 
@@ -272,10 +263,144 @@ Next is to join this dataset with the master dataset.
 ```{r cte intensity join with master}
 master.6 <- read_csv("Data/SLEDS/Masters/Master-5.csv") %>%
   mutate(PersonID = as.integer(PersonID)) %>%
-  left_join(cte.intensity.summarise, by = "PersonID")
+  left_join(cte.intensity.summarise, by = "PersonID") 
+
+head(master.6)
+
+names(master.6)
 
 ```
 
 <br>
 
 In the master 6 dataset we have `r comma(master.6 %>% nrow(), accuracy = 1)` rows and `r comma(master.6 %>% ncol, accuracy = 1)` columns.
+
+# Summary of CTE intensity{.tabset}
+
+First, lets check out the summary statistics of the total group.
+
+The mean and median are a bit different. The mean CTE intensity is .35 which can be interpreted as the students, on average, had a CTE intensity that was .35 standard deviations away from the average CTE intensity each year. The median was a bit higher with .54 and a rather large standard deviation of 1.65.
+
+The distribution chart shows that there looks to be a normal distribution in the data. 
+
+<br>
+
+## Summary table of total datatset
+
+```{r cte intensity summary stats total}
+cte.intensity.summary.total <- master.6 %>%
+  summarise(n = n(),
+            mean = comma(mean(avg.cte.intensity, na.rm = TRUE), accuracy = .01),
+            median = comma(median(avg.cte.intensity, na.rm = TRUE), accuracy = .01),
+            sd = comma(sd(avg.cte.intensity, na.rm = TRUE), accuracy = .01))
+
+datatable(cte.intensity.summary.total, class = "cell-border stripe", filter = "top", rownames = FALSE, options = list(
+  columnDefs = list(list(className = "dt-center", targets = 0:3))
+))
+```
+
+<br>
+
+## Distribution of total dataset
+
+```{r cte intensity distribution total}
+ cte.intensity.distribution.plot <- ggplot(master.6, aes(avg.cte.intensity)) +
+  geom_histogram() +
+    labs(x="", y = "", color="", title = "Distribution of average CTE Intensity")+
+    scale_y_continuous(labels=scales::comma) +
+    theme_bar+
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = cte.intensity.distribution.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, we will check to see if there are any differences in the average CTE intensity depending on RUCA category.
+
+The ANOVA table shows that that we have a very low p-value, meaning we can reject the NULL hypothesis taht the means are the same across RUCA groups. In particular, the analysis shows that the average CTE intensity for students from entirely rural high schools is significantly different than the means for town/rural mix and urban/town/rural mix county groups.
+
+The summary table definitely shows this to be true. The average CTE intensity for the students from entirely rural high schools is .99 compared to .2 and .44 for town/rural mix and urban/town/rural mix county groups. The median was significantly higher for entirely rural high school students as well.
+
+<br>
+
+## Summary table - RUCA
+
+```{r cte intensity summary ruca}
+cte.intensity.summary.ruca <- master.6 %>%
+  group_by(Dem_Desc) %>%
+  summarise(n = n(),
+            mean = comma(mean(avg.cte.intensity, na.rm = TRUE), accuracy = .01),
+            median = comma(median(avg.cte.intensity, na.rm = TRUE), accuracy = .01),
+            sd = comma(sd(avg.cte.intensity, na.rm = TRUE), accuracy = .01)) %>%
+  ungroup()
+
+datatable(cte.intensity.summary.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE, options = list(
+  columnDefs = list(list(className = "dt-center", targets = 1:4))))
+```
+
+<br>
+
+## ANOVA - RUCA
+
+```{r cte intensity anova ruca}
+cte.intensity.anova.ruca <- aov(n.years.attended ~ Dem_Desc, data = master.6)
+
+summary(cte.intensity.anova.ruca)
+
+TukeyHSD(cte.intensity.anova.ruca)
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next we will do the same analysis for EDRs.
+
+The ANOVA table shows that thee p-value did not reach the threshold of being less than .01, however it is less than .05. If we are to reject the NULL hypothesis, we can see that EDR 8 - Southwest has an average CTE intensity that is significantly different than EDR 6E and EDR 6W. 
+
+The summary table shows that graduates from EDR 8 - Southwest have an average CTE intensity of -.15 which is significantly different than EDR 6E and EDR 6W which have an avg cte intensity of .67 and .9, respectively.
+
+<br>
+
+## Summary table - EDR
+
+```{r cte intensity summary edr}
+cte.intensity.summary.edr <- master.6 %>%
+  group_by(edr) %>%
+  summarise(n = n(),
+            mean = comma(mean(avg.cte.intensity, na.rm = TRUE), accuracy = .01),
+            median = comma(median(avg.cte.intensity, na.rm = TRUE), accuracy = .01),
+            sd = comma(sd(avg.cte.intensity, na.rm = TRUE), accuracy = .01)) %>%
+  ungroup()
+
+datatable(cte.intensity.summary.edr, class = "cell-border stripe", filter = "top", rownames = FALSE, options = list(
+  columnDefs = list(list(className = "dt-center", targets = 1:4))))
+
+```
+
+<br>
+
+## ANOVA - EDR
+
+```{r cte intensity anova edr}
+cte.intensity.anova.edr <- aov(n.years.attended ~ edr, data = master.6)
+
+summary(cte.intensity.anova.edr)
+
+TukeyHSD(cte.intensity.anova.edr)
+```
+
+<br>
+
+```{r write master}
+write_csv(master.6, "Data/SLEDS/Masters/Master-6.csv")
+
+```
