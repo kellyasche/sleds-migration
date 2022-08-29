@@ -22,6 +22,8 @@ navbar:
           href: ctedemographics.html
         - text: "CTEIntensity"
           href: cteintensity.html
+        - text: "Assessments"
+          href: assessments.html
         - text: "Employment"
           href: employment.html
 output:
