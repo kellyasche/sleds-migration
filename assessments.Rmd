@@ -109,7 +109,7 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
 
 # Data prep
 
-Okay, lets check out IPEDS.
+Okay, lets check out assessments.
 
 <br>
 
@@ -137,27 +137,660 @@ We have `r comma(assessments.original %>% nrow(), accuracy = 1)` rows and `r com
   + MCA-II & MCA-III: Minnesota Comprehsensive Assessments (series 2 and 3)
   + MOD-II, MOD-III: Modified Comprehensive Assessment, used only until 2014
   + MTAS & MTAS-III: Minnesota Test of Academic Skills
-  + MTELL:
+  + MTELL: an alternate assessment for students learning English (like the MTAS or MOD). MTELL was only administered from 2007-2010 during the series-II of MCAs.
   + SOLOM: Minnesota Student Oral Language Observation Matrix
-  + TEAE: Minnesota Therapeutic Education Alternative 
+  + TEAE: one of two assessments that Minnesota used to meet the requirements to test ELs in all four domains of language (the other was SOLOM). TEAE was used 2002 until we changed to ACCESS in 2012. SOLOM was used 2004 until we changed to ACCESS in 2012. 
 * Subject: Classifies each test that is given to a student based on the areas measured. There are 8 factors;
-  + A: ACCESS Test
-  + C: ACCESS Test
+  + A: Aural (listening) - ACCESS & ALTACCESS only
+  + C: Composite - ACCESS & ALTACCESS only
   + L: Listening/Speaking
   + M: Math
-  + O: ACCESS Test
+  + O: Oral - ACCESS & ALTACCESS only
   + R: Reading
   + S: Science
   + W: Writing
 * GradeTested: Grade student was enrolled in when performing assessment.
 * AchievementLevel: Used to count the number of students in each achievement level by group such as race, gender, and ethnicity. It must be calculated from other students at a similar graden and subject for a specific year. 
   + ACCESS students are graded on a language proficiency scale of 1 through 6.
-  + All-ACCESS students are graded using a P1 through P3 and A1 through A3 scale.
+  + ALT-ACCESS students are graded using a P1 through P3 and A1 through A3 scale.
   + There are 4 different levels for the MCA test
     + D: Does not meet standards
     + E: Exceeds standards
     + M: Meets Standards
     + P: Partially meets standards
   + SOLOM tests are 1-5 scale with 5 being the highest
-  + TEAE tests are 1-5 scale.     
+  + TEAE tests are 1-5 scale with 5 being the highest.
+
+There are two ways in which we are going to code our graduates.
+
+The first is to identify whether a student has been identified as an English learner. This means filtering students that have taken the ACCESS, ALT-ACCESS, MTELL, MTAS, TEAE, MOD-II, MOD-III, or SOLOM at least once in their career. 
+
+The second is be determining their highest achievement level in each subject of the MCA tests within the dataset. The dataset provides each instance of a test for each student so many are students are listed numerous times - once for each time they took a test. 
+
+Lets do this in two separate files and then join each with the master file. 
+
+Starting with identifying the EL students.
+
+<br>
+
+```{r identifying EL students}
+el <- assessments.original %>%
+  filter(!TestName %in% c("MCA-II", "MCA-III")) %>%
+  distinct(PersonID, .keep_all = TRUE) %>%
+  select(PersonID) %>%
+  mutate(english.learner = 1)
+
+head(el)
+
+names(el)
+
+```
+
+<br>
+
+This dataset identified `r comma(el %>% nrow(), accuracy = 1)` individuals who were identified as an english learner at least one time in the original dataset.
+
+Now we will determine the highest achievement level for each subject for each student. 
+
+<br>
+
+```{r mca highest achievement}
+mca <- assessments.original %>%
+  filter(TestName %in% c("MCA-II", "MCA-III")) %>%
+  filter(AchievementLevel != "NULL") %>%
+  droplevels() %>%
+  mutate(AchievementLevelCode = ifelse(AchievementLevel == "D", 1,
+                                       ifelse(AchievementLevel == "P", 2,
+                                              ifelse(AchievementLevel == "M", 3, 4))))
+
+mca.highest <- mca %>%
+  group_by(PersonID, Subject) %>%
+  filter(AchievementLevelCode == max(AchievementLevelCode)) %>%
+  ungroup() %>%
+  select(PersonID, Subject, AchievementLevelCode) %>%
+  mutate(mca.subject = paste("MCA.", Subject, sep = "")) %>%
+  select(PersonID, mca.subject, AchievementLevelCode) %>%
+  mutate(id = seq(n())) %>%
+  spread(key = mca.subject, value = AchievementLevelCode) %>%
+  group_by(PersonID) %>%
+  fill(MCA.M, .direction = c("downup")) %>%
+  fill(MCA.R, .direction = "downup") %>%
+  fill(MCA.S, .direction = "downup") %>%
+  distinct(PersonID, .keep_all = TRUE)
   
+head(mca.highest)
+
+names(mca.highest)
+```
+
+<br>
+
+This dataset has `r comma(mca.highest %>% nrow(), accuracy = 1)` rows and `r comma(mca.highest %>% ncol(), accuracy = 1)` columns. In this dataset, I have recoded the AchievementLevel so that 1 = Do not meet standards, 2 = Partially meets standards, 3 = Meets standards, and 4 = Exceeds standards. I will summarize this column in the summary section below.
+
+Now it's time to join the datasets.
+
+<br>
+
+```{r join with master}
+master.7 <- read_csv("Data/SLEDS/Masters/Master-6.csv") %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  left_join(el, by = "PersonID") %>%
+  left_join(mca.highest, by = "PersonID") %>%
+  mutate(english.learner = ifelse(is.na(english.learner), 0, english.learner))
+```
+
+# Summary of English Learners
+
+Let's start by summarizing the english learners in the total dataset.
+
+In the master dataset 5.42% of the individuals were identified as English Learners at some point in the original data. 
+
+<br>
+
+```{r english learners summary total}
+el.summary.total <- master.7 %>%
+  summarize(total = n(),
+            english.learner = sum(english.learner)) %>%
+  mutate(pct.english.learner = english.learner / total)
+
+datatable(el.summary.total, 
+          class = "cell-border stripe", 
+          filter = "top", 
+          rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 0:2)))) %>%
+  formatPercentage(3, 2) %>%
+  formatCurrency(1:2, "", digits = 0)
+  
+```
+  
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Let's now see if there are any significant differences by RUCA category.
+
+The cross-tabs provides a very low p-value indicating that there are significant differences in the percentage of individuals in the dataset categorized as English learners.
+
+The percentage of English learners graduating from an entirely rural high schools and urban/town/rural high schools is significantly lower than the town/rural mix county schools. Both the entirely rural and urban/town/rural mix schools had just over 3% of the graduates in the dataset categorized as English learners compared to 6.31% in the town/rural mix schools.
+
+<br>
+
+## RUCA - Table
+
+<br>
+
+```{r english learners summary ruca}
+el.summary.ruca <- master.7 %>%
+  group_by(Dem_Desc) %>%
+  summarize(n = n(),
+            english.learner = sum(english.learner)) %>%
+  ungroup() %>%
+  mutate(pct.english.learner = english.learner / n)
+
+
+datatable(el.summary.ruca, 
+          class = "cell-border stripe", 
+          filter = "top", 
+          rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 0:3)))) %>%
+  formatPercentage(4, 2) %>%
+  formatCurrency(2:3, "", digits = 0)
+```
+
+<br>
+
+## RUCA Cross-tabs
+
+<br>
+
+```{r english learners cross tabs ruca}
+CrossTable(master.7$Dem_Desc, master.7$english.learner, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Let's now see if there are any significant differences by EDR category.
+
+The cross-tabs provides a very low p-value indicating that there are significant differences in the percentage of individuals in the dataset categorized as English learners.
+
+The percentage of English learners graduating from EDR 6W is significantly lower compared to EDR 6E and EDR 8. EDR 6W has 3.03% of their graduates in the dataset categorized as an English learner compared to EDR 6E which had 5.32% and EDR 8 which had 6.55%.
+
+<br>
+
+## EDR - Table
+
+<br>
+
+```{r english learners summary edr}
+el.summary.edr <- master.7 %>%
+  group_by(edr) %>%
+  summarize(n = n(),
+            english.learner = sum(english.learner)) %>%
+  ungroup() %>%
+  mutate(pct.english.learner = english.learner / n)
+
+
+datatable(el.summary.edr, 
+          class = "cell-border stripe", 
+          filter = "top", 
+          rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 0:3)))) %>%
+  formatPercentage(4, 2) %>%
+  formatCurrency(2:3, "", digits = 0)
+```
+
+<br>
+
+## EDR Cross-tabs
+
+<br>
+
+```{r english learners cross tabs edr}
+CrossTable(master.7$edr, master.7$english.learner, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+# Summary of MCA
+
+Let's see what the MCA breakdown is by subject.
+
+Well, kids are not very good at math. Yikes. 30% of the students in the dataset did not meet standards. Luckily, nearly 40% meet or exceed standards.
+
+Reading is much better with well over 50% meet or exceeding standards.
+
+Science was not taken as much by students with nearly 25% of the students have NA as their achievement.
+
+<br>
+
+```{r mca achievement total}
+mca.highest.summary.total <- master.7 %>%
+  select(PersonID, MCA.M, MCA.R, MCA.S) %>%
+  gather(key = "subject", value = "achievement", 2:4) %>%
+  mutate(achievement = ifelse(achievement == 1, "D",
+                              ifelse(achievement == 2, "P",
+                                     ifelse(achievement == 3, "M",
+                                            ifelse(achievement == 4, "E", achievement)))),
+         achievement = fct_relevel(achievement, "D", "P", "M", "E")) %>%
+  group_by(subject, achievement) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(subject) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = as.character(seq(n())))
+
+mca.highest.total.plot <- ggplot(mca.highest.summary.total, aes(subject, pct, fill = achievement, group = achievement)) +
+    geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(subject, "\nGrade: ", achievement, "\nNumber of students with this grade: ", comma(n, accuracy = 1), "\nPercent of students: ", percent(pct, accuracy = .1), sep = ""))) +
+    geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5) +
+    labs(x="", y = "", color="", title = "Student grades within subject for MCA tests")+
+    scale_y_continuous(labels=scales::percent)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
+    theme_bar+
+    scale_fill_manual(values= brewer.pal(n = 5, "RdYlBu"),
+                       guide = guide_legend(ncol = 3)) +
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = mca.highest.total.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+
+
+```
+
+<br>
+
+From here we will break down the data and see if there are significant differences between RUCA categories and EDRs. We will start with RUCA categories.
+
+<br>
+
+## MCA - Math
+
+We will start with analyzing math and RUCA categories.
+
+The p-value from the cross-tabs indicate that there is a relationship between RUCA categories and the grades received in the MCA-Math test.
+
+The percentage of students who received a "did not meet standards" grade was significantly higher for the town/rural mix county students while being significantly lower for the entirely rural and urban/town/rural mix county group.
+
+In addition, the percentage of students who received a "exceeds standards" grade was significantly higher for urban/town/rural mix students
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+### RUCA table
+
+<br>
+
+```{r mca math summary ruca}
+mca.highest.summary.ruca <- master.7 %>%
+  select(Dem_Desc, MCA.M) %>%
+  mutate(MCA.M = ifelse(MCA.M == 1, "D",
+                              ifelse(MCA.M == 2, "P",
+                                     ifelse(MCA.M == 3, "M",
+                                            ifelse(MCA.M == 4, "E", MCA.M)))),
+         MCA.M = fct_relevel(MCA.M, "D", "P", "M", "E")) %>%
+  group_by(Dem_Desc, MCA.M) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = as.character(seq(n())))
+
+mca.highest.ruca.plot <- ggplot(mca.highest.summary.ruca, aes(Dem_Desc, pct, fill = MCA.M, group = MCA.M)) +
+    geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("MCA - Math", "\nGrade: ", MCA.M, "\nNumber of students with this grade: ", comma(n, accuracy = 1), "\nPercent of students: ", percent(pct, accuracy = .1), sep = ""))) +
+    geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5) +
+    labs(x="", y = "", color="", title = "Student grades within RUCA category for MCA - Math")+
+    scale_y_continuous(labels=scales::percent)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
+    theme_bar+
+    scale_fill_manual(values= brewer.pal(n = 5, "RdYlBu"),
+                       guide = guide_legend(ncol = 3)) +
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = mca.highest.ruca.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+```
+
+<br>
+
+### RUCA crosstabs
+
+<br>
+
+```{r mca math cross tabs}
+CrossTable(master.7$Dem_Desc, master.7$MCA.M, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next we will check the EDRs.
+
+The p-value in the cross tabs indicates a relationship between MCA-Math grades and the EDR.
+
+EDR 6W has a significantly higher percentage of students who received a "did not meet standards" grade while the percentages were significantly lower in EDR 6E and EDR 8. 
+
+Vice verse for the percentage of students who received "exceeded standards". The percentages were significanly higher in EDR 6E and EDR 8 while being lower in EDR 6W.
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+<br>
+
+### EDR table
+
+<br>
+
+```{r mca math summary edr}
+mca.highest.summary.edr <- master.7 %>%
+  select(edr, MCA.M) %>%
+  mutate(MCA.M = ifelse(MCA.M == 1, "D",
+                              ifelse(MCA.M == 2, "P",
+                                     ifelse(MCA.M == 3, "M",
+                                            ifelse(MCA.M == 4, "E", MCA.M)))),
+         MCA.M = fct_relevel(MCA.M, "D", "P", "M", "E")) %>%
+  group_by(edr, MCA.M) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = as.character(seq(n())))
+
+mca.highest.edr.plot <- ggplot(mca.highest.summary.edr, aes(edr, pct, fill = MCA.M, group = MCA.M)) +
+    geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("MCA - Math", "\nGrade: ", MCA.M, "\nNumber of students with this grade: ", comma(n, accuracy = 1), "\nPercent of students: ", percent(pct, accuracy = .1), sep = ""))) +
+    geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5) +
+    labs(x="", y = "", color="", title = "Student grades within EDRs for MCA - Math")+
+    scale_y_continuous(labels=scales::percent)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
+    theme_bar+
+    scale_fill_manual(values= brewer.pal(n = 5, "RdYlBu"),
+                       guide = guide_legend(ncol = 3)) +
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = mca.highest.edr.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+```
+
+<br>
+
+### EDR crosstabs
+
+<br>
+
+```{r mca math cross tabs edr}
+CrossTable(master.7$edr, master.7$MCA.M, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+<br>
+
+## MCA - Reading
+
+Next lets analyze reading and RUCA categories.
+
+The p-value from the cross-tabs indicate that there is a relationship between RUCA categories and the grades received in the MCA-Reading test.
+
+The biggest difference between RUCA categories is that town/rural mix county students had a lower percentage that meets or exceeds standards (60.8%) compared to entirely rural (66.3%) and urban/town/rural mix (`r percent(.389+.288, accuracy = .01)`). 
+
+On the flip side, this also means that EDR 6W had a higher percentage of students that either did not meet standards (12.6%) or partially met standards (19.2%) compared to the other county groups.
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+### RUCA table
+
+<br>
+
+```{r mca read summary ruca}
+mca.highest.reading.summary.ruca <- master.7 %>%
+  select(Dem_Desc, MCA.R) %>%
+  mutate(MCA.R = ifelse(MCA.R == 1, "D",
+                              ifelse(MCA.R == 2, "P",
+                                     ifelse(MCA.R == 3, "M",
+                                            ifelse(MCA.R == 4, "E", MCA.R)))),
+         MCA.R = fct_relevel(MCA.R, "D", "P", "M", "E")) %>%
+  group_by(Dem_Desc, MCA.R) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = as.character(seq(n())))
+
+mca.highest.reading.ruca.plot <- ggplot(mca.highest.reading.summary.ruca, aes(Dem_Desc, pct, fill = MCA.R, group = MCA.R)) +
+    geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("MCA - Math", "\nGrade: ", MCA.R, "\nNumber of students with this grade: ", comma(n, accuracy = 1), "\nPercent of students: ", percent(pct, accuracy = .1), sep = ""))) +
+    geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5) +
+    labs(x="", y = "", color="", title = "Student grades within RUCA category for MCA - Reading")+
+    scale_y_continuous(labels=scales::percent)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
+    theme_bar+
+    scale_fill_manual(values= brewer.pal(n = 5, "RdYlBu"),
+                       guide = guide_legend(ncol = 3)) +
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = mca.highest.reading.ruca.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+```
+
+<br>
+
+### RUCA crosstabs
+
+<br>
+
+```{r mca reading cross tabs}
+CrossTable(master.7$Dem_Desc, master.7$MCA.R, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next we will check the EDRs.
+
+The p-value in the cross tabs indicates a relationship between MCA-Reading grades and the EDR.
+
+EDR 6e has a significantly higher percentage of students who received a "meets" or "exceeds standards" (`r percent(.372+.276, accuracy = .01)`) grade compared to EDR 6W (`r percent(.368+.237, accuracy = .01)`) and EDR 8 (`r percent(.365+.254, accuracy = .01)`).
+
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+<br>
+
+### EDR table
+
+<br>
+
+```{r mca read summary edr}
+mca.highest.reading.summary.edr <- master.7 %>%
+  select(edr, MCA.R) %>%
+  mutate(MCA.R = ifelse(MCA.R == 1, "D",
+                              ifelse(MCA.R == 2, "P",
+                                     ifelse(MCA.R == 3, "M",
+                                            ifelse(MCA.R == 4, "E", MCA.R)))),
+         MCA.R = fct_relevel(MCA.R, "D", "P", "M", "E")) %>%
+  group_by(edr, MCA.R) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = as.character(seq(n())))
+
+mca.highest.reading.edr.plot <- ggplot(mca.highest.reading.summary.edr, aes(edr, pct, fill = MCA.R, group = MCA.R)) +
+    geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("MCA - Math", "\nGrade: ", MCA.R, "\nNumber of students with this grade: ", comma(n, accuracy = 1), "\nPercent of students: ", percent(pct, accuracy = .1), sep = ""))) +
+    geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5) +
+    labs(x="", y = "", color="", title = "Student grades within edr category for MCA - Reading")+
+    scale_y_continuous(labels=scales::percent)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
+    theme_bar+
+    scale_fill_manual(values= brewer.pal(n = 5, "RdYlBu"),
+                       guide = guide_legend(ncol = 3)) +
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = mca.highest.reading.edr.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+```
+
+<br>
+
+### EDR crosstabs
+
+<br>
+
+```{r mca reading cross tabs edr}
+CrossTable(master.7$edr, master.7$MCA.R, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+<br>
+
+## MCA - Science
+
+Next lets analyze science and RUCA categories.
+
+The p-value from the cross-tabs indicate that there is a relationship between RUCA categories and the grades received in the MCA-Science test.
+
+The biggest difference between RUCA categories is that town/rural mix county students had a lower percentage that meets or exceeds standards (`r percent(.062+.293, accuracy = .1)`) compared to entirely rural (`r percent(.335+.076, accuracy = .1)`) and urban/town/rural mix (`r percent(.348+.102, accuracy = .1)`). 
+
+On the flip side, this also means that town/rural mix had a higher percentage of students that either did not meet standards (10.8%) compared to the other county groups.
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+### RUCA table
+
+<br>
+
+```{r mca science summary ruca}
+mca.highest.science.summary.ruca <- master.7 %>%
+  select(Dem_Desc, MCA.S) %>%
+  mutate(MCA.S = ifelse(MCA.S == 1, "D",
+                              ifelse(MCA.S == 2, "P",
+                                     ifelse(MCA.S == 3, "M",
+                                            ifelse(MCA.S == 4, "E", MCA.S)))),
+         MCA.S = fct_relevel(MCA.S, "D", "P", "M", "E")) %>%
+  group_by(Dem_Desc, MCA.S) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = as.character(seq(n())))
+
+mca.highest.science.ruca.plot <- ggplot(mca.highest.science.summary.ruca, aes(Dem_Desc, pct, fill = MCA.S, group = MCA.S)) +
+    geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("MCA - Math", "\nGrade: ", MCA.S, "\nNumber of students with this grade: ", comma(n, accuracy = 1), "\nPercent of students: ", percent(pct, accuracy = .1), sep = ""))) +
+    geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5) +
+    labs(x="", y = "", color="", title = "Student grades within RUCA category for MCA - science")+
+    scale_y_continuous(labels=scales::percent)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
+    theme_bar+
+    scale_fill_manual(values= brewer.pal(n = 5, "RdYlBu"),
+                       guide = guide_legend(ncol = 3)) +
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = mca.highest.science.ruca.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+```
+
+<br>
+
+### RUCA crosstabs
+
+<br>
+
+```{r mca science cross tabs}
+CrossTable(master.7$Dem_Desc, master.7$MCA.S, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next lets analyze science and EDRs.
+
+The p-value from the cross-tabs indicate that there is a relationship between EDRs and the grades received in the MCA-Science test.
+
+The biggest difference between EDRs is that EDR 6W has a significantly lower percentage of students who meet or exceeds standards (`r percent(.298+.055, accuracy = .1)`) compared to EDR 6E (`r percent(.316+.072, accuracy = .1)`) and EDR 8 (`r percent(.305+.077, accuracy = .1)`).
+
+<br>
+
+### EDR table
+
+<br>
+
+```{r mca science summary edr}
+mca.highest.science.summary.edr <- master.7 %>%
+  select(edr, MCA.S) %>%
+  mutate(MCA.S = ifelse(MCA.S == 1, "D",
+                              ifelse(MCA.S == 2, "P",
+                                     ifelse(MCA.S == 3, "M",
+                                            ifelse(MCA.S == 4, "E", MCA.S)))),
+         MCA.S = fct_relevel(MCA.S, "D", "P", "M", "E")) %>%
+  group_by(edr, MCA.S) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = as.character(seq(n())))
+
+mca.highest.science.edr.plot <- ggplot(mca.highest.science.summary.edr, aes(edr, pct, fill = MCA.S, group = MCA.S)) +
+    geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("MCA - Math", "\nGrade: ", MCA.S, "\nNumber of students with this grade: ", comma(n, accuracy = 1), "\nPercent of students: ", percent(pct, accuracy = .1), sep = ""))) +
+    geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5) +
+    labs(x="", y = "", color="", title = "Student grades within edr category for MCA - science")+
+    scale_y_continuous(labels=scales::percent)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 3)) +
+    theme_bar+
+    scale_fill_manual(values= brewer.pal(n = 5, "RdYlBu"),
+                       guide = guide_legend(ncol = 3)) +
+    theme(legend.position = "none",
+          text = element_text(size = 18))
+
+
+girafe(ggobj = mca.highest.science.edr.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))
+```
+
+<br>
+
+### RUCA crosstabs
+
+<br>
+
+```{r mca science cross tabs edr}
+CrossTable(master.7$edr, master.7$MCA.S, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+
+```{r write master}
+write_csv(master.7, "Data/SLEDS/Masters/Master-7.csv")
+```
+
