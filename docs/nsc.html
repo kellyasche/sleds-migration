@@ -11,7 +11,7 @@
 
 
 
-<title>Summary</title>
+<title>National Student Clearinghouse</title>
 
 <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -29,6 +29,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -225,6 +228,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#section-TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#section-TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -232,6 +298,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="section-TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -304,25 +380,87 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Summary</h1>
+<h1 class="title toc-ignore">National Student Clearinghouse</h1>
 
 </div>
 
 
-<div id="section-largest-changes-to-original-dataset"
-class="section level1">
-<h1>Largest changes to original dataset</h1>
+<p><br></p>
+<div id="section-data-prep---nsc-enrollment" class="section level1">
+<h1>Data prep - NSC enrollment</h1>
+<p>Okay, lets check out the National Student Clearinghouse enrollment
+data.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 6
+##   PersonID EnrollmentBeginTimeID EnrollmentEndTimeID   OPEID Instituti…¹ Enrol…²
+##      &lt;int&gt;                 &lt;dbl&gt;               &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;  
+## 1       68              20070820            20071214  254700 Grace Univ… L      
+## 2       68              20080827            20081218  237100 University… F      
+## 3       68              20090112            20090514  237100 University… F      
+## 4       68              20090909            20091216  346900 University… F      
+## 5       68              20110309            20110524 1258600 Metropolit… F      
+## 6       68              20110606            20110815 1258600 Metropolit… F      
+## # … with abbreviated variable names ¹​InstitutionName, ²​EnrollmentStatus</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;              &quot;EnrollmentBeginTimeID&quot; &quot;EnrollmentEndTimeID&quot;  
+## [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;</code></pre>
+<p><br></p>
+<p>The dataset has 276,273 rows and 6 columns. Here are the columns and
+their definitions.</p>
 <ul>
-<li>Removed all observations of students who graduated before 2008. This
-was due to the fact that the CTE information had a record for each class
-taken by a student. Therefore, if a student was in their senior year in
-2006, we only have one year of their CTE records, not the full Sophmore
-- Senior years like all the others.</li>
+<li>EnrollmentBeginTimeID: Begin date for the student’s period of
+attendance.</li>
+<li>EnrollmentEndTimeID: End date for the student’s period of
+attendance.</li>
+<li>OPEID: Office of Postsecondary Education (OPE)/FICE code of the
+college that the student attended (Foreign Key to
+IPEDSCharacteristics).</li>
+<li>InstitutionName: Name of institution</li>
+<li>EnrollmentStatus: The last enrollment status reported for the
+student. This field will have ‘N/A’ if the reporting college has not
+defined the student’s enrollment status as directory information. Here
+are the code definitions;
+<ul>
+<li>A: Leave of absence</li>
+<li>D: Deceased</li>
+<li>F: Full-time</li>
+<li>H: Half-time</li>
+<li>L: Less than full-time</li>
+<li>W: Withdrawn</li>
+</ul></li>
 </ul>
+<p>There are a few pieces of information that I want to consolidate from
+this dataset;</p>
+<ol style="list-style-type: decimal">
+<li>Did the PersonID in the master dataset attend college - yes or
+no.</li>
+<li>Did the PersonID attend multiple colleges - yes or no.</li>
+<li>Did the PersonID attend a public, private, or for-profit
+institution?</li>
+<li>Did the PersonID attend a 2-year institution - yes or no.</li>
+<li>Did the PersonID attend a 4-year institution - yes or no.</li>
+<li>Did the PersonID attend a college(s) inside or outside of the
+Southwest Region or outside the EDR of their high school?</li>
+<li>What was the highest degree attained by the PersonID.</li>
+</ol>
+<p>The pieces of information missing in the original dataset is location
+and type of institution attended.To do this we will need to join the
+original dataset with an IPEDS dataset using UnitID with opeid.</p>
+<p><br></p>
+<pre><code>## [1] &quot;UnitID&quot;                               
+## [2] &quot;Institution Name&quot;                     
+## [3] &quot;Sector of institution (HD2006)&quot;       
+## [4] &quot;Level of institution (HD2006)&quot;        
+## [5] &quot;Institutional category (HD2006)&quot;      
+## [6] &quot;City location of institution (HD2006)&quot;
+## [7] &quot;ZIP code (HD2006)&quot;</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;              &quot;EnrollmentBeginTimeID&quot; &quot;EnrollmentEndTimeID&quot;  
+## [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;</code></pre>
 </div>
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -355,6 +493,35 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#section-TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

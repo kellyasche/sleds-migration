@@ -11,7 +11,7 @@
 
 
 
-<title>Summary</title>
+<title>PSEO</title>
 
 <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -29,6 +29,9 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -225,6 +228,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#section-TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#section-TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -232,6 +298,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="section-TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -304,25 +380,123 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Summary</h1>
+<h1 class="title toc-ignore">PSEO</h1>
 
 </div>
 
 
-<div id="section-largest-changes-to-original-dataset"
-class="section level1">
-<h1>Largest changes to original dataset</h1>
+<p><br></p>
+<div id="section-data-prep---pseocourses" class="section level1">
+<h1>Data prep - PSEOCourses</h1>
+<p>Let’s check out the PSEO courses dataset.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 7
+##   opeid InstitutionName    CourseName           Course…¹ Count…² first…³ lasty…⁴
+##   &lt;chr&gt; &lt;chr&gt;              &lt;chr&gt;                &lt;chr&gt;      &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1 5252  Ridgewater College ABOD100201Auto Trade 20             1    2018    2018
+## 2 5252  Ridgewater College ABOD111101Minor Body 20             1    2018    2018
+## 3 5252  Ridgewater College ABOD111201Weld Proce 20             1    2018    2018
+## 4 5252  Ridgewater College ABOD111301Vehicle Pr 20             1    2018    2018
+## 5 5252  Ridgewater College ABOD112401Body/Glass 20             1    2018    2018
+## 6 5252  Ridgewater College ABOD112501Auto Refin 20             1    2018    2018
+## # … with abbreviated variable names ¹​CourseSubject, ²​CountStudents,
+## #   ³​firstYearofdata, ⁴​lastyearofdata</code></pre>
+<pre><code>## [1] &quot;opeid&quot;           &quot;InstitutionName&quot; &quot;CourseName&quot;      &quot;CourseSubject&quot;  
+## [5] &quot;CountStudents&quot;   &quot;firstYearofdata&quot; &quot;lastyearofdata&quot;</code></pre>
+<p><br></p>
+<p>This dataset has 945 rows and 7 columns. The definitions for the
+columns are;</p>
 <ul>
-<li>Removed all observations of students who graduated before 2008. This
-was due to the fact that the CTE information had a record for each class
-taken by a student. Therefore, if a student was in their senior year in
-2006, we only have one year of their CTE records, not the full Sophmore
-- Senior years like all the others.</li>
+<li>opeid: Identification code for the institution.</li>
+<li>InstitutionName: Name</li>
+<li>CourseName: Name of course</li>
+<li>CourseSubject: Code identifying the subject. The table is long so
+here’s a <a
+href="https://sleds.mn.gov/dataDictionary/4792">link</a>.</li>
+<li>CountStudents: I guess the number of students in the course for the
+fiscal year?</li>
+<li>firstYearofData: No idea</li>
+<li>lastyearofdata: No idea</li>
 </ul>
+<p>At this point I have no idea what this dataset is for?</p>
+</div>
+<div id="section-data-prep---pseostudent" class="section level1">
+<h1>Data prep - PSEOStudent</h1>
+<p>Let’s check the PSEO Student dataset.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 14
+##   PersonID Fiscal…¹ TimeID TermY…² TermS…³ OPEID Insti…⁴ Grade…⁵ Cours…⁶ Cours…⁷
+##      &lt;int&gt;    &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;
+## 1    24816     2018 2.02e7 NULL    NULL     5252 Ridgew…      12 ABOD11…       4
+## 2    24816     2018 2.02e7 NULL    NULL     5252 Ridgew…      12 ABOD11…       1
+## 3    24816     2018 2.02e7 NULL    NULL     5252 Ridgew…      12 ABOD11…      11
+## 4    24816     2018 2.02e7 NULL    NULL     5252 Ridgew…      12 ABOD10…       2
+## 5    24816     2018 2.02e7 NULL    NULL     5252 Ridgew…      12 ABOD11…       6
+## 6    24816     2018 2.02e7 NULL    NULL     5252 Ridgew…      12 ABOD11…       3
+## # … with 4 more variables: CourseProgramCode &lt;dbl&gt;, CourseSubject &lt;chr&gt;,
+## #   CourseSubjectDescription &lt;chr&gt;, CourseGrade &lt;fct&gt;, and abbreviated variable
+## #   names ¹​FiscalYear, ²​TermYear, ³​TermSeason, ⁴​InstitutionName, ⁵​GradeLevel,
+## #   ⁶​CourseName, ⁷​CourseNoOfCredits
+## # ℹ Use `colnames()` to see all variable names</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;                 &quot;FiscalYear&quot;              
+##  [3] &quot;TimeID&quot;                   &quot;TermYear&quot;                
+##  [5] &quot;TermSeason&quot;               &quot;OPEID&quot;                   
+##  [7] &quot;InstitutionName&quot;          &quot;GradeLevel&quot;              
+##  [9] &quot;CourseName&quot;               &quot;CourseNoOfCredits&quot;       
+## [11] &quot;CourseProgramCode&quot;        &quot;CourseSubject&quot;           
+## [13] &quot;CourseSubjectDescription&quot; &quot;CourseGrade&quot;</code></pre>
+<p><br></p>
+<p>There are 3,057 rows and 14 columns in this dataset. The column
+definitions are;</p>
+<ul>
+<li>FiscalYear: School year</li>
+<li>TimeID: No idea</li>
+<li>TermYear: Year of term</li>
+<li>TermSeason: Fall, Spring or Summer</li>
+<li>OPEID: Identification of institution</li>
+<li>InstitutionName: Name</li>
+<li>GradeLevel: Grade of student when taking the course</li>
+<li>CourseName: Name of course taken</li>
+<li>CourseNoOfCredits: Number of credits if course is completed.</li>
+<li>CourseProgramCode: No definition given</li>
+<li>CourseSubject: Code of subject. Table provided <a
+href="https://sleds.mn.gov/dataDictionary/4792">here</a></li>
+<li>CourseSubjectDescription: Description of 1-24 codes</li>
+<li>CourseGrade: Grade given in course.</li>
+</ul>
+<p>In the master dataset, I already have a column on whether a student
+has taken a PSEO course. Therefore, there is only two pieces of
+information that I want from these two datasets and that is the total
+credits of PSEO coursework taken by each PersonID as well as the number
+of courses.</p>
+<p>So, first I will delete any instances where the PersonID received a
+failing grade (F, I (incomplete), WF). Then, I will just group the
+dataset by PersonID, and count the number of instances a single PersonID
+is in the dataset which will give me the number of courses and sum up
+the number of credits.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 3
+##   PersonID n.pseo.courses n.pseo.credits
+##      &lt;int&gt;          &lt;int&gt;          &lt;dbl&gt;
+## 1    24816              7             33
+## 2    29546              1              3
+## 3    40884             10             27
+## 4    89368              2              6
+## 5   105421              2              4
+## 6   108731              2              4</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;       &quot;n.pseo.courses&quot; &quot;n.pseo.credits&quot;</code></pre>
+<p><br></p>
+<p>In this dataset there are 547 rows and 3 columns. This seems kind of
+crazy. In the master dataset I have 13,235 students who’ve taken PSEO.
+That’s about 35% of the PersonID.</p>
+<p>Now we can join this with the masterdata set.</p>
+<p><br></p>
 </div>
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -355,6 +529,35 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#section-TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

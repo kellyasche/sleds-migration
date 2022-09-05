@@ -1,0 +1,166 @@
+---
+title: "National Student Clearinghouse"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(systemfonts)
+reset_font_cache()
+library(ggtext)
+library(gmodels)
+```
+
+```{r themes and join docs, include=FALSE}
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial"))
+
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+```
+
+<br>
+
+# Data prep - NSC enrollment
+
+Okay, lets check out the National Student Clearinghouse enrollment data.
+
+<br>
+
+```{r nsc enrollment originals}
+nsc.enrollment.original <- read_csv("Data/SLEDS/NSC/NSC_Enrollments.csv") %>%
+  mutate(PersonID = as.integer(PersonID))
+  
+head(nsc.enrollment.original)
+
+names(nsc.enrollment.original)
+```
+
+<br>
+
+The dataset has `r comma(nsc.enrollment.original %>% nrow(), accuracy = 1)` rows and `r comma(nsc.enrollment.original %>% ncol(), accuracy = 1)` columns. Here are the columns and their definitions.
+
+* EnrollmentBeginTimeID: Begin date for the student’s period of attendance.
+* EnrollmentEndTimeID: End date for the student’s period of attendance.
+* OPEID: Office of Postsecondary Education (OPE)/FICE code of the college that the student attended (Foreign Key to IPEDSCharacteristics).
+* InstitutionName: Name of institution
+* EnrollmentStatus: The last enrollment status reported for the student. This field will have 'N/A' if the reporting college has not defined the student’s enrollment status as directory information. Here are the code definitions;
+  + A: Leave of absence
+  + D: Deceased
+  + F: Full-time
+  + H: Half-time
+  + L: Less than full-time
+  + W: Withdrawn
+
+There are a few pieces of information that I want to consolidate from this dataset;
+
+1. Did the PersonID in the master dataset attend college - yes or no.
+2. Did the PersonID attend multiple colleges - yes or no.
+3. Did the PersonID attend a public, private, or for-profit institution?
+4. Did the PersonID attend a 2-year institution - yes or no.
+5. Did the PersonID attend a 4-year institution - yes or no.
+6. Did the PersonID attend a college(s) inside or outside of the Southwest Region or outside the EDR of their high school?
+7. What was the highest degree attained by the PersonID.
+
+The pieces of information missing in the original dataset is location and type of institution attended.To do this we will need to join the original dataset with an IPEDS dataset using UnitID with opeid.
+
+<br>
+
+```{r prep ipeds}
+ipeds <- read_csv("Data/SLEDS/NSC/institutions-location-characteristics.csv")
+
+nsc.enrollment.ipeds <- nsc.enrollment.original %>%
+  left_join(ipeds, by = c("OPEID" = "UnitID"))
+
+names(ipeds)
+names(nsc.enrollment.original)
+```
+  
+
+

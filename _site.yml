@@ -24,8 +24,10 @@ navbar:
           href: cteintensity.html
         - text: "Assessments"
           href: assessments.html
-        - text: "Employment"
-          href: employment.html
+        - text: "SAT"
+          href: sat.html
+        - text: "PSEO"
+          href: pseo.html
 output:
   html_document:
     css: "styles.css"

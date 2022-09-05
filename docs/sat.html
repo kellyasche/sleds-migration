@@ -11,7 +11,7 @@
 
 
 
-<title>K12Enrollment</title>
+<title>SAT</title>
 
 <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -392,162 +392,104 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">K12Enrollment</h1>
+<h1 class="title toc-ignore">SAT</h1>
 
 </div>
 
 
 <p><br></p>
-<div id="section-data-prep" class="section level1">
-<h1>Data prep</h1>
-<p>This dataset is of all the individuals that have graduated from a
-high school in Southwest Minnesota.</p>
+<div id="section-data-prep---sat" class="section level1">
+<h1>Data prep - SAT</h1>
+<p>Alright, lets see what this dataset looks like.</p>
 <p><br></p>
-<pre><code>## # A tibble: 6 × 15
-##   PersonID K12Or…¹ K12En…² Grade Econo…³ Feder…⁴ PostS…⁵ PSEOC…⁶ RaceE…⁷ Statu…⁸
-##      &lt;int&gt;   &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;
-## 1       68  124096  2.01e7    10       0 NULL    N       NULL          5      40
-## 2       68  124083  2.01e7    11       0 NULL    N       NULL          5      40
-## 3       68  124084  2.01e7    12       0 NULL    N       NULL          5       8
-## 4      161   77457  2.01e7     9       0 NULL    N       NULL          5      40
-## 5      161   77450  2.01e7    10       0 NULL    N       NULL          5      40
-## 6      161   77451  2.01e7    11       0 NULL    N       NULL          5      40
-## # … with 5 more variables: Gender &lt;chr&gt;, SpecialEdStatus &lt;dbl&gt;,
-## #   LimitedEnglishProficiencyIndicator &lt;chr&gt;, HomePrimaryLanguage &lt;dbl&gt;,
-## #   HomelessIndicator &lt;chr&gt;, and abbreviated variable names ¹​K12OrganizationID,
-## #   ²​K12EnrTimeID, ³​EconomicStatusIndicator, ⁴​FederalRaceIndicator,
-## #   ⁵​PostSecondaryEnrollmentOptionsIndicator,
-## #   ⁶​PSEOConcurrentEnrollmentIndicator, ⁷​RaceEthnicity, ⁸​StatusEnd
-## # ℹ Use `colnames()` to see all variable names</code></pre>
-<pre><code>##  [1] &quot;PersonID&quot;                               
-##  [2] &quot;K12OrganizationID&quot;                      
-##  [3] &quot;K12EnrTimeID&quot;                           
-##  [4] &quot;Grade&quot;                                  
-##  [5] &quot;EconomicStatusIndicator&quot;                
-##  [6] &quot;FederalRaceIndicator&quot;                   
-##  [7] &quot;PostSecondaryEnrollmentOptionsIndicator&quot;
-##  [8] &quot;PSEOConcurrentEnrollmentIndicator&quot;      
-##  [9] &quot;RaceEthnicity&quot;                          
-## [10] &quot;StatusEnd&quot;                              
-## [11] &quot;Gender&quot;                                 
-## [12] &quot;SpecialEdStatus&quot;                        
-## [13] &quot;LimitedEnglishProficiencyIndicator&quot;     
-## [14] &quot;HomePrimaryLanguage&quot;                    
-## [15] &quot;HomelessIndicator&quot;</code></pre>
+<pre><code>## # A tibble: 6 × 5
+##   PersonID SATTimeID TestType ExamSubject        ExamGrade
+##      &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;              &lt;chr&gt;    
+## 1     5221  20150630 SAT      SAT_WRITE_MC_MR    47       
+## 2     5221  20150630 SAT      SAT_WRITE_MR       450      
+## 3     5221  20150630 SAT      SAT_MATH_HC        620      
+## 4     5221  20150630 SAT      SAT_MATH_MR        620      
+## 5     5221  20150630 SAT      SAT_WRITE_ESSAY_HC 6        
+## 6     5221  20150630 SAT      SAT_WRITE_ESSAY_MR 6</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;    &quot;SATTimeID&quot;   &quot;TestType&quot;    &quot;ExamSubject&quot; &quot;ExamGrade&quot;</code></pre>
 <p><br></p>
-<p>In the dataset there are 200,350 observations along with 15 columns.
-Each observation does not represent a unique, unduplicated individual,
-but rather a unique status for the individual. For example, one
-individual can have multiple observations if they changed schools, for
-each school year, or if their economic status changed in the middle of a
-school year.</p>
-<p>My goal is to end up with a dataset where each observation (row)
-represents a unique (unduplicated) individual that’s tied to the school
-from which they graduated. Here’s how I will do that.</p>
+<p>There are 4,005 rows and 5 columns. The definitions of the columns
+are;</p>
 <ul>
-<li>PersonID: change to integer</li>
-<li>K12OrganizationID: change to integer.</li>
-<li>K12EnrTimeID: Change so it’s only the year</li>
-<li>Grade: eliminate - unimportant since we are mostly concerned about
-whether they graduated.</li>
-<li>EconomicStatusIndicator: I will change this to two categories.
-Whether they were ever eligible for reduce priced or free meal will be
-coded as 1 (eligible = codes 1, 2, 4, 5) at any point in the dataset.
-The remaining will be coded as 0.</li>
-<li>FederalRaceIndicator: eliminate - I’m going to use the RaceEthnicity
-column instead.</li>
-<li>PSEO columns: I’m most concerned about whether they participated in
-PSEO or not. A new column will be created indicated whether there was a
-“Y” coded for either the “PSEOConcurrentEnrollmentIndicator” or
-“PostSecondaryEnrollmentOptionsIndicator” columns at any point in the
-dataset. The two original columns will be eliminated.</li>
-<li>StatusEnd: I will only include individuals that have StatusEnd coded
-as an 8 or 9.</li>
-<li>Gender: included and not changed.</li>
-<li>SpecialEdStatus: I will split this into two categories. The first is
-that a student did not require special education services (codes 1-2) at
-any point in the dataset. The other category will be that they require
-special education (codes 4 - 9) at any point in the dataset.</li>
-<li>Limited English: keep with no changes.</li>
-<li>Primary language: I’m going to create two categories. One being that
-English is the primary language while the other will be that English is
-NOT the primary language at any point in the dataset.</li>
-<li>Homeless: Keep with no changes.</li>
+<li>SATTimeID: Time of the test</li>
+<li>TestType: SAT</li>
+<li>ExamSubject: subject</li>
+<li>ExamGrade: Exam grades are all over the place here and there’s no
+definition in the data dictionary.</li>
 </ul>
-<p>We first need to create a list of all individuals with the StatusEnd
-code of 8 or 9 (graduated). In addition, we need to remove any student
-that graduated before 2008. This is because we will not have their full
-Sophmore - Senior records which is especially important when attempting
-to identify whether the number of CTE courses taken predicts
-migration.</p>
-<p>This “graduates list” will be the list on which we will bind all the
-other variables.</p>
+<p>Okay, since I don’t have any information related to how the grading
+system works, I will just utilize this dataset to code wither a PersonID
+has taken an SAT test.</p>
 <p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID sat.taken
+##      &lt;int&gt;     &lt;dbl&gt;
+## 1     5221         1
+## 2    13263         1
+## 3   192162         1
+## 4   237914         1
+## 5   325260         1
+## 6   370304         1</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;  &quot;sat.taken&quot;</code></pre>
 <p><br></p>
-<p>Unfortunately, we still end up with duplicates so I just did a
-distinct on PersonID. We will send this to Meredith to figure out.</p>
-<p>Next we need to create new columns for the variables that will
-indicate a certain status has been met at any point in the dataset for
-each PersonID. For example, we want a column that indicates a PersonID
-was enrolled in PSEO at some point in the dataset. The variables that
-need a new column created are;</p>
-<ul>
-<li>EconomicStatusIndicator</li>
-<li>PostSecondaryEnrollmentOptionsIndicator &amp;
-PSEOConcurrentEnrollmentIndicator</li>
-<li>SpecialEdStatus</li>
-<li>HomeprimaryLanguage</li>
-</ul>
+<p>Now we will join it with the master dataset.</p>
 <p><br></p>
-<p><br></p>
-<p>Now we can combine the list of graduates with the status
-indicators.</p>
-<p><br></p>
-<pre><code>## # A tibble: 6 × 10
+<pre><code>## # A tibble: 6 × 37
 ##   Perso…¹ K12Or…² grad.…³ Gender Limit…⁴ Homel…⁵ econo…⁶ pseo.…⁷ Speci…⁸ non.e…⁹
-##     &lt;int&gt;   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
 ## 1     161   77452    2009 M      N       N             0       1       0       0
 ## 2     641   38385    2009 M      N       N             1       0       0       0
 ## 3     676   55598    2008 M      N       N             0       0       1       0
 ## 4     786   56633    2010 F      N       N             0       0       0       0
 ## 5    1162  181770    2019 M      N       N             1       0       0       1
 ## 6    2292   55659    2010 F      N       N             0       1       0       0
-## # … with abbreviated variable names ¹​PersonID, ²​K12OrganizationID, ³​grad.year,
-## #   ⁴​LimitedEnglishProficiencyIndicator, ⁵​HomelessIndicator, ⁶​economic.status,
-## #   ⁷​pseo.participant, ⁸​SpecialEdStatus, ⁹​non.english.home</code></pre>
+## # … with 27 more variables: DistrictName &lt;chr&gt;, county.name &lt;chr&gt;,
+## #   countyfp &lt;chr&gt;, Dem_Desc &lt;chr&gt;, edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;,
+## #   ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;, total.cte.courses.taken &lt;dbl&gt;,
+## #   cte.careerfield.1 &lt;dbl&gt;, cte.careerfield.2 &lt;dbl&gt;, cte.careerfield.3 &lt;dbl&gt;,
+## #   cte.careerfield.4 &lt;dbl&gt;, cte.careerfield.5 &lt;dbl&gt;, cte.careerfield.6 &lt;dbl&gt;,
+## #   cte.careerfield.7 &lt;dbl&gt;, cte.careerfield.8 &lt;dbl&gt;, cte.careerfield.9 &lt;dbl&gt;,
+## #   cte.careerfield.NULL &lt;dbl&gt;, cte.achievement &lt;chr&gt;, …
+## # ℹ Use `colnames()` to see all variable names</code></pre>
 <pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
 ##  [3] &quot;grad.year&quot;                          &quot;Gender&quot;                            
 ##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
 ##  [7] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
-##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;</code></pre>
+##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;                  
+## [11] &quot;DistrictName&quot;                       &quot;county.name&quot;                       
+## [13] &quot;countyfp&quot;                           &quot;Dem_Desc&quot;                          
+## [15] &quot;edr&quot;                                &quot;n.years.attended&quot;                  
+## [17] &quot;ACTCompositeScore&quot;                  &quot;ap.exam&quot;                           
+## [19] &quot;total.cte.courses.taken&quot;            &quot;cte.careerfield.1&quot;                 
+## [21] &quot;cte.careerfield.2&quot;                  &quot;cte.careerfield.3&quot;                 
+## [23] &quot;cte.careerfield.4&quot;                  &quot;cte.careerfield.5&quot;                 
+## [25] &quot;cte.careerfield.6&quot;                  &quot;cte.careerfield.7&quot;                 
+## [27] &quot;cte.careerfield.8&quot;                  &quot;cte.careerfield.9&quot;                 
+## [29] &quot;cte.careerfield.NULL&quot;               &quot;cte.achievement&quot;                   
+## [31] &quot;avg.cte.intensity&quot;                  &quot;english.learner&quot;                   
+## [33] &quot;id&quot;                                 &quot;MCA.M&quot;                             
+## [35] &quot;MCA.R&quot;                              &quot;MCA.S&quot;                             
+## [37] &quot;sat.taken&quot;</code></pre>
 <p><br></p>
-<p>The prepped enrollment data has 38,184 observations and 10
-columns.</p>
-<p><br></p>
+<p>As expected there are 38,154 rows and 37 columns.</p>
 </div>
-<div id="section-summary-of-k12enrollment-data" class="section level1">
-<h1>Summary of K12Enrollment data</h1>
-<p>Below is the percentage of total observations that;</p>
-<ul>
-<li>Were eligible for free or reduced lunch at some point in the
-dataset</li>
-<li>Are Female</li>
-<li>Have been homeless at some point in the dataset</li>
-<li>Had limited english proficiency at some point in the dataset</li>
-<li>Had non english speakders in home at some point in the dataset</li>
-<li>Participated in a PSEO course at some point in the dataset.</li>
-</ul>
-<p>As expected, nearly half (49.4%) of the observations are female. Over
-a third (39.2%) of the observations have been eligible for free or
-reduced lunch at some point in the dataset. Also, nearly a third (34.7%)
-of observations participated in a PSEO course. 8.7% of observations
-indicated that there was a non-english speaker at home, 2% had limited
-english proficiency and 0.4% indicated that were homeless at some
-point.</p>
+<div id="section-summary-of-sat-data" class="section level1">
+<h1>Summary of SAT data</h1>
+<p>Lets check to see what percentage of the master dataset has taken the
+SAT.</p>
+<p>There is a tiny percentage of the dataset that has taken the SAT,
+0.6%. With this information I don’t see a need to check whether there is
+a significant difference in students taking the SAT based on RUCA
+categoriy or EDR. Even if there is a significant difference, there just
+isn’t enough observations to make a difference.</p>
 <p><br></p>
-<div id="htmlwidget-28f99ac8c657c23643f3" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-28f99ac8c657c23643f3">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"161\" data-max=\"18861\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Female","Free or reduced lunch","Homeless","Limited English Proficiency","Non-english in home","PSEO participant","Special Ed"],[18861,14977,161,809,3326,13235,5266],[38184,38184,38184,38184,38184,38184,38184],["49.4%","39.2%","0.4%","2.1%","8.7%","34.7%","13.8%"]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>indicator<\/th>\n      <th>confirmed.indicator<\/th>\n      <th>total.observations<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":[],"jsHooks":[]}</script>
-<p><br></p>
+<div id="htmlwidget-225c079d26f18ae0c727" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-225c079d26f18ae0c727">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"237\" data-max=\"37917\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.006211668501336\" data-max=\"0.993788331498664\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[[0,1],[37917,237],[0.993788331498663,0.00621166850133669]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>sat.taken<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[0,1]},{"className":"dt-right","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
 </div>
 
 
