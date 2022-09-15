@@ -108,3 +108,5 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
 <br>
 
 # Data prep - PS enrollment
+
+Let's check the data.

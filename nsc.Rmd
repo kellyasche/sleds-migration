@@ -115,7 +115,8 @@ Okay, lets check out the National Student Clearinghouse enrollment data.
 
 ```{r nsc enrollment originals}
 nsc.enrollment.original <- read_csv("Data/SLEDS/NSC/NSC_Enrollments.csv") %>%
-  mutate(PersonID = as.integer(PersonID))
+  mutate(PersonID = as.integer(PersonID),
+         OPEID = str_pad(OPEID, width = 8, side = "left", pad = "0"))
   
 head(nsc.enrollment.original)
 
@@ -148,19 +149,32 @@ There are a few pieces of information that I want to consolidate from this datas
 6. Did the PersonID attend a college(s) inside or outside of the Southwest Region or outside the EDR of their high school?
 7. What was the highest degree attained by the PersonID.
 
-The pieces of information missing in the original dataset is location and type of institution attended.To do this we will need to join the original dataset with an IPEDS dataset using UnitID with opeid.
+The pieces of information missing in the original dataset is location and type of institution attended.To do this we will need to join the original dataset with an IPEDS dataset using opeid.
+
+The IPEDS data and the NSC data will only match using the first 6 digits of the IPEDS OPEID values. So I will change that in the NSC data. Then I can join.
 
 <br>
 
 ```{r prep ipeds}
-ipeds <- read_csv("Data/SLEDS/NSC/institutions-location-characteristics.csv")
+ipeds <- read_csv("Data/SLEDS/IPEDS/Master-ipeds.csv")
 
-nsc.enrollment.ipeds <- nsc.enrollment.original %>%
-  left_join(ipeds, by = c("OPEID" = "UnitID"))
-
-names(ipeds)
-names(nsc.enrollment.original)
 ```
-  
+
+<br>
+
+After joining these we now have `r `
+
+Value	Label	Frequency	Percentage
+0	Administrative Unit		
+1	Public, 4-year or above		
+2	Private not-for-profit, 4-year or above		
+3	Private for-profit, 4-year or above		
+4	Public, 2-year		
+5	Private not-for-profit, 2-year		
+6	Private for-profit, 2-year		
+7	Public, less-than 2-year		
+8	Private not-for-profit, less-than 2-year		
+9	Private for-profit, less-than 2-year		
+99	Sector unknown (not active)
 
 

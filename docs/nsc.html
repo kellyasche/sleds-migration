@@ -364,7 +364,7 @@ div.tocify {
       <a href="sat.html">SAT</a>
     </li>
     <li>
-      <a href="pseo.html">PSEO</a>
+      <a href="nsc.html">National Student Clearinghouse</a>
     </li>
   </ul>
 </li>
@@ -392,14 +392,14 @@ div.tocify {
 data.</p>
 <p><br></p>
 <pre><code>## # A tibble: 6 × 6
-##   PersonID EnrollmentBeginTimeID EnrollmentEndTimeID   OPEID Instituti…¹ Enrol…²
-##      &lt;int&gt;                 &lt;dbl&gt;               &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;  
-## 1       68              20070820            20071214  254700 Grace Univ… L      
-## 2       68              20080827            20081218  237100 University… F      
-## 3       68              20090112            20090514  237100 University… F      
-## 4       68              20090909            20091216  346900 University… F      
-## 5       68              20110309            20110524 1258600 Metropolit… F      
-## 6       68              20110606            20110815 1258600 Metropolit… F      
+##   PersonID EnrollmentBeginTimeID EnrollmentEndTimeID OPEID    Institut…¹ Enrol…²
+##      &lt;int&gt;                 &lt;dbl&gt;               &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;  
+## 1       68              20070820            20071214 00254700 Grace Uni… L      
+## 2       68              20080827            20081218 00237100 Universit… F      
+## 3       68              20090112            20090514 00237100 Universit… F      
+## 4       68              20090909            20091216 00346900 Universit… F      
+## 5       68              20110309            20110524 01258600 Metropoli… F      
+## 6       68              20110606            20110815 01258600 Metropoli… F      
 ## # … with abbreviated variable names ¹​InstitutionName, ²​EnrollmentStatus</code></pre>
 <pre><code>## [1] &quot;PersonID&quot;              &quot;EnrollmentBeginTimeID&quot; &quot;EnrollmentEndTimeID&quot;  
 ## [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;</code></pre>
@@ -444,17 +444,24 @@ Southwest Region or outside the EDR of their high school?</li>
 </ol>
 <p>The pieces of information missing in the original dataset is location
 and type of institution attended.To do this we will need to join the
-original dataset with an IPEDS dataset using UnitID with opeid.</p>
+original dataset with an IPEDS dataset using opeid.</p>
+<p>The IPEDS data and the NSC data will only match using the first 6
+digits of the IPEDS OPEID values. So I will change that in the NSC data.
+Then I can join.</p>
 <p><br></p>
-<pre><code>## [1] &quot;UnitID&quot;                               
-## [2] &quot;Institution Name&quot;                     
-## [3] &quot;Sector of institution (HD2006)&quot;       
-## [4] &quot;Level of institution (HD2006)&quot;        
-## [5] &quot;Institutional category (HD2006)&quot;      
-## [6] &quot;City location of institution (HD2006)&quot;
-## [7] &quot;ZIP code (HD2006)&quot;</code></pre>
-<pre><code>## [1] &quot;PersonID&quot;              &quot;EnrollmentBeginTimeID&quot; &quot;EnrollmentEndTimeID&quot;  
-## [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;</code></pre>
+<p><br></p>
+<p>After joining these we now have <code>r</code></p>
+<p>Value Label Frequency Percentage 0 Administrative Unit<br />
+1 Public, 4-year or above<br />
+2 Private not-for-profit, 4-year or above<br />
+3 Private for-profit, 4-year or above<br />
+4 Public, 2-year<br />
+5 Private not-for-profit, 2-year<br />
+6 Private for-profit, 2-year<br />
+7 Public, less-than 2-year<br />
+8 Private not-for-profit, less-than 2-year<br />
+9 Private for-profit, less-than 2-year<br />
+99 Sector unknown (not active)</p>
 </div>
 
 
