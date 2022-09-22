@@ -116,7 +116,10 @@ Okay, lets check out the National Student Clearinghouse enrollment data.
 ```{r nsc enrollment originals}
 nsc.enrollment.original <- read_csv("Data/SLEDS/NSC/NSC_Enrollments.csv") %>%
   mutate(PersonID = as.integer(PersonID),
-         OPEID = str_pad(OPEID, width = 8, side = "left", pad = "0"))
+         OPEID = str_pad(OPEID, width = 8, side = "left", pad = "0"),
+         OPEID.6 = str_sub(OPEID, 1, 6)) %>%
+  drop_na(PersonID) %>%
+  drop_na(OPEID)
   
 head(nsc.enrollment.original)
 
@@ -131,7 +134,7 @@ The dataset has `r comma(nsc.enrollment.original %>% nrow(), accuracy = 1)` rows
 * EnrollmentEndTimeID: End date for the student’s period of attendance.
 * OPEID: Office of Postsecondary Education (OPE)/FICE code of the college that the student attended (Foreign Key to IPEDSCharacteristics).
 * InstitutionName: Name of institution
-* EnrollmentStatus: The last enrollment status reported for the student. This field will have 'N/A' if the reporting college has not defined the student’s enrollment status as directory information. Here are the code definitions;
+* EnrollmentStatus: The last enrollment status reported for the student. This field will have 'N/A' or "NULL" if the reporting college has not defined the student’s enrollment status as directory information. Here are the code definitions;
   + A: Leave of absence
   + D: Deceased
   + F: Full-time
@@ -141,13 +144,15 @@ The dataset has `r comma(nsc.enrollment.original %>% nrow(), accuracy = 1)` rows
 
 There are a few pieces of information that I want to consolidate from this dataset;
 
-1. Did the PersonID in the master dataset attend college - yes or no.
-2. Did the PersonID attend multiple colleges - yes or no.
-3. Did the PersonID attend a public, private, or for-profit institution?
-4. Did the PersonID attend a 2-year institution - yes or no.
-5. Did the PersonID attend a 4-year institution - yes or no.
-6. Did the PersonID attend a college(s) inside or outside of the Southwest Region or outside the EDR of their high school?
-7. What was the highest degree attained by the PersonID.
+1. Did the PersonID in the master dataset attend a college - yes or no?
+2. Did the PersonID finish college or withdraw?
+3. What was the highest degree attained by the PersonID?
+4. Did the PersonID attend college immediately after graduation or wait?
+5. Did the PersonID attend multiple colleges - yes or no?
+6. Did the PersonID attend a public, private not-for-profit, or private for-profit college(s)?
+7. Did the PersonID attend a 2-year institution - yes or no?
+8. Did the PersonID attend a 4-year institution - yes or no?
+9. At any point during their college career, did the PersonID attend a college(s) inside or outside of the Southwest Region or outside the EDR of their high school?
 
 The pieces of information missing in the original dataset is location and type of institution attended.To do this we will need to join the original dataset with an IPEDS dataset using opeid.
 
@@ -156,25 +161,41 @@ The IPEDS data and the NSC data will only match using the first 6 digits of the 
 <br>
 
 ```{r prep ipeds}
-ipeds <- read_csv("Data/SLEDS/IPEDS/Master-ipeds.csv")
+ipeds.original <- read_csv("Data/SLEDS/IPEDS/IPEDS.csv") 
 
+ipeds.sector <- ipeds.original %>%
+  filter(!is.na(OPEID)) %>%
+  mutate(OPEID = str_pad(OPEID, width = 8, side = "left", pad = "0"),
+         OPEID.6 = str_sub(OPEID, 1, 6)) %>%
+  select(Unitid, OPEID.6, City, State, FIPS, GeographicRegion, CountyCode, InstitutionSector) 
+
+nsc.enrollment.ipeds<- nsc.enrollment.original %>%
+  left_join(ipeds.sector, by = "OPEID.6") %>%
+  drop_na(Unitid)
+
+head(nsc.enrollment.ipeds)
+
+names(nsc.enrollment.ipeds)
 ```
 
 <br>
 
-After joining these we now have `r `
+After joining these we now have `r comma(nsc.enrollment.ipeds %>% nrow(), accuracy = 1)` rows and `r comma(nsc.enrollment.ipeds %>% ncol(), accuracy = 1)` columns. This is a few less than the original enrollment document due to a few OPEIDs not aligning. But overall, the data now has the institution sector that the individual attended as well as location.
 
-Value	Label	Frequency	Percentage
-0	Administrative Unit		
-1	Public, 4-year or above		
-2	Private not-for-profit, 4-year or above		
-3	Private for-profit, 4-year or above		
-4	Public, 2-year		
-5	Private not-for-profit, 2-year		
-6	Private for-profit, 2-year		
-7	Public, less-than 2-year		
-8	Private not-for-profit, less-than 2-year		
-9	Private for-profit, less-than 2-year		
-99	Sector unknown (not active)
+Let's start 
+
+Here are the definitions of the institution sector;
+
+* 0	- Administrative Unit	
+* 1	- Public, 4-year or above		
+* 2	- Private not-for-profit, 4-year or above		
+* 3	- Private for-profit, 4-year or above		
+* 4	- Public, 2-year		
+* 5	- Private not-for-profit, 2-year		
+* 6	- Private for-profit, 2-year		
+* 7	- Public, less-than 2-year		
+* 8	- Private not-for-profit, less-than 2-year		
+* 9	- Private for-profit, less-than 2-year		
+* 99 - Sector unknown (not active)
 
 
