@@ -1,5 +1,5 @@
 ---
-title: "National Student Clearinghouse"
+title: "National Student Clearinghouse - enrollment"
 output:
   html_document:
     toc: true
@@ -135,24 +135,26 @@ The dataset has `r comma(nsc.enrollment.original %>% nrow(), accuracy = 1)` rows
 * OPEID: Office of Postsecondary Education (OPE)/FICE code of the college that the student attended (Foreign Key to IPEDSCharacteristics).
 * InstitutionName: Name of institution
 * EnrollmentStatus: The last enrollment status reported for the student. This field will have 'N/A' or "NULL" if the reporting college has not defined the student’s enrollment status as directory information. Here are the code definitions;
-  + A: Leave of absence
-  + D: Deceased
   + F: Full-time
+  + Q: Three-quarter time
   + H: Half-time
-  + L: Less than full-time
+  + L: Less than half-time
+  + A: Leave of absence
   + W: Withdrawn
+  + D: Deceased
+
+Essentially, this dataset provides semester-based information - each observation is a semester/single period with the institutional information and beginning and end time of that single period (usually a semester). For example, if an individual attended South Dakota State University, attended in a "typical" fashion (fall and spring semesters), and graduated in 4 years, there would be 8 observations for that PersonID - one observation per semester.
 
 There are a few pieces of information that I want to consolidate from this dataset;
 
 1. Did the PersonID in the master dataset attend a college - yes or no?
-2. Did the PersonID finish college or withdraw?
-3. What was the highest degree attained by the PersonID?
-4. Did the PersonID attend college immediately after graduation or wait?
-5. Did the PersonID attend multiple colleges - yes or no?
-6. Did the PersonID attend a public, private not-for-profit, or private for-profit college(s)?
-7. Did the PersonID attend a 2-year institution - yes or no?
-8. Did the PersonID attend a 4-year institution - yes or no?
-9. At any point during their college career, did the PersonID attend a college(s) inside or outside of the Southwest Region or outside the EDR of their high school?
+2. Did the PersonID attend college during high school (PSEO), immediately after graduation or wait?
+3. How many months did they attend college?
+4. Did the PersonID attend multiple colleges - yes or no?
+5. Did the PersonID attend a public, private not-for-profit, or private for-profit college(s)?
+6. Did the PersonID attend a 2-year institution - yes or no?
+7. Did the PersonID attend a 4-year institution - yes or no?
+8. At any point during their college career, did the PersonID attend a college(s) inside or outside of the Southwest Region or outside the EDR of their high school?
 
 The pieces of information missing in the original dataset is location and type of institution attended.To do this we will need to join the original dataset with an IPEDS dataset using opeid.
 
@@ -171,7 +173,8 @@ ipeds.sector <- ipeds.original %>%
 
 nsc.enrollment.ipeds<- nsc.enrollment.original %>%
   left_join(ipeds.sector, by = "OPEID.6") %>%
-  drop_na(Unitid)
+  drop_na(Unitid) %>%
+  mutate(EnrollmentStatus = as_factor(EnrollmentStatus))
 
 head(nsc.enrollment.ipeds)
 
@@ -182,7 +185,89 @@ names(nsc.enrollment.ipeds)
 
 After joining these we now have `r comma(nsc.enrollment.ipeds %>% nrow(), accuracy = 1)` rows and `r comma(nsc.enrollment.ipeds %>% ncol(), accuracy = 1)` columns. This is a few less than the original enrollment document due to a few OPEIDs not aligning. But overall, the data now has the institution sector that the individual attended as well as location.
 
-Let's start 
+First, we will create a dataset with a column confirming their post-secondary attendance for each unique PersonID in the nsc.enrollment.ipeds.
+
+<br>
+
+```{r nsc attended}
+nsc.enrollment.confirm <- nsc.enrollment.ipeds %>%
+  distinct(PersonID) %>%
+  mutate(attended.ps = "Yes")
+
+head(nsc.enrollment.confirm)
+
+names(nsc.enrollment.confirm)
+```
+
+<br>
+
+There are `r comma(nsc.enrollment.confirm %>% nrow(), accuracy = 1)` rows and `r comma(nsc.enrollment.confirm %>% ncol(), accuracy = 1)` columns in the dataset. The columns provide the unique PersonID along with a newly created column confirming that they attended post-secondary education.
+
+Next we will extract the first month and year each PersonID attended a post-secondary institution.
+
+<br>
+
+```{r nsc first month and year attending}
+nsc.enrollment.first.attend <- nsc.enrollment.ipeds %>%
+  mutate(first.year = as.integer(str_sub(EnrollmentBeginTimeID, 1,4)),
+         first.month = as.integer(str_sub(EnrollmentBeginTimeID, 5,6)),
+         first.day = as.integer(str_sub(EnrollmentBeginTimeID, 7, 8))) %>%
+  group_by(PersonID) %>%
+  filter(first.year == min(first.year)) %>%
+  mutate(n = n()) %>%
+  ungroup() %>%
+  group_by(PersonID) %>%
+  filter(first.month == min(first.month)) %>%
+  ungroup() %>%
+  group_by(PersonID) %>%
+  filter(first.day == min(first.day)) %>%
+  ungroup() %>%
+  distinct(PersonID, .keep_all = TRUE) %>%
+  mutate(first.month = str_pad(first.month, width = 2, side = "left", pad = "0"),
+         first.day = str_pad(first.day, width = 2, side = "left", pad = "0"),
+         first.attend.ps = paste(first.year, first.month, first.day, sep = "")) %>%
+  select(PersonID, first.attend.ps)
+
+head(nsc.enrollment.first.attend)
+
+names(nsc.enrollment.first.attend)
+```
+
+<br>
+
+This dataset has `r comma(nsc.enrollment.first.attend %>% nrow(), accuracy = 1)` rows and `r comma(nsc.enrollment.first.attend %>% ncol(), accuracy = 1)` columns. Essentially, this datset provides each unique PersonID with the earliest begin time for post-secondary education.
+
+Now we will extract the number of total months that each PersonID attended a post-secondary institution.
+
+<br>
+
+```{r nsc enrollment n months attending}
+nsc.enrollment.n.days.attend <- nsc.enrollment.ipeds %>%
+  select(PersonID, EnrollmentBeginTimeID, EnrollmentEndTimeID) %>%
+  mutate(begin = paste(str_sub(EnrollmentBeginTimeID, 1, 4), str_sub(EnrollmentBeginTimeID, 5, 6), str_sub(EnrollmentBeginTimeID, 7, 8), sep = "-"),
+         begin = ymd(begin),
+         end = paste(str_sub(EnrollmentEndTimeID, 1,4), str_sub(EnrollmentEndTimeID, 5,6), str_sub(EnrollmentEndTimeID, 7, 8), sep = "-"),
+         end = ymd(end)) %>%
+  group_by(PersonID) %>%
+  distinct(begin, end, .keep_all = TRUE) %>%
+  ungroup() %>%
+  mutate(attend.interval = end - begin) %>%
+  group_by(PersonID, begin) %>%
+  mutate(duplicated = n()) %>%
+  filter(attend.interval == max(attend.interval)) %>%
+  ungroup() %>%
+  group_by(PersonID) %>%
+  summarize(n.days.attend.ps = sum(attend.interval)) %>%
+  ungroup()
+  
+head(nsc.enrollment.n.days.attend)
+
+names(nsc.enrollment.n.days.attend)
+```
+
+<br>
+
+As expected, we have the same number of rows as the previous dataset - `r comma(nsc.enrollment.n.days.attend %>% nrow(), accuracy = 1)` rows. 
 
 Here are the definitions of the institution sector;
 

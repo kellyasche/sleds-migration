@@ -11,7 +11,7 @@
 
 
 
-<title>National Student Clearinghouse</title>
+<title>National Student Clearinghouse - enrollment</title>
 
 <script src="site_libs/header-attrs-2.14/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -364,7 +364,7 @@ div.tocify {
       <a href="sat.html">SAT</a>
     </li>
     <li>
-      <a href="nsc.html">National Student Clearinghouse</a>
+      <a href="nscenrollment.html">National Student Clearinghouse - enrollment</a>
     </li>
   </ul>
 </li>
@@ -380,7 +380,8 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">National Student Clearinghouse</h1>
+<h1 class="title toc-ignore">National Student Clearinghouse -
+enrollment</h1>
 
 </div>
 
@@ -391,20 +392,22 @@ div.tocify {
 <p>Okay, lets check out the National Student Clearinghouse enrollment
 data.</p>
 <p><br></p>
-<pre><code>## # A tibble: 6 × 6
-##   PersonID EnrollmentBeginTimeID EnrollmentEndTimeID OPEID    Institut…¹ Enrol…²
-##      &lt;int&gt;                 &lt;dbl&gt;               &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;  
-## 1       68              20070820            20071214 00254700 Grace Uni… L      
-## 2       68              20080827            20081218 00237100 Universit… F      
-## 3       68              20090112            20090514 00237100 Universit… F      
-## 4       68              20090909            20091216 00346900 Universit… F      
-## 5       68              20110309            20110524 01258600 Metropoli… F      
-## 6       68              20110606            20110815 01258600 Metropoli… F      
-## # … with abbreviated variable names ¹​InstitutionName, ²​EnrollmentStatus</code></pre>
+<pre><code>## # A tibble: 6 × 7
+##   PersonID EnrollmentBeginTimeID EnrollmentEndTi…¹ OPEID Insti…² Enrol…³ OPEID.6
+##      &lt;int&gt;                 &lt;dbl&gt;             &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  
+## 1       68              20070820          20071214 0025… Grace … L       002547 
+## 2       68              20080827          20081218 0023… Univer… F       002371 
+## 3       68              20090112          20090514 0023… Univer… F       002371 
+## 4       68              20090909          20091216 0034… Univer… F       003469 
+## 5       68              20110309          20110524 0125… Metrop… F       012586 
+## 6       68              20110606          20110815 0125… Metrop… F       012586 
+## # … with abbreviated variable names ¹​EnrollmentEndTimeID, ²​InstitutionName,
+## #   ³​EnrollmentStatus</code></pre>
 <pre><code>## [1] &quot;PersonID&quot;              &quot;EnrollmentBeginTimeID&quot; &quot;EnrollmentEndTimeID&quot;  
-## [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;</code></pre>
+## [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;     
+## [7] &quot;OPEID.6&quot;</code></pre>
 <p><br></p>
-<p>The dataset has 276,273 rows and 6 columns. Here are the columns and
+<p>The dataset has 276,249 rows and 7 columns. Here are the columns and
 their definitions.</p>
 <ul>
 <li>EnrollmentBeginTimeID: Begin date for the student’s period of
@@ -416,31 +419,42 @@ college that the student attended (Foreign Key to
 IPEDSCharacteristics).</li>
 <li>InstitutionName: Name of institution</li>
 <li>EnrollmentStatus: The last enrollment status reported for the
-student. This field will have ‘N/A’ if the reporting college has not
-defined the student’s enrollment status as directory information. Here
-are the code definitions;
+student. This field will have ‘N/A’ or “NULL” if the reporting college
+has not defined the student’s enrollment status as directory
+information. Here are the code definitions;
 <ul>
-<li>A: Leave of absence</li>
-<li>D: Deceased</li>
 <li>F: Full-time</li>
+<li>Q: Three-quarter time</li>
 <li>H: Half-time</li>
-<li>L: Less than full-time</li>
+<li>L: Less than half-time</li>
+<li>A: Leave of absence</li>
 <li>W: Withdrawn</li>
+<li>D: Deceased</li>
 </ul></li>
 </ul>
+<p>Essentially, this dataset provides semester-based information - each
+observation is a semester/single period with the institutional
+information and beginning and end time of that single period (usually a
+semester). For example, if an individual attended South Dakota State
+University, attended in a “typical” fashion (fall and spring semesters),
+and graduated in 4 years, there would be 8 observations for that
+PersonID - one observation per semester.</p>
 <p>There are a few pieces of information that I want to consolidate from
 this dataset;</p>
 <ol style="list-style-type: decimal">
-<li>Did the PersonID in the master dataset attend college - yes or
-no.</li>
-<li>Did the PersonID attend multiple colleges - yes or no.</li>
-<li>Did the PersonID attend a public, private, or for-profit
-institution?</li>
-<li>Did the PersonID attend a 2-year institution - yes or no.</li>
-<li>Did the PersonID attend a 4-year institution - yes or no.</li>
-<li>Did the PersonID attend a college(s) inside or outside of the
-Southwest Region or outside the EDR of their high school?</li>
-<li>What was the highest degree attained by the PersonID.</li>
+<li>Did the PersonID in the master dataset attend a college - yes or
+no?</li>
+<li>Did the PersonID attend college during high school (PSEO),
+immediately after graduation or wait?</li>
+<li>How many months did they attend college?</li>
+<li>Did the PersonID attend multiple colleges - yes or no?</li>
+<li>Did the PersonID attend a public, private not-for-profit, or private
+for-profit college(s)?</li>
+<li>Did the PersonID attend a 2-year institution - yes or no?</li>
+<li>Did the PersonID attend a 4-year institution - yes or no?</li>
+<li>At any point during their college career, did the PersonID attend a
+college(s) inside or outside of the Southwest Region or outside the EDR
+of their high school?</li>
 </ol>
 <p>The pieces of information missing in the original dataset is location
 and type of institution attended.To do this we will need to join the
@@ -449,19 +463,104 @@ original dataset with an IPEDS dataset using opeid.</p>
 digits of the IPEDS OPEID values. So I will change that in the NSC data.
 Then I can join.</p>
 <p><br></p>
+<pre><code>## # A tibble: 6 × 14
+##   Perso…¹ Enrol…² Enrol…³ OPEID Insti…⁴ Enrol…⁵ OPEID.6 Unitid City  State  FIPS
+##     &lt;int&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;   &lt;fct&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;dbl&gt;
+## 1      68  2.01e7  2.01e7 0025… Grace … L       002547  181093 Omaha NE       31
+## 2      68  2.01e7  2.01e7 0023… Univer… F       002371  174491 Sain… MN       27
+## 3      68  2.01e7  2.01e7 0023… Univer… F       002371  174491 Sain… MN       27
+## 4      68  2.01e7  2.01e7 0034… Univer… F       003469  219383 Siou… SD       46
+## 5      68  2.01e7  2.01e7 0125… Metrop… F       012586  181303 Omaha NE       31
+## 6      68  2.01e7  2.01e7 0125… Metrop… F       012586  181303 Omaha NE       31
+## # … with 3 more variables: GeographicRegion &lt;dbl&gt;, CountyCode &lt;chr&gt;,
+## #   InstitutionSector &lt;dbl&gt;, and abbreviated variable names ¹​PersonID,
+## #   ²​EnrollmentBeginTimeID, ³​EnrollmentEndTimeID, ⁴​InstitutionName,
+## #   ⁵​EnrollmentStatus</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;              &quot;EnrollmentBeginTimeID&quot; &quot;EnrollmentEndTimeID&quot;  
+##  [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;     
+##  [7] &quot;OPEID.6&quot;               &quot;Unitid&quot;                &quot;City&quot;                 
+## [10] &quot;State&quot;                 &quot;FIPS&quot;                  &quot;GeographicRegion&quot;     
+## [13] &quot;CountyCode&quot;            &quot;InstitutionSector&quot;</code></pre>
 <p><br></p>
-<p>After joining these we now have <code>r</code></p>
-<p>Value Label Frequency Percentage 0 Administrative Unit<br />
-1 Public, 4-year or above<br />
-2 Private not-for-profit, 4-year or above<br />
-3 Private for-profit, 4-year or above<br />
-4 Public, 2-year<br />
-5 Private not-for-profit, 2-year<br />
-6 Private for-profit, 2-year<br />
-7 Public, less-than 2-year<br />
-8 Private not-for-profit, less-than 2-year<br />
-9 Private for-profit, less-than 2-year<br />
-99 Sector unknown (not active)</p>
+<p>After joining these we now have 276,238 rows and 14 columns. This is
+a few less than the original enrollment document due to a few OPEIDs not
+aligning. But overall, the data now has the institution sector that the
+individual attended as well as location.</p>
+<p>First, we will create a dataset with a column confirming their
+post-secondary attendance for each unique PersonID in the
+nsc.enrollment.ipeds.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID attended.ps
+##      &lt;int&gt; &lt;chr&gt;      
+## 1       68 Yes        
+## 2      161 Yes        
+## 3      676 Yes        
+## 4      758 Yes        
+## 5      786 Yes        
+## 6     1698 Yes</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;    &quot;attended.ps&quot;</code></pre>
+<p><br></p>
+<p>There are 35,056 rows and 2 columns in the dataset. The columns
+provide the unique PersonID along with a newly created column confirming
+that they attended post-secondary education.</p>
+<p>Next we will extract the first month and year each PersonID attended
+a post-secondary institution.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID first.attend.ps
+##      &lt;int&gt; &lt;chr&gt;          
+## 1       68 20070820       
+## 2      161 20090908       
+## 3      676 20090113       
+## 4      758 20070827       
+## 5      786 20100823       
+## 6     1698 20070904</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;        &quot;first.attend.ps&quot;</code></pre>
+<p><br></p>
+<p>This dataset has 35,056 rows and 2 columns. Essentially, this datset
+provides each unique PersonID with the earliest begin time for
+post-secondary education.</p>
+<p>Now we will extract the number of total months that each PersonID
+attended a post-secondary institution.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID n.days.attend.ps
+##      &lt;int&gt; &lt;drtn&gt;          
+## 1       68 1129 days       
+## 2      161  869 days       
+## 3      676  122 days       
+## 4      758  470 days       
+## 5      786 1062 days       
+## 6     1698  999 days</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;         &quot;n.days.attend.ps&quot;</code></pre>
+<p><br></p>
+<p>As expected, we have the same number of rows as the previous dataset
+- 35,056 rows.</p>
+<p>Here are the definitions of the institution sector;</p>
+<ul>
+<li>0 - Administrative Unit<br />
+</li>
+<li>1 - Public, 4-year or above<br />
+</li>
+<li>2 - Private not-for-profit, 4-year or above<br />
+</li>
+<li>3 - Private for-profit, 4-year or above<br />
+</li>
+<li>4 - Public, 2-year<br />
+</li>
+<li>5 - Private not-for-profit, 2-year<br />
+</li>
+<li>6 - Private for-profit, 2-year<br />
+</li>
+<li>7 - Public, less-than 2-year<br />
+</li>
+<li>8 - Private not-for-profit, less-than 2-year<br />
+</li>
+<li>9 - Private for-profit, less-than 2-year<br />
+</li>
+<li>99 - Sector unknown (not active)</li>
+</ul>
 </div>
 
 

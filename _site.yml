@@ -26,8 +26,8 @@ navbar:
           href: assessments.html
         - text: "SAT"
           href: sat.html
-        - text: "National Student Clearinghouse"
-          href: nsc.html
+        - text: "National Student Clearinghouse - enrollment"
+          href: nscenrollment.html
 output:
   html_document:
     css: "styles.css"
