@@ -638,6 +638,7 @@ Next we will look at the cross-tabs by EDR. As expected, the variables with rela
 * Non-english speaker at home: a significantly lower percentage of graduates from high schools in EDR 6W  were categorized as having someone in the household where english wasn't the primary language.
 * PSEO: a significantly higher percentage of graduates from high schools in EDR 6E counties participated in a PSEO program.
 
+<br>
 
 ### EDR Free or reduced lunch*
 
