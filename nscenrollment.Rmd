@@ -463,6 +463,8 @@ As expected, there are `r comma(nsc.enrollment.same.pr %>% nrow(), accuracy = 1)
 
 Next we want to see how many of the students leave the state to attend post-secondary education.
 
+<br>
+
 ```{r nsc enrollment in MN}
 nsc.enrollment.in.MN <- nsc.enrollment.location.join %>%
   mutate(ps.in.MN = ifelse(ps.statefp == "27", "In MN", "Outside MN")) %>%
@@ -1551,4 +1553,10 @@ girafe(ggobj = ps.state.map, height_svg = 10, width_svg = 10) %>%
 
 ```
 
+<br>
+
+```{r write master}
+write_csv(master.9, "Data/SLEDS/Masters/Master-9.csv")
+
+```
 
