@@ -779,8 +779,144 @@ TukeyHSD(years.between.grads.anova.edr)
 
 # Summary of post-secondary graduate sector
 
-Next we will take a look at the percentage of students that graduated by institution sector. We will start with the total dataset and then look to see if there are any statistical differences by RUCA category and EDR.
+Next we will take a look at the percentage of students that graduated by institution sector. We will start with the total dataset and then look to see if there are any statistical differences on the RUCA category and EDR of their high school from which they graduated.
+
+First, let's look at it from a total dataset. Of the over 18,000 individuals that attended post-secondary in the dataset, nearly 40% went to a public, 4-year college, 35% went to a 2-year public college, 13% went to a private 4-year, and 9% graduated from a mixture of institution types. 
+
+<br>
+
+```{r table grad sector total}
+sectors <- read_xlsx("Data/SLEDS/NSC/IPEDS/institution-sectors.xlsx")
+
+grad.sector.total <- master.10 %>%
+  group_by(ps.grad.InstitutionSector) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  left_join(sectors, by = c("ps.grad.InstitutionSector" = "Code")) %>%
+  filter(!is.na(Sector)) %>%
+  mutate(pct = n / sum(n)) %>%
+  arrange(desc(n)) %>%
+  select(Sector, n, pct)
+
+datatable(grad.sector.total, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 0:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 2)
+
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next lets see if the RUCA category from where they graduated high school makes any significant difference in the post-secondary institution from which they received a degree.
+
+The crosstabs indicates a relationship between the RUCA location of their high school and the institution type from which they received a degree.
+
+The table shows 3 significant differences. 
+
+1. A higher percentage of students from an urban/town/rural mix high school completed college at a public, 4-year institution (45%) vs. individuals from entirely rural high schools (40%).
+2. A higher percentage of students from entirely rural high schools completed college at a public, 2-year institution (40%) vs. individuals from urban/town/rural mix high schools (28%).
+3. A higher percentage of students from urban/town/rural mix high schools completed college at a private, 4-year institution (16%) compared to individuals from entirely rural high schools (10%).
+The primary trend is that the average number of years between high school graduation and earning first credential increases as a high school becomes more urban - 3.23 years for entirely rural students and 3.62 for urban/town/rural mix students.
+
+
+<br>
+
+## Chart - RUCA
+
+<br>
+
+```{r chart grad institution sector ruca}
+grad.sector.ruca <- master.10 %>%
+  filter(!is.na(ps.grad.InstitutionSector)) %>%
+  group_by(Dem_Desc, ps.grad.InstitutionSector) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  left_join(sectors, by = c("ps.grad.InstitutionSector" = "Code")) %>%
+  select(Dem_Desc, Sector, n) %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  complete(Dem_Desc, Sector, fill = list(n = 0, pct = 0)) %>%
+  select(Dem_Desc, Sector, pct) %>%
+  arrange(pct) %>%
+  spread(key = Dem_Desc, value = pct) 
+
+datatable(grad.sector.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 2)
+
+```
+
+<br>
+
+## Crosstabs - RUCA
+
+<br>
+
+```{r crosstabs grad sector ruca}
+grad.sector.summary.ruca <- master.10 %>%
+  filter(!is.na(ps.grad.InstitutionSector)) %>%
+  left_join(sectors, by = c("ps.grad.InstitutionSector" = "Code"))
+
+CrossTable(grad.sector.summary.ruca$Sector, grad.sector.summary.ruca$Dem_Desc, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
 
 <br>
 
 
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next lets see if there's a relationship between institution type and EDRs.
+
+The Crosstabs indicates a relationship between the location of an individuals high school and the institution type from which they completed a degree.
+
+Similary to the RUCA categories, the more urban an EDR is, the higher the percentage of individuals that completed a degree in a public, or not-for-profit, 4-year insititution compared to more rural EDRs. In addition, the more rural, the higher liklihood that an individual completed a degree at a public, 2-year institution.
+
+
+<br>
+
+## Chart - EDR
+
+<br>
+
+```{r chart grad institution sector edr}
+grad.sector.edr <- master.10 %>%
+  filter(!is.na(ps.grad.InstitutionSector)) %>%
+  group_by(edr, ps.grad.InstitutionSector) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  left_join(sectors, by = c("ps.grad.InstitutionSector" = "Code")) %>%
+  select(edr, Sector, n) %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  complete(edr, Sector, fill = list(n = 0, pct = 0)) %>%
+  select(edr, Sector, pct) %>%
+  arrange(pct) %>%
+  spread(key = edr, value = pct) 
+
+datatable(grad.sector.edr, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 2)
+
+```
+
+<br>
+
+## Crosstabs - EDR
+
+<br>
+
+```{r crosstabs grad sector edr}
+grad.sector.summary.ruca <- master.10 %>%
+  filter(!is.na(ps.grad.InstitutionSector)) %>%
+  left_join(sectors, by = c("ps.grad.InstitutionSector" = "Code"))
+
+CrossTable(grad.sector.summary.ruca$Sector, grad.sector.summary.ruca$Dem_Desc, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+<br>
