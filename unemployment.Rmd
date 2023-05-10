@@ -1,5 +1,5 @@
 ---
-title: "PSEnrollment and PSCompletions"
+title: "Unemployment"
 output:
   html_document:
     toc: true
@@ -41,6 +41,22 @@ library(gmodels)
 ```
 
 ```{r themes and join docs, include=FALSE}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
 theme_line <- theme_bw() +
   theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
         legend.key = element_rect(fill = "transparent"),
@@ -68,21 +84,6 @@ theme_sf <- theme_bw() +
         legend.key.size = unit(1, "lines"),
         text = element_text(family = "Arial"))
 
-theme_bar <- theme_bw() +
-  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
-        panel.grid.minor = element_blank(),
-        axis.ticks = element_blank(),
-        axis.text = element_text(face = "bold"),
-        panel.border = element_blank(),
-        legend.background = element_rect(fill = "transparent", color = "transparent"),
-        legend.key = element_rect(fill = "transparent"),
-        legend.key.size = unit(1, "lines"),
-        legend.margin = margin(0,0,0,0),
-        legend.title = element_blank(),
-        legend.text = element_text(margin = margin(l = 2)),
-        text = element_text(family = "Arial"))
-
-
 mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
   ms_simplify(keep = .01, keep_shapes = TRUE) %>%
   rename(countyfp = FIPS_CODE)
@@ -103,32 +104,57 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
          mif = as.factor(mif),
          mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
 
+regions = counties.regions %>%
+  select(edr, planning.region) %>%
+  distinct(edr, .keep_all = TRUE)
+
+```
+
+# Data Prep
+
+Each PersonID in the dataset will get the average annual unemployment rate of their high school county between their Sophmore and Senior years of high school. So if someone graduates in 2008, the unemployment rate will be the average between 2006 and 2008.
+
+<br>
+
+```{r original unemployment}
+unemployment.original <- read_csv("Data/Unemployment/Master-avg-unemp-rate-county.csv")
+
+head(unemployment.original)
+
+names(unemployment.original)
 ```
 
 <br>
 
-# Data prep - PS enrollment
+The dataset above contains each county along with their three year rolling average of unemployment rate. 
 
-Let's check the data.
+Now, we need to join it up with the master dataset by high school graduation year and county of high school.
 
 <br>
 
-```{r ps enrollment original}
-psenrollment.original <- read_csv("Data/SLEDS/PS enrollment/PSEnrollment.csv")
+```{r unemployment join with master}
+master.11 <- read_csv("Data/SLEDS/Masters/Master-11.csv")
 
-master <- read_csv("Data/SLEDS/Masters/Master-9.csv")
-names(master)
-nsccompletions.original <- read_csv("Data/SLEDS/NSC/NSC_completions.csv") %>%
-  rename(PersonID = 1) %>%
-  select(1:7) %>%
-  mutate(PersonID = as.integer(PersonID),
-         OPEID = str_pad(OPEID, width = 8, side = "left", pad = "0"),
-         OPEID.6 = str_sub(OPEID, 1, 6)) %>%
-  drop_na(PersonID) %>%
-  drop_na(OPEID) %>%
-  mutate(DegreeTitle = as_factor(DegreeTitle))
+master.12 <- master.11 %>%
+  left_join(unemployment.original, by = c("hs.grad.year", "countyfp"))
 
-head(nsccompletions.original)
+head(master.12)
 
-names(nsccompletions.original)
+names(master.12)
+
+```
+
+<br>
+
+After joining with master dataset, we have `r comma(nrow(master.12))` rows along with `r comma(ncol(master.12))` columns.
+
+<br>
+
+# Summary
+
+Not really much to summarize here.
+
+```{r write master}
+write_csv(master.12, "Data/SLEDS/Masters/Master-12.csv")
+
 ```

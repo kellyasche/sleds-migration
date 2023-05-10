@@ -11,7 +11,7 @@
 
 
 
-<title>SAT</title>
+<title>Unemployment</title>
 
 <script src="site_libs/header-attrs-2.20.1/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -35,18 +35,6 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<script src="site_libs/htmlwidgets-1.6.1/htmlwidgets.js"></script>
-<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
-<script src="site_libs/datatables-binding-0.27/datatables.js"></script>
-<link href="site_libs/dt-core-1.12.1/css/jquery.dataTables.min.css" rel="stylesheet" />
-<link href="site_libs/dt-core-1.12.1/css/jquery.dataTables.extra.css" rel="stylesheet" />
-<script src="site_libs/dt-core-1.12.1/js/jquery.dataTables.min.js"></script>
-<link href="site_libs/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet" />
-<script src="site_libs/nouislider-7.0.10/jquery.nouislider.min.js"></script>
-<link href="site_libs/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet" />
-<script src="site_libs/selectize-0.12.0/selectize.min.js"></script>
-<link href="site_libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
-<script src="site_libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
 <link href="site_libs/font-awesome-6.2.1/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.2.1/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -401,55 +389,36 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">SAT</h1>
+<h1 class="title toc-ignore">Unemployment</h1>
 
 </div>
 
 
+<div id="section-data-prep" class="section level1">
+<h1>Data Prep</h1>
+<p>Each PersonID in the dataset will get the average annual unemployment
+rate of their high school county between their Sophmore and Senior years
+of high school. So if someone graduates in 2008, the unemployment rate
+will be the average between 2006 and 2008.</p>
 <p><br></p>
-<div id="section-data-prep---sat" class="section level1">
-<h1>Data prep - SAT</h1>
-<p>Alright, lets see what this dataset looks like.</p>
+<pre><code>## # A tibble: 6 × 3
+##   countyfp hs.grad.year avg.unemp.rate
+##   &lt;chr&gt;           &lt;dbl&gt;          &lt;dbl&gt;
+## 1 005              2008           5.87
+## 2 017              2008           5.87
+## 3 073              2008           4.2 
+## 4 041              2008           4.4 
+## 5 031              2008           4.93
+## 6 059              2008           5.93</code></pre>
+<pre><code>## [1] &quot;countyfp&quot;       &quot;hs.grad.year&quot;   &quot;avg.unemp.rate&quot;</code></pre>
 <p><br></p>
-<pre><code>## # A tibble: 6 × 5
-##   PersonID SATTimeID TestType ExamSubject        ExamGrade
-##      &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;              &lt;chr&gt;    
-## 1     5221  20150630 SAT      SAT_WRITE_MC_MR    47       
-## 2     5221  20150630 SAT      SAT_WRITE_MR       450      
-## 3     5221  20150630 SAT      SAT_MATH_HC        620      
-## 4     5221  20150630 SAT      SAT_MATH_MR        620      
-## 5     5221  20150630 SAT      SAT_WRITE_ESSAY_HC 6        
-## 6     5221  20150630 SAT      SAT_WRITE_ESSAY_MR 6</code></pre>
-<pre><code>## [1] &quot;PersonID&quot;    &quot;SATTimeID&quot;   &quot;TestType&quot;    &quot;ExamSubject&quot; &quot;ExamGrade&quot;</code></pre>
+<p>The dataset above contains each county along with their three year
+rolling average of unemployment rate.</p>
+<p>Now, we need to join it up with the master dataset by high school
+graduation year and county of high school.</p>
 <p><br></p>
-<p>There are 4,005 rows and 5 columns. The definitions of the columns
-are;</p>
-<ul>
-<li>SATTimeID: Time of the test</li>
-<li>TestType: SAT</li>
-<li>ExamSubject: subject</li>
-<li>ExamGrade: Exam grades are all over the place here and there’s no
-definition in the data dictionary.</li>
-</ul>
-<p>Okay, since I don’t have any information related to how the grading
-system works, I will just utilize this dataset to code wither a PersonID
-has taken an SAT test.</p>
-<p><br></p>
-<pre><code>## # A tibble: 6 × 2
-##   PersonID sat.taken
-##      &lt;int&gt;     &lt;dbl&gt;
-## 1     5221         1
-## 2    13263         1
-## 3   192162         1
-## 4   237914         1
-## 5   325260         1
-## 6   370304         1</code></pre>
-<pre><code>## [1] &quot;PersonID&quot;  &quot;sat.taken&quot;</code></pre>
-<p><br></p>
-<p>Now we will join it with the master dataset.</p>
-<p><br></p>
-<pre><code>## # A tibble: 6 × 46
-##   Perso…¹ K12Or…² grad.…³ Gender Limit…⁴ Homel…⁵ econo…⁶ pseo.…⁷ Speci…⁸ non.e…⁹
+<pre><code>## # A tibble: 6 × 77
+##   Perso…¹ K12Or…² hs.gr…³ Gender Limit…⁴ Homel…⁵ econo…⁶ pseo.…⁷ Speci…⁸ non.e…⁹
 ##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
 ## 1     161   77452    2009 M      N       N             0       1       0       0
 ## 2     641   38385    2009 M      N       N             1       0       0       0
@@ -457,51 +426,98 @@ has taken an SAT test.</p>
 ## 4     786   56633    2010 F      N       N             0       0       0       0
 ## 5    1162  181770    2019 M      N       N             1       0       0       1
 ## 6    2292   55659    2010 F      N       N             0       1       0       0
-## # … with 36 more variables: DistrictName &lt;chr&gt;, county.name &lt;chr&gt;,
+## # … with 67 more variables: DistrictName &lt;chr&gt;, county.name &lt;chr&gt;,
 ## #   countyfp &lt;chr&gt;, Dem_Desc &lt;chr&gt;, edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;,
 ## #   ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;, total.cte.courses.taken &lt;dbl&gt;,
 ## #   cte.0 &lt;dbl&gt;, cte.1 &lt;dbl&gt;, cte.2 &lt;dbl&gt;, cte.3 &lt;dbl&gt;, cte.4 &lt;dbl&gt;,
 ## #   cte.5 &lt;dbl&gt;, cte.6 &lt;dbl&gt;, cte.7 &lt;dbl&gt;, cte.8 &lt;dbl&gt;, cte.9 &lt;dbl&gt;,
 ## #   cte.10 &lt;dbl&gt;, cte.11 &lt;dbl&gt;, cte.12 &lt;dbl&gt;, cte.14 &lt;dbl&gt;, cte.21 &lt;dbl&gt;,
 ## #   cte.22 &lt;dbl&gt;, cte.23 &lt;dbl&gt;, cte.24 &lt;dbl&gt;, cte.25 &lt;dbl&gt;, cte.26 &lt;dbl&gt;, …</code></pre>
-<pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
-##  [3] &quot;grad.year&quot;                          &quot;Gender&quot;                            
-##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
-##  [7] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
-##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;                  
-## [11] &quot;DistrictName&quot;                       &quot;county.name&quot;                       
-## [13] &quot;countyfp&quot;                           &quot;Dem_Desc&quot;                          
-## [15] &quot;edr&quot;                                &quot;n.years.attended&quot;                  
-## [17] &quot;ACTCompositeScore&quot;                  &quot;ap.exam&quot;                           
-## [19] &quot;total.cte.courses.taken&quot;            &quot;cte.0&quot;                             
-## [21] &quot;cte.1&quot;                              &quot;cte.2&quot;                             
-## [23] &quot;cte.3&quot;                              &quot;cte.4&quot;                             
-## [25] &quot;cte.5&quot;                              &quot;cte.6&quot;                             
-## [27] &quot;cte.7&quot;                              &quot;cte.8&quot;                             
-## [29] &quot;cte.9&quot;                              &quot;cte.10&quot;                            
-## [31] &quot;cte.11&quot;                             &quot;cte.12&quot;                            
-## [33] &quot;cte.14&quot;                             &quot;cte.21&quot;                            
-## [35] &quot;cte.22&quot;                             &quot;cte.23&quot;                            
-## [37] &quot;cte.24&quot;                             &quot;cte.25&quot;                            
-## [39] &quot;cte.26&quot;                             &quot;cte.achievement&quot;                   
-## [41] &quot;avg.cte.intensity&quot;                  &quot;english.learner&quot;                   
-## [43] &quot;MCA.M&quot;                              &quot;MCA.R&quot;                             
-## [45] &quot;MCA.S&quot;                              &quot;sat.taken&quot;</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;                            
+##  [2] &quot;K12OrganizationID&quot;                   
+##  [3] &quot;hs.grad.year&quot;                        
+##  [4] &quot;Gender&quot;                              
+##  [5] &quot;LimitedEnglishProficiencyIndicator&quot;  
+##  [6] &quot;HomelessIndicator&quot;                   
+##  [7] &quot;economic.status&quot;                     
+##  [8] &quot;pseo.participant&quot;                    
+##  [9] &quot;SpecialEdStatus&quot;                     
+## [10] &quot;non.english.home&quot;                    
+## [11] &quot;DistrictName&quot;                        
+## [12] &quot;county.name&quot;                         
+## [13] &quot;countyfp&quot;                            
+## [14] &quot;Dem_Desc&quot;                            
+## [15] &quot;edr&quot;                                 
+## [16] &quot;n.years.attended&quot;                    
+## [17] &quot;ACTCompositeScore&quot;                   
+## [18] &quot;ap.exam&quot;                             
+## [19] &quot;total.cte.courses.taken&quot;             
+## [20] &quot;cte.0&quot;                               
+## [21] &quot;cte.1&quot;                               
+## [22] &quot;cte.2&quot;                               
+## [23] &quot;cte.3&quot;                               
+## [24] &quot;cte.4&quot;                               
+## [25] &quot;cte.5&quot;                               
+## [26] &quot;cte.6&quot;                               
+## [27] &quot;cte.7&quot;                               
+## [28] &quot;cte.8&quot;                               
+## [29] &quot;cte.9&quot;                               
+## [30] &quot;cte.10&quot;                              
+## [31] &quot;cte.11&quot;                              
+## [32] &quot;cte.12&quot;                              
+## [33] &quot;cte.14&quot;                              
+## [34] &quot;cte.21&quot;                              
+## [35] &quot;cte.22&quot;                              
+## [36] &quot;cte.23&quot;                              
+## [37] &quot;cte.24&quot;                              
+## [38] &quot;cte.25&quot;                              
+## [39] &quot;cte.26&quot;                              
+## [40] &quot;cte.achievement&quot;                     
+## [41] &quot;avg.cte.intensity&quot;                   
+## [42] &quot;english.learner&quot;                     
+## [43] &quot;MCA.M&quot;                               
+## [44] &quot;MCA.R&quot;                               
+## [45] &quot;MCA.S&quot;                               
+## [46] &quot;sat.taken&quot;                           
+## [47] &quot;attended.ps&quot;                         
+## [48] &quot;first.attend.ps&quot;                     
+## [49] &quot;attended.ps.first.year&quot;              
+## [50] &quot;attended.ps.years.hsgrad&quot;            
+## [51] &quot;attended.ps.within.first.year.hsgrad&quot;
+## [52] &quot;n.institutions&quot;                      
+## [53] &quot;first.InstitutionSector&quot;             
+## [54] &quot;ps.attend.InstitutionSector&quot;         
+## [55] &quot;ps.in.same.ruca&quot;                     
+## [56] &quot;ps.in.same.edr&quot;                      
+## [57] &quot;ps.in.same.pr&quot;                       
+## [58] &quot;ps.in.MN&quot;                            
+## [59] &quot;ps.grad&quot;                             
+## [60] &quot;min.ps.grad.year&quot;                    
+## [61] &quot;max.ps.grad.year&quot;                    
+## [62] &quot;years.between.grads&quot;                 
+## [63] &quot;ps.grad.InstitutionSector&quot;           
+## [64] &quot;highest.cred.level&quot;                  
+## [65] &quot;ps.grad.in.same.ruca&quot;                
+## [66] &quot;ps.grad.in.same.edr&quot;                 
+## [67] &quot;ps.grad.in.same.pr&quot;                  
+## [68] &quot;ps.grad.in.MN&quot;                       
+## [69] &quot;mn.emp.record&quot;                       
+## [70] &quot;meaningful.emp&quot;                      
+## [71] &quot;emp.hsgrad.same.county&quot;              
+## [72] &quot;emp.hsgrad.same.edr&quot;                 
+## [73] &quot;emp.hsgrad.same.pr&quot;                  
+## [74] &quot;emp.hsgrad.same.ruca&quot;                
+## [75] &quot;emp.hsgrad.same.mn&quot;                  
+## [76] &quot;emp.careercluster.match&quot;             
+## [77] &quot;avg.unemp.rate&quot;</code></pre>
 <p><br></p>
-<p>As expected there are 38,154 rows and 46 columns.</p>
+<p>After joining with master dataset, we have 38,154 rows along with 77
+columns.</p>
+<p><br></p>
 </div>
-<div id="section-summary-of-sat-data" class="section level1">
-<h1>Summary of SAT data</h1>
-<p>Lets check to see what percentage of the master dataset has taken the
-SAT.</p>
-<p>There is a tiny percentage of the dataset that has taken the SAT,
-0.6%. With this information I don’t see a need to check whether there is
-a significant difference in students taking the SAT based on RUCA
-categoriy or EDR. Even if there is a significant difference, there just
-isn’t enough observations to make a difference.</p>
-<p><br></p>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-675f2550d06dbe8aa90f" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-675f2550d06dbe8aa90f">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"237\" data-max=\"37917\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.006211668501336\" data-max=\"0.993788331498664\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[[0,1],[37917,237],[0.993788331498663,0.00621166850133669]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>sat.taken<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[0,1]},{"className":"dt-right","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<div id="section-summary" class="section level1">
+<h1>Summary</h1>
+<p>Not really much to summarize here.</p>
 </div>
 
 

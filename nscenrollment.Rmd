@@ -502,7 +502,6 @@ master.9 <- master %>%
   mutate(attended.ps.first.year = as.integer(str_sub(first.attend.ps, 1, 4)),
          attended.ps.years.hsgrad = attended.ps.first.year - grad.year,
          attended.ps.within.first.year.hsgrad = ifelse(attended.ps.years.hsgrad < 2, "Yes", "No")) %>%
-  select(1:38, 41, 42) %>%
   left_join(nsc.enrollment.n.institutions, by = "PersonID") %>%
   left_join(nsc.enrollment.first.institution, by = "PersonID") %>%
   rename(first.InstitutionSector = InstitutionSector) %>%

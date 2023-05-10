@@ -35,6 +35,18 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.6.1/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.27/datatables.js"></script>
+<link href="site_libs/dt-core-1.12.1/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.12.1/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.12.1/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet" />
+<script src="site_libs/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="site_libs/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet" />
+<script src="site_libs/selectize-0.12.0/selectize.min.js"></script>
+<link href="site_libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
 <link href="site_libs/font-awesome-6.2.1/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.2.1/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -366,6 +378,15 @@ div.tocify {
     <li>
       <a href="nsccompletions.html">National Student Clearinghouse - completions</a>
     </li>
+    <li>
+      <a href="employment.html">Employment</a>
+    </li>
+    <li>
+      <a href="unemployment.html">Unemployment</a>
+    </li>
+    <li>
+      <a href="avgwages.html">Average wages</a>
+    </li>
   </ul>
 </li>
       </ul>
@@ -403,7 +424,7 @@ size. So I will import both and rbind them together.</p>
 ## 5       68    20070930      2007       3    2855     306    1990       1     892
 ## 6       68    20070930      2007       3  141112      37     239       2     593
 ## # … with 14 more variables: USIndustryCode &lt;dbl&gt;, USIndustry &lt;chr&gt;,
-## #   GroupCode &lt;dbl&gt;, IndustryGroup &lt;chr&gt;, OwnershipCode &lt;chr&gt;,
+## #   GroupCode &lt;dbl&gt;, IndustryGroup &lt;chr&gt;, OwnershipCode &lt;dbl&gt;,
 ## #   EmployerLocationTotalWagesPaid &lt;chr&gt;, QuarterlyAverageEmployment &lt;chr&gt;,
 ## #   LocationID &lt;chr&gt;, EconomicDevelopmentRegion &lt;chr&gt;,
 ## #   EconomicDevelopmentRegionName &lt;chr&gt;, County &lt;chr&gt;, CountyName &lt;chr&gt;,
@@ -515,6 +536,1227 @@ Minnesota.
 City: All of the city data is NA</li>
 </ul></li>
 </ul>
+<p><br></p>
+<p>So all the previous datasets we structured and filtered so that each
+observation in the master dataset was an individual. We will want to
+continue to do the same. So we need to create an employment dataset with
+the following columns;</p>
+<ol style="list-style-type: decimal">
+<li>PersonID</li>
+<li>Confirmation on whether PersonID in the master dataset has a MN
+employment record</li>
+<li>Confirmation on whether they had “meaningful employment” since
+graduating high school</li>
+<li>Whether they had meaningful employment with an employer located in
+their high school county, edr, one of the research EDRs and in
+Minnesota.</li>
+<li>Whether they had meaningful employment with an employer in an
+industry that matches a CTE careercluster.</li>
+</ol>
+<div id="section-filter-for-meaningful-employment"
+class="section level2">
+<h2>Filter for “meaningful” employment</h2>
+<p>The biggest issue is how do we get a meaningful indicator on whether
+they were employed in the region and whether they are employed in an
+industry that matches their CTE experience? We need to filter out summer
+jobs between college years, as well as adapt to different paths that
+students take.</p>
+<p>The research question is most concerned about how education
+experience shapes migration and employment. Does it matter if someone is
+a CTE concentrator goes to a 2-year, is employed for a few years in an
+industry that’s in the region, but then goes to a 4-year and moves away?
+Probably not. What matters is capturing the instance of the student
+taking those years to work in the region and/or industry of their CTE
+experience and whether it was impacted more because of that CTE
+experience.</p>
+<p>So we will keep all employment instances that are more than 1,000
+hours worked in a given year.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID EmploymentOrganizationID
+##      &lt;int&gt;                    &lt;dbl&gt;
+## 1      161                    17971
+## 2      161                   126753
+## 3      641                   193920
+## 4      641                   222346
+## 5      758                    57239
+## 6      758                    76615</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;                 &quot;EmploymentOrganizationID&quot;</code></pre>
+<p><br></p>
+<p>This dataset has 57,469 rows which represents an PersonID and
+EmploymentOrganizationID with 1,000 or more hours had been worked in any
+given year of employment with that organization.</p>
+<p>Up next, we want to aggregate some of the other information related
+to these instances of employment for each PErsonID - such as location,
+wages earned, etc….</p>
+</div>
+<div id="section-match-employment-and-high-school-locationsregions."
+class="section level2">
+<h2>Match employment and high school locations/regions.</h2>
+<p>In one fell swoop, we can group together each employment instance
+from the previous dataset above then sum together the;</p>
+<ul>
+<li>total quarters worked</li>
+<li>total hours worked</li>
+<li>total wages earned</li>
+<li>year started working</li>
+<li>last year worked, and</li>
+<li>industry of employer.</li>
+</ul>
+<p>We will also filter the dataset so that it only includes PersonID
+that are in the previous master dataset so we are only looking at
+individuals who “qualify” in the analysis parameters.</p>
+<p><br></p>
+<pre><code>##  [1] &quot;PersonID&quot;                            
+##  [2] &quot;K12OrganizationID&quot;                   
+##  [3] &quot;hs.grad.year&quot;                        
+##  [4] &quot;Gender&quot;                              
+##  [5] &quot;LimitedEnglishProficiencyIndicator&quot;  
+##  [6] &quot;HomelessIndicator&quot;                   
+##  [7] &quot;economic.status&quot;                     
+##  [8] &quot;pseo.participant&quot;                    
+##  [9] &quot;SpecialEdStatus&quot;                     
+## [10] &quot;non.english.home&quot;                    
+## [11] &quot;DistrictName&quot;                        
+## [12] &quot;county.name&quot;                         
+## [13] &quot;countyfp&quot;                            
+## [14] &quot;hs.Dem_Desc&quot;                         
+## [15] &quot;edr&quot;                                 
+## [16] &quot;n.years.attended&quot;                    
+## [17] &quot;ACTCompositeScore&quot;                   
+## [18] &quot;ap.exam&quot;                             
+## [19] &quot;total.cte.courses.taken&quot;             
+## [20] &quot;cte.0&quot;                               
+## [21] &quot;cte.1&quot;                               
+## [22] &quot;cte.2&quot;                               
+## [23] &quot;cte.3&quot;                               
+## [24] &quot;cte.4&quot;                               
+## [25] &quot;cte.5&quot;                               
+## [26] &quot;cte.6&quot;                               
+## [27] &quot;cte.7&quot;                               
+## [28] &quot;cte.8&quot;                               
+## [29] &quot;cte.9&quot;                               
+## [30] &quot;cte.10&quot;                              
+## [31] &quot;cte.11&quot;                              
+## [32] &quot;cte.12&quot;                              
+## [33] &quot;cte.14&quot;                              
+## [34] &quot;cte.21&quot;                              
+## [35] &quot;cte.22&quot;                              
+## [36] &quot;cte.23&quot;                              
+## [37] &quot;cte.24&quot;                              
+## [38] &quot;cte.25&quot;                              
+## [39] &quot;cte.26&quot;                              
+## [40] &quot;cte.achievement&quot;                     
+## [41] &quot;avg.cte.intensity&quot;                   
+## [42] &quot;english.learner&quot;                     
+## [43] &quot;MCA.M&quot;                               
+## [44] &quot;MCA.R&quot;                               
+## [45] &quot;MCA.S&quot;                               
+## [46] &quot;sat.taken&quot;                           
+## [47] &quot;attended.ps&quot;                         
+## [48] &quot;first.attend.ps&quot;                     
+## [49] &quot;attended.ps.first.year&quot;              
+## [50] &quot;attended.ps.years.hsgrad&quot;            
+## [51] &quot;attended.ps.within.first.year.hsgrad&quot;
+## [52] &quot;n.institutions&quot;                      
+## [53] &quot;first.InstitutionSector&quot;             
+## [54] &quot;ps.attend.InstitutionSector&quot;         
+## [55] &quot;ps.in.same.ruca&quot;                     
+## [56] &quot;ps.in.same.edr&quot;                      
+## [57] &quot;ps.in.same.pr&quot;                       
+## [58] &quot;ps.in.MN&quot;                            
+## [59] &quot;ps.grad&quot;                             
+## [60] &quot;min.ps.grad.year&quot;                    
+## [61] &quot;max.ps.grad.year&quot;                    
+## [62] &quot;years.between.grads&quot;                 
+## [63] &quot;ps.grad.InstitutionSector&quot;           
+## [64] &quot;highest.cred.level&quot;                  
+## [65] &quot;ps.grad.in.same.ruca&quot;                
+## [66] &quot;ps.grad.in.same.edr&quot;                 
+## [67] &quot;ps.grad.in.same.pr&quot;                  
+## [68] &quot;ps.grad.in.MN&quot;                       
+## [69] &quot;EmploymentOrganizationID&quot;            
+## [70] &quot;IndustryID&quot;                          
+## [71] &quot;USIndustryCode&quot;                      
+## [72] &quot;USIndustry&quot;                          
+## [73] &quot;GroupCode&quot;                           
+## [74] &quot;IndustryGroup&quot;                       
+## [75] &quot;employment.county&quot;                   
+## [76] &quot;emp.edr&quot;                             
+## [77] &quot;emp.Dem_Desc&quot;                        
+## [78] &quot;emp.quarters&quot;                        
+## [79] &quot;total.hours.worked&quot;                  
+## [80] &quot;total.wages&quot;                         
+## [81] &quot;first.employment.year&quot;               
+## [82] &quot;last.employment.year&quot;                
+## [83] &quot;wages.earned&quot;                        
+## [84] &quot;quarters.employed&quot;                   
+## [85] &quot;meaningful.emp&quot;</code></pre>
+<pre><code>## # A tibble: 6 × 85
+##   Perso…¹ K12Or…² hs.gr…³ Gender Limit…⁴ Homel…⁵ econo…⁶ pseo.…⁷ Speci…⁸ non.e…⁹
+##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+## 1     161   77452    2009 M      N       N             0       1       0       0
+## 2     161   77452    2009 M      N       N             0       1       0       0
+## 3     641   38385    2009 M      N       N             1       0       0       0
+## 4     641   38385    2009 M      N       N             1       0       0       0
+## 5     676   55598    2008 M      N       N             0       0       1       0
+## 6     786   56633    2010 F      N       N             0       0       0       0
+## # … with 75 more variables: DistrictName &lt;chr&gt;, county.name &lt;chr&gt;,
+## #   countyfp &lt;chr&gt;, hs.Dem_Desc &lt;chr&gt;, edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;,
+## #   ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;, total.cte.courses.taken &lt;dbl&gt;,
+## #   cte.0 &lt;dbl&gt;, cte.1 &lt;dbl&gt;, cte.2 &lt;dbl&gt;, cte.3 &lt;dbl&gt;, cte.4 &lt;dbl&gt;,
+## #   cte.5 &lt;dbl&gt;, cte.6 &lt;dbl&gt;, cte.7 &lt;dbl&gt;, cte.8 &lt;dbl&gt;, cte.9 &lt;dbl&gt;,
+## #   cte.10 &lt;dbl&gt;, cte.11 &lt;dbl&gt;, cte.12 &lt;dbl&gt;, cte.14 &lt;dbl&gt;, cte.21 &lt;dbl&gt;,
+## #   cte.22 &lt;dbl&gt;, cte.23 &lt;dbl&gt;, cte.24 &lt;dbl&gt;, cte.25 &lt;dbl&gt;, cte.26 &lt;dbl&gt;, …</code></pre>
+<p><br></p>
+<p>59,865 employment instances match the PersonID from the Master
+dataset built up to this point as well as being unique employer
+instances in which 1,000 hours or more was worked in a given year for
+that employer.</p>
+<p>So now we want to create a new dataset that has each unique PersonID
+with the following additional columns;</p>
+<ul>
+<li>Yes/No - after graduation, worked in same county as high school</li>
+<li>Yes/No - after graduation, worked in same EDR</li>
+<li>Yes/No - after graduation, worked in SW Minnesota</li>
+<li>Yes/No - after graduation, worked in Minnesota</li>
+<li>Yes/No - after graduation, worked in same RUCA county category</li>
+</ul>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 7
+##   PersonID emp.hsgrad.same.county emp.hsgrad.s…¹ emp.h…² emp.h…³ emp.h…⁴ meani…⁵
+##      &lt;dbl&gt;                  &lt;dbl&gt;          &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  
+## 1      161                      1              1       1       1       1 Yes    
+## 2      641                      1              1       1       1       1 Yes    
+## 3      786                      0              1       1       0       1 Yes    
+## 4     1162                      0              0       1       1       1 Yes    
+## 5     2668                      0              1       1       1       1 Yes    
+## 6     2782                      1              1       1       1       1 Yes    
+## # … with abbreviated variable names ¹​emp.hsgrad.same.edr, ²​emp.hsgrad.same.pr,
+## #   ³​emp.hsgrad.same.ruca, ⁴​emp.hsgrad.same.mn, ⁵​meaningful.emp</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;               &quot;emp.hsgrad.same.county&quot; &quot;emp.hsgrad.same.edr&quot;   
+## [4] &quot;emp.hsgrad.same.pr&quot;     &quot;emp.hsgrad.same.ruca&quot;   &quot;emp.hsgrad.same.mn&quot;    
+## [7] &quot;meaningful.emp&quot;</code></pre>
+<p><br></p>
+<p>The dataset has 21,038 unique PersonID that had meaningful employment
+with confirmation on whether they were ever employed in the same county,
+EDR, Planning Region, or in Minnesota at any point after graduating high
+school. We will merge this dataset with the master list later, below.
+The PersonID that do not have “meaningful employment” will be
+categorized correctly at that point.</p>
+</div>
+<div id="section-match-employment-industry-with-career-cluster"
+class="section level2">
+<h2>Match employment industry with career cluster</h2>
+<p>Next we need to find a way to compare the CTE careerclusters with the
+actual industry from which they work. We are not able to compare majors
+which is a bummer. But, the careerclusters from CTE coursework does
+align somewhat with NAICS codes. Here’s what it looks like;</p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-2b97319f64cf9ca45df6" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-2b97319f64cf9ca45df6">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"11\" data-max=\"6215\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["1","1","1","2","12","9","9","9","9","9","15","7","16","10 &amp; 11","8","5","13","3","3","3","14","4","4","0"],["Agriculture, Food &amp; Natural Resources","Agriculture, Food &amp; Natural Resources","Agriculture, Food &amp; Natural Resources","Architecture &amp; Construction","Arts, A/V Technology &amp; Communications","Business Management &amp; Administration AND Marketing","Business Management &amp; Administration AND Marketing","Business Management &amp; Administration AND Marketing","Business Management &amp; Administration AND Marketing","Business Management &amp; Administration AND Marketing","Education &amp; Training","Finance","Government &amp; Public Administration","Health Science AND Human Services","Hospitality &amp; Tourism","Information Technology","Law, Public Safety, Corrections &amp; Security","Manufacturing","Manufacturing","Manufacturing","Science, Technology, Engineering &amp; Mathematics","Transportation, Distribution &amp; Logistics","Transportation, Distribution &amp; Logistics",null],[11,21,22,23,71,42,44,45,53,55,61,52,92,62,72,51,56,31,32,33,6215,48,49,null],["Agriculture, Forestry, Fishing and Hunting","Mining, Quarrying, and Oil and Gas Extraction","Utilities","Construction","Arts, Entertainment, and Recreation","Wholesale Trade","Retail Trade","Retail Trade","Real Estate and Rental and Leasing","Management of Companies and Enterprises","Educational Services","Finance and Insurance","Public Administration","Health Care and Social Assistance","Accommodation and Food Services","Information","Administrative and Support and Waste Management and Remediation","Manufacturing","Manufacturing","Manufacturing","Health Care and Social Assistance","Transportation and Warehousing","Transportation and Warehousing",null]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>cw.CareerCluster<\/th>\n      <th>cw.CareerClusterName<\/th>\n      <th>cw.emp.ind.code<\/th>\n      <th>cw.emp.ind.name<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
+<p>There is one industry in which two career clusters will have to be
+marged - Human Services and Health Science &amp; Health Occupations. Due
+to this, we will create a new column with an “updated” careercluster
+code that includes the merged cluster.</p>
+<p>Once we create the new column that aligns with this crosswalk, we
+will compare it to the naics 2-code industry.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID emp.careercluster.match
+##      &lt;dbl&gt;                   &lt;dbl&gt;
+## 1      161                       0
+## 2      641                       0
+## 3      786                       0
+## 4     1162                       0
+## 5     2668                       1
+## 6     2782                       1</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;                &quot;emp.careercluster.match&quot;</code></pre>
+<p><br></p>
+<p>The data table created provides each PersonID that had meaningful
+employment in an industry that matched a CTE course they took - “1”
+means yes, and “0” means no. There are 19,249 rows in the dataset with 2
+columns.</p>
+<p><br></p>
+</div>
+<div id="section-confirm-original-master-has-mn-employment-record"
+class="section level2">
+<h2>Confirm original master has MN employment record</h2>
+<p>Next, we will want to merge this with the master list. One problem is
+that there will be individuals that are in that master list that are not
+in the employment list due to never having a MN employment record. So
+let’s build that first, and then we can merge with the master list.</p>
+<pre><code>## [1] &quot;PersonID&quot;      &quot;mn.emp.record&quot;</code></pre>
+<pre><code>## # A tibble: 6 × 2
+##   PersonID mn.emp.record
+##      &lt;dbl&gt; &lt;chr&gt;        
+## 1      161 Yes          
+## 2      641 Yes          
+## 3      786 Yes          
+## 4     1162 Yes          
+## 5     2668 Yes          
+## 6     2782 Yes</code></pre>
+<p><br></p>
+<p>The above data object consists of each unique PersonID from the
+previous master list along with a confirmation column on whether they
+had an MN employment record. The data object contains 38,154 individuals
+and 2 columns.</p>
+<p><br></p>
+<p>Next we need to combine all of this together with the master dataset
+and we can begin the summary. The data that needs to be combined
+are;</p>
+<ul>
+<li>Master 10</li>
+<li>Confirmation of MN Employment record column</li>
+<li>Confirmation of post high school graduation employment instance
+matching high school graduation locations/regions</li>
+<li>Confirmation of post high school graduation employment instance
+matching CTE course taken.</li>
+<li>A “yes” or “no” on whether the PersonID ever had “meaningful
+employment”.</li>
+</ul>
+<p><br></p>
+<p><br></p>
+<p>After combining the date we have 38,154 rows with 76 columns.</p>
+<p><br></p>
+</div>
+</div>
+<div id="section-summary---mn-employment-record" class="section level1">
+<h1>Summary - MN employment record</h1>
+<p>We will first summarize the number of individuals that had MN
+employment records.</p>
+<p>The table below shows that 60% of the individuals that graduated from
+a SW high school had a MN employment record either “meaningful” or “not
+meaningful”.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-e602a3f1f94f1f8aa69a" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-e602a3f1f94f1f8aa69a">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"15293\" data-max=\"22861\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.400822980552497\" data-max=\"0.599177019447503\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[15293,22861],[0.400822980552498,0.599177019447502]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>mn.emp.record<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-section"
+class="section level1 unnumbered unlisted toc-ignore tabset">
+<h1 class="unnumbered unlisted toc-ignore tabset"></h1>
+<p>Next, let’s see if there is any significant differences by the EDR
+location of their high school.</p>
+<p>The first table below shows that the highest percentage of graduates
+that have a mn employment record is in EDR 6E with 65%, compared to 60%
+in EDR 6W and 56% in EDR 8.</p>
+<p>The cross tabs indicate that there is a relationship between the EDR
+of the high school graduate and whether they have a MN employment
+record.</p>
+<ul>
+<li>EDR 6E: a significantly higher number of graduates had a MN
+employment record - 9,115 vs. 8,353 expected.</li>
+<li>EDR 8: a significantly lower number of graduates had a MN employment
+record - 9,348 vs. 10,096 expected.</li>
+</ul>
+<p><br></p>
+<div id="section-table---percent" class="section level2">
+<h2>Table - percent</h2>
+<pre><code>## [1] &quot;mn.emp.record&quot;                  &quot;EDR 6E- Southwest Central&quot;     
+## [3] &quot;EDR 6W- Upper Minnesota Valley&quot; &quot;EDR 8 - Southwest&quot;</code></pre>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-cec4464e49d214ccd95f" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-cec4464e49d214ccd95f">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.34617315831002\" data-max=\"0.65382684168998\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.402770233568712\" data-max=\"0.597229766431288\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.445189625497062\" data-max=\"0.554810374502938\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[0.346173158310021,0.653826841689979],[0.402770233568713,0.597229766431287],[0.445189625497062,0.554810374502938]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>mn.emp.record<\/th>\n      <th>EDR 6E- Southwest Central<\/th>\n      <th>EDR 6W- Upper Minnesota Valley<\/th>\n      <th>EDR 8 - Southwest<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-cross-tabs" class="section level2">
+<h2>Cross tabs</h2>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  38154 
+## 
+##  
+##                                | master.11$mn.emp.record 
+##                  master.11$edr |        No |       Yes | Row Total | 
+## -------------------------------|-----------|-----------|-----------|
+##      EDR 6E- Southwest Central |      4826 |      9115 |     13941 | 
+##                                |  5587.873 |  8353.127 |           | 
+##                                |     0.346 |     0.654 |     0.365 | 
+## -------------------------------|-----------|-----------|-----------|
+## EDR 6W- Upper Minnesota Valley |      2966 |      4398 |      7364 | 
+##                                |  2951.660 |  4412.340 |           | 
+##                                |     0.403 |     0.597 |     0.193 | 
+## -------------------------------|-----------|-----------|-----------|
+##              EDR 8 - Southwest |      7501 |      9348 |     16849 | 
+##                                |  6753.466 | 10095.534 |           | 
+##                                |     0.445 |     0.555 |     0.442 | 
+## -------------------------------|-----------|-----------|-----------|
+##                   Column Total |     15293 |     22861 |     38154 | 
+## -------------------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  311.5777     d.f. =  2     p =  2.19669e-68 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-section-1"
+class="section level1 unnumbered unlisted toc-ignore tabset">
+<h1 class="unnumbered unlisted toc-ignore tabset"></h1>
+<p>Next we will check for differences by RUCA category of high
+school.</p>
+<p>The first table below shows a pretty consistent percentage of
+graduates that had a MN employment record. All RUCA categories had
+nearly 60% of their graduates have an MN employment record.</p>
+<p>The second table does show a relationship, but it’s not nearly as
+strong and doesn’t come through as much in the percentages.</p>
+<p><br></p>
+<div id="section-table---percent-1" class="section level2">
+<h2>Table - percent</h2>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-aa39714b46c4ae80ba94" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-aa39714b46c4ae80ba94">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.423431567528475\" data-max=\"0.576568432471525\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.39488316177023\" data-max=\"0.60511683822977\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.406328059950041\" data-max=\"0.593671940049959\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[0.423431567528476,0.576568432471524],[0.394883161770231,0.605116838229769],[0.406328059950042,0.593671940049958]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>mn.emp.record<\/th>\n      <th>Entirely rural<\/th>\n      <th>Town/rural mix<\/th>\n      <th>Urban/town/rural mix<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-cross-tabs-1" class="section level2">
+<h2>Cross tabs</h2>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  38154 
+## 
+##  
+##                      | master.11$mn.emp.record 
+##   master.11$Dem_Desc |        No |       Yes | Row Total | 
+## ---------------------|-----------|-----------|-----------|
+##       Entirely rural |      2342 |      3189 |      5531 | 
+##                      |  2216.952 |  3314.048 |           | 
+##                      |     0.423 |     0.577 |     0.145 | 
+## ---------------------|-----------|-----------|-----------|
+##       Town/rural mix |     10511 |     16107 |     26618 | 
+##                      | 10669.106 | 15948.894 |           | 
+##                      |     0.395 |     0.605 |     0.698 | 
+## ---------------------|-----------|-----------|-----------|
+## Urban/town/rural mix |      2440 |      3565 |      6005 | 
+##                      |  2406.942 |  3598.058 |           | 
+##                      |     0.406 |     0.594 |     0.157 | 
+## ---------------------|-----------|-----------|-----------|
+##         Column Total |     15293 |     22861 |     38154 | 
+## ---------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  16.43989     d.f. =  2     p =  0.0002692294 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-summary---meaningful-employment"
+class="section level1">
+<h1>Summary - meaningful employment</h1>
+<p>First, let’s check to see what percentage of individuals in the
+dataset had “meaningful” employment. This is defined as and individual
+having worked for an employer for 1,000 or more hours in any given year
+with that employer.</p>
+<p>The table below shows that 55% of the individuals in the dataset had
+an instance where they worked for an employer for 1,000 or more hours in
+a given year since graduating high school.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-1b8003cfa9df2e90e6ac" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1b8003cfa9df2e90e6ac">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"17116\" data-max=\"21038\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.448603029826492\" data-max=\"0.551396970173508\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[17116,21038],[0.448603029826493,0.551396970173507]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>meaningful.emp<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 2, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-section-2"
+class="section level1 unnumbered unlisted toc-ignore tabset">
+<h1 class="unnumbered unlisted toc-ignore tabset"></h1>
+<p>Next, let’s check to see if there are any differences in the
+percentages by the EDR of their high school.</p>
+<p>The first table shows that EDR 6E had the highest percentage of
+individuals that had meaningful employment with 61% compared to 54% and
+51% for EDR 6W, and EDR 8, respectively.</p>
+<p>The cross table below indicates a relationship between EDR of a
+PersonID’s high school and the percentage of individuals that had
+meaningful employment. The following are noteworthy;</p>
+<ul>
+<li>EDR 6E: A significantly higher number of individuals had meaningful
+employment than expected - 8,467 vs. 7,687 expected.</li>
+<li>EDR 8 : A significantly lower number of individuals had meaningful
+employment than expected - 8,563 vs. 9,290 expected.</li>
+</ul>
+<p><br></p>
+<div id="section-table---pct" class="section level2">
+<h2>Table - PCT</h2>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-3eec2065192a7a933d03" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-3eec2065192a7a933d03">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"3356\" data-max=\"8563\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.392654759342945\" data-max=\"0.607345240657055\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["EDR 6E- Southwest Central","EDR 6E- Southwest Central","EDR 6W- Upper Minnesota Valley","EDR 6W- Upper Minnesota Valley","EDR 8 - Southwest","EDR 8 - Southwest"],["No","Yes","No","Yes","No","Yes"],[5474,8467,3356,4008,8286,8563],[0.392654759342945,0.607345240657055,0.455730581205866,0.544269418794134,0.491779927592142,0.508220072407858]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>edr<\/th>\n      <th>meaningful.emp<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 2, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-crosstabs" class="section level2">
+<h2>Crosstabs</h2>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  38154 
+## 
+##  
+##                   | summary.cross$meaningful.emp 
+## summary.cross$edr |        No |       Yes | Row Total | 
+## ------------------|-----------|-----------|-----------|
+##            EDR 6E |      5474 |      8467 |     13941 | 
+##                   |  6253.975 |  7687.025 |           | 
+##                   |     0.393 |     0.607 |     0.365 | 
+## ------------------|-----------|-----------|-----------|
+##            EDR 6W |      3356 |      4008 |      7364 | 
+##                   |  3303.513 |  4060.487 |           | 
+##                   |     0.456 |     0.544 |     0.193 | 
+## ------------------|-----------|-----------|-----------|
+##            EDR 8  |      8286 |      8563 |     16849 | 
+##                   |  7558.512 |  9290.488 |           | 
+##                   |     0.492 |     0.508 |     0.442 | 
+## ------------------|-----------|-----------|-----------|
+##      Column Total |     17116 |     21038 |     38154 | 
+## ------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  304.9139     d.f. =  2     p =  6.148702e-67 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-section-3"
+class="section level1 unnumbered unlisted toc-ignore tabset">
+<h1 class="unnumbered unlisted toc-ignore tabset"></h1>
+<p>Next lets check to see what this looks like by RUCA category.</p>
+<p>The first table shows that all RUCA categories had similar
+percentages of individuals have meaningful employment - ~55%.</p>
+<p>The cross tabs, however, do indicate a relationship that would drive
+differences in the percentages. But it’s pretty minimal. This is kind of
+interesting.</p>
+<p><br></p>
+<div id="section-table---percent-2" class="section level2">
+<h2>Table - percent</h2>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-67da9ffb7eb7286f6094" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-67da9ffb7eb7286f6094">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"2579\" data-max=\"14765\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.445300172815388\" data-max=\"0.554699827184612\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Entirely rural","Entirely rural","Town/rural mix","Town/rural mix","Urban/town/rural mix","Urban/town/rural mix"],["No","Yes","No","Yes","No","Yes"],[2579,2952,11853,14765,2684,3321],[0.466280961851383,0.533719038148617,0.445300172815388,0.554699827184612,0.446960865945046,0.553039134054954]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>Dem_Desc<\/th>\n      <th>meaningful.emp<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 2, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-cross-tabs-2" class="section level2">
+<h2>Cross tabs</h2>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  38154 
+## 
+##  
+##                        | summary.cross$meaningful.emp 
+## summary.cross$Dem_Desc |        No |       Yes | Row Total | 
+## -----------------------|-----------|-----------|-----------|
+##         Entirely rural |      2579 |      2952 |      5531 | 
+##                        |  2481.223 |  3049.777 |           | 
+##                        |     0.466 |     0.534 |     0.145 | 
+## -----------------------|-----------|-----------|-----------|
+##         Town/rural mix |     11853 |     14765 |     26618 | 
+##                        | 11940.915 | 14677.085 |           | 
+##                        |     0.445 |     0.555 |     0.698 | 
+## -----------------------|-----------|-----------|-----------|
+##   Urban/town/rural mix |      2684 |      3321 |      6005 | 
+##                        |  2693.861 |  3311.139 |           | 
+##                        |     0.447 |     0.553 |     0.157 | 
+## -----------------------|-----------|-----------|-----------|
+##           Column Total |     17116 |     21038 |     38154 | 
+## -----------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  8.227152     d.f. =  2     p =  0.01634921 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div
+id="section-summary---matching-employment-locations-and-high-school-locations"
+class="section level1">
+<h1>Summary - matching employment locations and high school
+locations</h1>
+<p>First we will summarize the percentage of students that had an
+employment instance in a location that matches their high school
+graduation. We will only use PersonID that had meaningful employment for
+the following summaries.</p>
+<p>We will begin with counties, then look at EDR, planning region,
+employed within Minnesota, and then by RUCA categories.</p>
+<p><br></p>
+<div id="section-high-school-grad-and-employment-instance-match"
+class="section level2">
+<h2>High school grad and employment instance match</h2>
+<p>First, let’s look what percentage of individuals had an employment
+instance where the employer was located in the same county as their high
+school.</p>
+<p>The table below shows that 42% of the individuals that graduated from
+a Southwest highschool and had meaningful employment was for an employer
+locarted in the same high school as their high school.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-825cecac7e8e7ebb6051" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-825cecac7e8e7ebb6051">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"8806\" data-max=\"12232\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.418575910257629\" data-max=\"0.581424089742371\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[12232,8806],[0.581424089742371,0.418575910257629]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.county<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-section-4"
+class="section level2 unnumbered unlisted toc-ignore tabset">
+<h2 class="unnumbered unlisted toc-ignore tabset"></h2>
+<p>Next, let’s see if there are any differences when comparing across
+regions. We’ll start by comparing percentage of individuals that
+have/had employment in their high school county by EDR and see if there
+are any significant differences.</p>
+<p>The first table below provides the percentage of individuals by high
+school edr that were employed for at least one meaningful employment
+instance in the same county as their high school. The percentages range
+from 32% for EDR 6W and 45% for EDR 8, with EDR 6E having 43%.</p>
+<p>The second table provides the crosstabs to determine if there is a
+significant difference in percentages across EDRs. The p-value was
+extremely low, meaning there does appear to be a relationship between
+the EDR from which an individual graduates from and whether they were
+ever employed in the same county as their high school after graduation
+year. Some of the main differences to note include;</p>
+<ul>
+<li>EDR 6W: significantly lower number of individuals that were ever
+employed in their high school county from EDR 6W - 1,274 did while 1,677
+was expected.</li>
+</ul>
+<p><br></p>
+<div id="section-table---percent-3" class="section level3">
+<h3>Table - percent</h3>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-61ddbd5375e7a4ed441c" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-61ddbd5375e7a4ed441c">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.431794023857328\" data-max=\"0.568205976142672\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.317864271457085\" data-max=\"0.682135728542915\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.452645101015999\" data-max=\"0.547354898984001\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","No"],[0.431794023857328,0.568205976142672],[0.317864271457086,0.682135728542914],[0.452645101015999,0.547354898984001]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.county<\/th>\n      <th>EDR 6E- Southwest Central<\/th>\n      <th>EDR 6W- Upper Minnesota Valley<\/th>\n      <th>EDR 8 - Southwest<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-crosstabs-1" class="section level3">
+<h3>Crosstabs</h3>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  21038 
+## 
+##  
+##                                       | match.county.summary.total.edr.ct$emp.hsgrad.same.county 
+## match.county.summary.total.edr.ct$edr |        No |       Yes | Row Total | 
+## --------------------------------------|-----------|-----------|-----------|
+##                                EDR 6E |      4811 |      3656 |      8467 | 
+##                                       |  4922.918 |  3544.082 |           | 
+##                                       |     0.568 |     0.432 |     0.402 | 
+## --------------------------------------|-----------|-----------|-----------|
+##                                EDR 6W |      2734 |      1274 |      4008 | 
+##                                       |  2330.348 |  1677.652 |           | 
+##                                       |     0.682 |     0.318 |     0.191 | 
+## --------------------------------------|-----------|-----------|-----------|
+##                                EDR 8  |      4687 |      3876 |      8563 | 
+##                                       |  4978.734 |  3584.266 |           | 
+##                                       |     0.547 |     0.453 |     0.407 | 
+## --------------------------------------|-----------|-----------|-----------|
+##                          Column Total |     12232 |      8806 |     21038 | 
+## --------------------------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  213.958     d.f. =  2     p =  3.464295e-47 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-section-5"
+class="section level2 unnumbered unlisted toc-ignore tabset">
+<h2 class="unnumbered unlisted toc-ignore tabset"></h2>
+<p>Next, let’s see if there are any significant differences by RUCA
+category.</p>
+<p>The first table below provides the percentage of individuals from
+each high school RUCA category that had meaningful employment in a
+county with the same RUCA category. The percentagres range from a low of
+30% in entirely rural high schools to 45% for town/rural mix high
+schools. Urban/town/rural mix high schools were in the middle with
+41%.</p>
+<p>The crosstabs shows a very low p-value, indicating a relationship
+between the high school RUCA category and the percentage of individuals
+that have employment in the same RUCA category. The following are
+especially noteworthy;</p>
+<ul>
+<li>Entirely rural school: A significantly lower number of individuals
+had an employment experience in an entirely rural county after
+graduation than expected - 870 vs. 1,277.</li>
+<li>Town/rural mix schools: A significantly higher number of individuals
+had an employment experience in an town/rural mix county after
+graduation than expected - 6,584 vs 6,180 expected.</li>
+<li>Urban/town/rural mix schools: The number of individuals aligned with
+the expected results pretty closely.</li>
+</ul>
+<p><br></p>
+<div id="section-table---percent-4" class="section level3">
+<h3>Table - percent</h3>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-dee7dc2c75eef003346b" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-dee7dc2c75eef003346b">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.294715447154471\" data-max=\"0.705284552845529\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.445919403995936\" data-max=\"0.554080596004064\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.407106293285155\" data-max=\"0.592893706714845\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","No"],[0.294715447154472,0.705284552845528],[0.445919403995936,0.554080596004064],[0.407106293285155,0.592893706714845]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.county<\/th>\n      <th>Entirely rural<\/th>\n      <th>Town/rural mix<\/th>\n      <th>Urban/town/rural mix<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-crosstabs-2" class="section level3">
+<h3>Crosstabs</h3>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  21038 
+## 
+##  
+##                                             | match.county.summary.total.ruca.ct$emp.hsgrad.same.county 
+## match.county.summary.total.ruca.ct$Dem_Desc |        No |       Yes | Row Total | 
+## --------------------------------------------|-----------|-----------|-----------|
+##                              Entirely rural |      2082 |       870 |      2952 | 
+##                                             |  1716.364 |  1235.636 |           | 
+##                                             |     0.705 |     0.295 |     0.140 | 
+## --------------------------------------------|-----------|-----------|-----------|
+##                              Town/rural mix |      8181 |      6584 |     14765 | 
+##                                             |  8584.727 |  6180.273 |           | 
+##                                             |     0.554 |     0.446 |     0.702 | 
+## --------------------------------------------|-----------|-----------|-----------|
+##                        Urban/town/rural mix |      1969 |      1352 |      3321 | 
+##                                             |  1930.909 |  1390.091 |           | 
+##                                             |     0.593 |     0.407 |     0.158 | 
+## --------------------------------------------|-----------|-----------|-----------|
+##                                Column Total |     12232 |      8806 |     21038 | 
+## --------------------------------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  233.2416     d.f. =  2     p =  2.250237e-51 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-high-school-grad-edr-and-employment-instance-match"
+class="section level2">
+<h2>High school grad EDR and employment instance match</h2>
+<p><br></p>
+<p>Next we will look at the percentage of individuals in the total
+dataset that had a high school graduation and an employment instance in
+the same EDR in Southwest Minnesota.</p>
+<p>The table below shows that 56% of individuals had a meaninful
+employment instance in their high school EDR.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-15f4aea5f912355ef4d6" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-15f4aea5f912355ef4d6">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"747\" data-max=\"11827\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.035507177488354\" data-max=\"0.562173210381215\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","No","Unknown"],[11827,8464,747],[0.562173210381215,0.402319612130431,0.0355071774883544]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.edr<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-section-6"
+class="section level2 unnumbered unlisted toc-ignore tabset">
+<h2 class="unnumbered unlisted toc-ignore tabset"></h2>
+<p>Next we will see if there are any statistically significant
+differences when breaking this down by EDR.</p>
+<p>The first table below shows the percentage of individuals that had
+meaningful employment in their high school EDR. It shows that the
+highest percentage was in EDR 8 with 65%, followed by EDR 6E with 53%
+and EDR 6W with 44%.</p>
+<p>The cross tabs indicate a significant difference in the percentages
+across EDRs. Some highlights included;</p>
+<ul>
+<li>EDR 6W: a signfiicantly lower number of individuals graduating from
+an EDR 6W high school had a meaningful employment experience in 6W -
+1,753 vs. 2,253 expected.</li>
+<li>EDR 8: a signficiantly higher number of individuals graduating from
+a EDR 8 high school had meaningful employment in EDR 8 - 5,589 vs. 4,814
+expected.</li>
+</ul>
+<p><br></p>
+<div id="section-table---percent-5" class="section level3">
+<h3>Table - percent</h3>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-d40778fc847952be7e82" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-d40778fc847952be7e82">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.040746427306011\" data-max=\"0.529703554978151\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.030938123752495\" data-max=\"0.531686626746507\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.032465257503211\" data-max=\"0.652691813616724\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","Unknown","No"],[0.52970355497815,0.0407464273060116,0.429550017715838],[0.437375249500998,0.030938123752495,0.531686626746507],[0.652691813616723,0.0324652575032115,0.314842928880065]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.edr<\/th>\n      <th>EDR 6E- Southwest Central<\/th>\n      <th>EDR 6W- Upper Minnesota Valley<\/th>\n      <th>EDR 8 - Southwest<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-crosstabs-3" class="section level3">
+<h3>Crosstabs</h3>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  21038 
+## 
+##  
+##                              | match.edr.summary.edr.ct$emp.hsgrad.same.edr 
+## match.edr.summary.edr.ct$edr |        No |   Unknown |       Yes | Row Total | 
+## -----------------------------|-----------|-----------|-----------|-----------|
+##                       EDR 6E |      3637 |       345 |      4485 |      8467 | 
+##                              |  3406.440 |   300.639 |  4759.921 |           | 
+##                              |     0.430 |     0.041 |     0.530 |     0.402 | 
+## -----------------------------|-----------|-----------|-----------|-----------|
+##                       EDR 6W |      2131 |       124 |      1753 |      4008 | 
+##                              |  1612.497 |   142.313 |  2253.190 |           | 
+##                              |     0.532 |     0.031 |     0.437 |     0.191 | 
+## -----------------------------|-----------|-----------|-----------|-----------|
+##                       EDR 8  |      2696 |       278 |      5589 |      8563 | 
+##                              |  3445.063 |   304.048 |  4813.889 |           | 
+##                              |     0.315 |     0.032 |     0.653 |     0.407 | 
+## -----------------------------|-----------|-----------|-----------|-----------|
+##                 Column Total |      8464 |       747 |     11827 |     21038 | 
+## -----------------------------|-----------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  608.056     d.f. =  4     p =  2.796769e-130 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-section-7"
+class="section level2 unnumbered unlisted toc-ignore tabset">
+<h2 class="unnumbered unlisted toc-ignore tabset"></h2>
+<p>Next, let’s see if there are any significant differences by RUCA
+category.</p>
+<p>The first table below provides the percentage of individuals from
+each high school RUCA category that had meaningful employment in a
+county with the same RUCA category. The percentages range from a low of
+49% in urban/town/rural mix high schools to 58% for town/rural mix high
+schools. Entirely rural high schools weren’t far behind with 57%.</p>
+<p>The crosstabs shows a very low p-value, however, the values are
+fairly aligned. <br></p>
+<div id="section-table---percent-6" class="section level3">
+<h3>Table - percent</h3>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-a8885e3dd47470afc067" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-a8885e3dd47470afc067">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.029132791327913\" data-max=\"0.56639566395664\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.033728411784625\" data-max=\"0.578462580426685\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.04908160192713\" data-max=\"0.485998193315267\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","Unknown","No"],[0.56639566395664,0.0291327913279133,0.404471544715447],[0.578462580426685,0.0337284117846258,0.387809007788689],[0.485998193315267,0.0490816019271304,0.464920204757603]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.edr<\/th>\n      <th>Entirely rural<\/th>\n      <th>Town/rural mix<\/th>\n      <th>Urban/town/rural mix<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-crosstabs-4" class="section level3">
+<h3>Crosstabs</h3>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  21038 
+## 
+##  
+##                                    | match.edr.summary.ruca.ct$emp.hsgrad.same.edr 
+## match.edr.summary.ruca.ct$Dem_Desc |        No |   Unknown |       Yes | Row Total | 
+## -----------------------------------|-----------|-----------|-----------|-----------|
+##                     Entirely rural |      1194 |        86 |      1672 |      2952 | 
+##                                    |  1187.647 |   104.817 |  1659.535 |           | 
+##                                    |     0.404 |     0.029 |     0.566 |     0.140 | 
+## -----------------------------------|-----------|-----------|-----------|-----------|
+##                     Town/rural mix |      5726 |       498 |      8541 |     14765 | 
+##                                    |  5940.249 |   524.263 |  8300.487 |           | 
+##                                    |     0.388 |     0.034 |     0.578 |     0.702 | 
+## -----------------------------------|-----------|-----------|-----------|-----------|
+##               Urban/town/rural mix |      1544 |       163 |      1614 |      3321 | 
+##                                    |  1336.103 |   117.919 |  1866.977 |           | 
+##                                    |     0.465 |     0.049 |     0.486 |     0.158 | 
+## -----------------------------------|-----------|-----------|-----------|-----------|
+##                       Column Total |      8464 |       747 |     11827 |     21038 | 
+## -----------------------------------|-----------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  103.3794     d.f. =  4     p =  1.875732e-21 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-section-8" class="section level2">
+<h2></h2>
+</div>
+<div
+id="section-high-school-grad-southwest-region-and-employment-instance-match"
+class="section level2">
+<h2>High school grad Southwest region and employment instance match</h2>
+<p>Next let’s look at what percentage of individuals had a meaningful
+employment experience in one of the planning regions pertaining to this
+research project (EDR 6E, EDR 6W, EDR 8).</p>
+<p>The table below shows that 64% of high school graduates in EDR 6E,
+EDR 6W, or EDR 8 had a meaningful employment experience in one of those
+EDRs after high school graduation.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-fb41beb1f9101e79b78c" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-fb41beb1f9101e79b78c">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"747\" data-max=\"13539\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.035507177488354\" data-max=\"0.643549767088127\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","No","Unknown"],[13539,6752,747],[0.643549767088126,0.320943055423519,0.0355071774883544]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.pr<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-section-9"
+class="section level2 unnumbered unlisted toc-ignore tabset">
+<h2 class="unnumbered unlisted toc-ignore tabset"></h2>
+<p>Next, let’s see if there are any significant differences by EDR.</p>
+<p>The first table below shows that 70% of high school graduates in EDR
+8 had a meaningful employment instance in one of the three research
+EDRs. This was followed by 67% in EDR 6W and 57% in EDR 6E.</p>
+<p>The cross tab table does show a significant difference in percentages
+across EDRs. Some highlights include;</p>
+<ul>
+<li>EDR 6E: a significantly lower number of individuals graduating from
+EDR 6E had a meaningful employment experience within one of the research
+EDRs - 4,833 vs. 5,448 expected.</li>
+<li>EDR 8: a significantly higher number of individuals graduating from
+EDR 8 had a meaningful employment experience within one of the research
+EDRs - 6,020 vs. 5,511 expected.</li>
+</ul>
+<p><br></p>
+<div id="section-table---percentages" class="section level3">
+<h3>Table - percentages</h3>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-6537cd45e52823be9c39" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-6537cd45e52823be9c39">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.040746427306011\" data-max=\"0.570804299043345\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.030938123752495\" data-max=\"0.670159680638723\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.032465257503211\" data-max=\"0.703024640896882\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","Unknown","No"],[0.570804299043345,0.0407464273060116,0.388449273650644],[0.670159680638723,0.030938123752495,0.298902195608782],[0.703024640896882,0.0324652575032115,0.264510101599907]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.pr<\/th>\n      <th>EDR 6E- Southwest Central<\/th>\n      <th>EDR 6W- Upper Minnesota Valley<\/th>\n      <th>EDR 8 - Southwest<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-cross-tabs-3" class="section level3">
+<h3>Cross tabs</h3>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  21038 
+## 
+##  
+##                                 | match.region.summary.edr.ct$emp.hsgrad.same.pr 
+## match.region.summary.edr.ct$edr |        No |   Unknown |       Yes | Row Total | 
+## --------------------------------|-----------|-----------|-----------|-----------|
+##                          EDR 6E |      3289 |       345 |      4833 |      8467 | 
+##                                 |  2717.425 |   300.639 |  5448.936 |           | 
+##                                 |     0.388 |     0.041 |     0.571 |     0.402 | 
+## --------------------------------|-----------|-----------|-----------|-----------|
+##                          EDR 6W |      1198 |       124 |      2686 |      4008 | 
+##                                 |  1286.340 |   142.313 |  2579.347 |           | 
+##                                 |     0.299 |     0.031 |     0.670 |     0.191 | 
+## --------------------------------|-----------|-----------|-----------|-----------|
+##                          EDR 8  |      2265 |       278 |      6020 |      8563 | 
+##                                 |  2748.235 |   304.048 |  5510.717 |           | 
+##                                 |     0.265 |     0.032 |     0.703 |     0.407 | 
+## --------------------------------|-----------|-----------|-----------|-----------|
+##                    Column Total |      6752 |       747 |     13539 |     21038 | 
+## --------------------------------|-----------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  343.4938     d.f. =  4     p =  4.45322e-73 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-section-10"
+class="section level2 unnumbered unlisted toc-ignore tabset">
+<h2 class="unnumbered unlisted toc-ignore tabset"></h2>
+<p>Next, let’s see if there are any significant differences by RUCA.</p>
+<p>The first table below shows that 67% of graduates from a town/rural
+mix high school had a meaningful employment instance in one of the three
+research EDRs. This was closely followed by entirely rural high schools
+with 65%. Significantly less was urban/town/rural mix high school
+graudates with 51%.</p>
+<p>The cross tab table does show a significant difference especially for
+the urban/town/rural mix graduates - 1,678 of them had a meaningful
+employment instance in one of the three research EDRs compared to 2,137
+that was expected.</p>
+<p><br></p>
+<div id="section-table---percentages-1" class="section level3">
+<h3>Table - percentages</h3>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-1d902e01f14afeed932a" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-1d902e01f14afeed932a">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.029132791327913\" data-max=\"0.651084010840109\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.033728411784625\" data-max=\"0.673145953267864\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.04908160192713\" data-max=\"0.505269497139416\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Yes","Unknown","No"],[0.651084010840108,0.0291327913279133,0.319783197831978],[0.673145953267863,0.0337284117846258,0.293125634947511],[0.505269497139416,0.0490816019271304,0.445648900933454]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.hsgrad.same.pr<\/th>\n      <th>Entirely rural<\/th>\n      <th>Town/rural mix<\/th>\n      <th>Urban/town/rural mix<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-cross-tabs-4" class="section level3">
+<h3>Cross tabs</h3>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  21038 
+## 
+##  
+##                                       | match.region.summary.ruca.ct$emp.hsgrad.same.pr 
+## match.region.summary.ruca.ct$Dem_Desc |        No |   Unknown |       Yes | Row Total | 
+## --------------------------------------|-----------|-----------|-----------|-----------|
+##                        Entirely rural |       944 |        86 |      1922 |      2952 | 
+##                                       |   947.424 |   104.817 |  1899.759 |           | 
+##                                       |     0.320 |     0.029 |     0.651 |     0.140 | 
+## --------------------------------------|-----------|-----------|-----------|-----------|
+##                        Town/rural mix |      4328 |       498 |      9939 |     14765 | 
+##                                       |  4738.724 |   524.263 |  9502.012 |           | 
+##                                       |     0.293 |     0.034 |     0.673 |     0.702 | 
+## --------------------------------------|-----------|-----------|-----------|-----------|
+##                  Urban/town/rural mix |      1480 |       163 |      1678 |      3321 | 
+##                                       |  1065.852 |   117.919 |  2137.229 |           | 
+##                                       |     0.446 |     0.049 |     0.505 |     0.158 | 
+## --------------------------------------|-----------|-----------|-----------|-----------|
+##                          Column Total |      6752 |       747 |     13539 |     21038 | 
+## --------------------------------------|-----------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  337.4934     d.f. =  4     p =  8.791229e-72 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+</div>
+<div
+id="section-summary---matching-cte-careerclusters-with-employment-industry"
+class="section level1">
+<h1>Summary - matching CTE careerclusters with employment industry</h1>
+<p>Let’s first take a look to see what the total is regarding the
+percentage of students that had CTE experience matching their employment
+industry at any point in their career after graduating high school.</p>
+<p>The table below shows that nearly 45% of the individuals that
+experienced meaningful employment and had taken a CTE course worked in
+meaningful employmemt that matches one of the CTE courses.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-95a0e36ad47e8a7be111" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-95a0e36ad47e8a7be111">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"7482\" data-max=\"9350\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.444510456273764\" data-max=\"0.555489543726236\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[9350,7482],[0.555489543726236,0.444510456273764]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.careercluster.match<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-section-11"
+class="section level1 unnumbered unlisted toc-ignore tabset">
+<h1 class="unnumbered unlisted toc-ignore tabset"></h1>
+<p>Let’s see if there are any differences by EDR.</p>
+<p>The first table provides the percentage of individuals that had taken
+a CTE course and whether they had meaningful employment in the
+careercluster of a CTE course. When analyzign by EDR, EDR 8 has a
+significantly lower percentage of graduates with meaningful employment
+in an industry from which they took a CTE course (39% vs. 47% and
+49%).</p>
+<p>The crosstabs indicate a relationship between the percentages and
+EDR. EDR 8 has significantly less number of graduates in meaningful
+employment industry similar to a CTE course they took - 2,667 vs. 3,052
+expected.</p>
+<p><br></p>
+<div id="section-table---percent-7" class="section level2">
+<h2>Table - percent</h2>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-48dc79f2ad1ab7029d55" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-48dc79f2ad1ab7029d55">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.488151658767772\" data-max=\"0.511848341232228\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.473576642335766\" data-max=\"0.526423357664234\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.388435770463151\" data-max=\"0.611564229536849\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[0.511848341232227,0.488151658767773],[0.526423357664234,0.473576642335766],[0.611564229536848,0.388435770463152]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.careercluster.match<\/th>\n      <th>EDR 6E- Southwest Central<\/th>\n      <th>EDR 6W- Upper Minnesota Valley<\/th>\n      <th>EDR 8 - Southwest<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-crosstabs-5" class="section level2">
+<h2>Crosstabs</h2>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  16832 
+## 
+##  
+##                                | match.cc.emp.ind.ct.edr$emp.careercluster.match 
+##    match.cc.emp.ind.ct.edr$edr |        No |       Yes | Row Total | 
+## -------------------------------|-----------|-----------|-----------|
+##      EDR 6E- Southwest Central |      3348 |      3193 |      6541 | 
+##                                |  3633.457 |  2907.543 |           | 
+##                                |     0.512 |     0.488 |     0.389 | 
+## -------------------------------|-----------|-----------|-----------|
+## EDR 6W- Upper Minnesota Valley |      1803 |      1622 |      3425 | 
+##                                |  1902.552 |  1522.448 |           | 
+##                                |     0.526 |     0.474 |     0.203 | 
+## -------------------------------|-----------|-----------|-----------|
+##              EDR 8 - Southwest |      4199 |      2667 |      6866 | 
+##                                |  3813.991 |  3052.009 |           | 
+##                                |     0.612 |     0.388 |     0.408 | 
+## -------------------------------|-----------|-----------|-----------|
+##                   Column Total |      9350 |      7482 |     16832 | 
+## -------------------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  149.6047     d.f. =  2     p =  3.264031e-33 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
+</div>
+<div id="section-section-12"
+class="section level1 unnumbered unlisted toc-ignore tabset">
+<h1 class="unnumbered unlisted toc-ignore tabset"></h1>
+<p>Next let’s see if there are any differences by RUCA category.</p>
+<p>There isn’t a huge difference here.</p>
+<p><br></p>
+<div id="section-table---percent-8" class="section level2">
+<h2>Table - percent</h2>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-e90dc1e3120f1516705a" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-e90dc1e3120f1516705a">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.461353624349219\" data-max=\"0.538646375650781\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.436176495402007\" data-max=\"0.563823504597992\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.467365028203062\" data-max=\"0.532634971796938\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["No","Yes"],[0.538646375650781,0.461353624349219],[0.563823504597992,0.436176495402008],[0.532634971796938,0.467365028203062]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>emp.careercluster.match<\/th>\n      <th>Entirely rural<\/th>\n      <th>Town/rural mix<\/th>\n      <th>Urban/town/rural mix<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[1,2,3]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render"],"jsHooks":[]}</script>
+<p><br></p>
+</div>
+<div id="section-crosstabs-6" class="section level2">
+<h2>Crosstabs</h2>
+<p><br></p>
+<pre><code>## 
+##  
+##    Cell Contents
+## |-------------------------|
+## |                       N |
+## |              Expected N |
+## |           N / Row Total |
+## |-------------------------|
+## 
+##  
+## Total Observations in Table:  16832 
+## 
+##  
+##                                   | match.cc.emp.ind.ct.ruca$emp.careercluster.match 
+## match.cc.emp.ind.ct.ruca$Dem_Desc |        No |       Yes | Row Total | 
+## ----------------------------------|-----------|-----------|-----------|
+##                    Entirely rural |      1345 |      1152 |      2497 | 
+##                                   |  1387.057 |  1109.943 |           | 
+##                                   |     0.539 |     0.461 |     0.148 | 
+## ----------------------------------|-----------|-----------|-----------|
+##                    Town/rural mix |      6683 |      5170 |     11853 | 
+##                                   |  6584.218 |  5268.782 |           | 
+##                                   |     0.564 |     0.436 |     0.704 | 
+## ----------------------------------|-----------|-----------|-----------|
+##              Urban/town/rural mix |      1322 |      1160 |      2482 | 
+##                                   |  1378.725 |  1103.275 |           | 
+##                                   |     0.533 |     0.467 |     0.147 | 
+## ----------------------------------|-----------|-----------|-----------|
+##                      Column Total |      9350 |      7482 |     16832 | 
+## ----------------------------------|-----------|-----------|-----------|
+## 
+##  
+## Statistics for All Table Factors
+## 
+## 
+## Pearson&#39;s Chi-squared test 
+## ------------------------------------------------------------
+## Chi^2 =  11.45328     d.f. =  2     p =  0.003257999 
+## 
+## 
+## </code></pre>
+<p><br></p>
+</div>
 </div>
 
 

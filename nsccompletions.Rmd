@@ -122,6 +122,7 @@ Alright, now we are going to determine who graduated. Let's see what this data l
 <br>
 
 ```{r nsc completions original}
+
 nsccompletions.original <- read_csv("Data/SLEDS/NSC/NSC_completions.csv") %>%
   rename(PersonID = 1) %>%
   select(1:7) %>%
@@ -156,6 +157,7 @@ The main characteristics from this dataset that I want to add to the master data
 * The year they graduated from their last post-seconary institution
 * The sector of the institution(s) from which they graduated
 * The highest level of degree obtained by the PersonID
+* The degrees earned
 * Whether the institution(s) from which they graduated are in the same RUCA category, EDR, planning region, and state as their high school
 
 Okay, lets first create a dataset with a unique PersonID and a column confirming that they graduated from a post secondary institution.
@@ -274,7 +276,7 @@ I'm going to combine these into just a few categories.
 
 <br>
 
-```{r degree earned}
+```{r highest credential earned}
 clean.degree <- read_xlsx("Data/SLEDS/NSC/NSC_Degree_Title_Cleaned.xlsx", sheet = 1)
 
 highest.credential.code <- nsccompletions.original %>%
@@ -920,3 +922,8 @@ CrossTable(grad.sector.summary.ruca$Sector, grad.sector.summary.ruca$Dem_Desc, e
 ```
 
 <br>
+
+```{r write master}
+write_csv(master.10, "Data/SLEDS/Masters/Master-10.csv")
+
+```

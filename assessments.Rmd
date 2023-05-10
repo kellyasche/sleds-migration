@@ -216,7 +216,8 @@ mca.highest <- mca %>%
   fill(MCA.M, .direction = c("downup")) %>%
   fill(MCA.R, .direction = "downup") %>%
   fill(MCA.S, .direction = "downup") %>%
-  distinct(PersonID, .keep_all = TRUE)
+  distinct(PersonID, .keep_all = TRUE) %>%
+  select(-id)
   
 head(mca.highest)
 

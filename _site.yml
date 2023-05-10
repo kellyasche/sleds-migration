@@ -30,6 +30,12 @@ navbar:
           href: nscenrollment.html
         - text: "National Student Clearinghouse - completions"
           href: nsccompletions.html
+        - text: "Employment"
+          href: employment.html
+        - text: "Unemployment"
+          href: unemployment.html
+        - text: "Average wages"
+          href: avgwages.html
 output:
   html_document:
     css: "styles.css"

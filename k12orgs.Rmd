@@ -132,7 +132,7 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 
 Up next is combining the school locations. The MN Department of Education uses their own codes for Minnesota counties and don't relate to countyfp. So I'm going to import their codes and combine them with the countyfp since that's what I'm used to using. I'm also going to import the EDR and planning regions for each county allowing me to analyze the data at various regional levels.
 
-```{r k12 orgs county codes and regions}
+```{r k12 orgs county codes and regions, include=FALSE}
 k12.county.codes <- read_csv("Data/SLEDS/K12 Org/K12-county-codes.csv")
 
 zip <- read_xlsx("Data/Join docs/zip-city-county.xlsx")

@@ -41,6 +41,22 @@ library(gmodels)
 ```
 
 ```{r themes and join docs, include=FALSE}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
 theme_line <- theme_bw() +
   theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
         legend.key = element_rect(fill = "transparent"),
@@ -88,6 +104,10 @@ counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
          mif = as.factor(mif),
          mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
 
+regions = counties.regions %>%
+  select(edr, planning.region) %>%
+  distinct(edr, .keep_all = TRUE)
+
 ```
 
 <br>
@@ -102,9 +122,10 @@ The dataset was exported as two separate spreadsheets due to the size. So I will
 
 ```{r employment original}
 employment.original.1 <- read_csv("Data/SLEDS/Employment/Employment.csv") %>%
-  mutate(PersonID = as.integer(PersonID)) 
+  mutate(PersonID = as.integer(PersonID)) %>%
+  select(1:23)
 
-employment.original.2 <- read_csv("Data/SLEDS/Employment/Employment2.csv") %>%
+employment.original.2 <- read_csv("Data/SLEDS/Employment/Employment2a.csv") %>%
   mutate(PersonID = as.integer(PersonID)) 
 
 employment.original <- employment.original.1 %>%
@@ -115,7 +136,6 @@ employment.original <- employment.original.1 %>%
 head(employment.original)
 
 names(employment.original)
-
 ```
 
 <br>
@@ -166,4 +186,1104 @@ In the original dataset we have `r employment.original %>% nrow()` rows and `r e
 * MNCounty: County Code for this location as assigned by the state of Minnesota.
   + [Link to codes](https://sleds.mn.gov/dataDictionary/663)
 City: All of the city data is NA
+
+<br>
+
+So all the previous datasets we structured and filtered so that each observation in the master dataset was an individual. We will want to continue to do the same. So we need to create an employment dataset with the following columns;
+
+1. PersonID
+2. Confirmation on whether PersonID in the master dataset has a MN employment record
+3. Confirmation on whether they had "meaningful employment" since graduating high school
+4. Whether they had meaningful employment with an employer located in their high school county, edr, one of the research EDRs and in Minnesota.
+5. Whether they had meaningful employment with an employer in an industry that matches a CTE careercluster.
+
+## Filter for "meaningful" employment
+
+The biggest issue is how do we get a meaningful indicator on whether they were employed in the region and whether they are employed in an industry that matches their CTE experience? We need to filter out summer jobs between college years, as well as adapt to different paths that students take. 
+
+The research question is most concerned about how education experience shapes migration and employment. Does it matter if someone is a CTE concentrator goes to a 2-year, is employed for a few years in an industry that's in the region, but then goes to a 4-year and moves away? Probably not. What matters is capturing the instance of the student taking those years to work in the region and/or industry of their CTE experience and whether it was impacted more because of that CTE experience.
+
+So we will keep all employment instances that are more than 1,000 hours worked in a given year.
+
+<br>
+
+```{r prep filter meaningful employment}
+meaningful.emp <- employment.original %>%
+  group_by(PersonID, EmploymentOrganizationID, CalendarYear) %>%
+  summarize(EmployeeQuarterlyHoursWorked = sum(EmployeeQuarterlyHoursWorked)) %>%
+  ungroup() %>%
+  group_by(PersonID) %>%
+  filter(EmployeeQuarterlyHoursWorked > 999) %>%
+  ungroup() %>%
+  distinct(PersonID, EmploymentOrganizationID)
+
+head(meaningful.emp)
+
+names(meaningful.emp)
+```
+
+<br>
+
+This dataset has `r comma(nrow(meaningful.emp))` rows which represents an PersonID and  EmploymentOrganizationID with 1,000 or more hours had been worked in any given year of employment with that organization. 
+
+Up next, we want to aggregate some of the other information related to these instances of employment for each PErsonID - such as location, wages earned, etc....
+
+## Match employment and high school locations/regions.
+
+In one fell swoop, we can group together each  employment instance from the previous dataset above then sum together the;
+
+* total quarters worked
+* total hours worked
+* total wages earned
+* year started working
+* last year worked, and
+* industry of employer.
+
+We will also filter the dataset so that it only includes PersonID that are in the previous master dataset so we are only looking at individuals who "qualify" in the analysis parameters.
+
+
+
+<br>
+
+```{r master employment}
+qualified.personid <- read_csv("Data/SLEDS/Masters/Master-10.csv")
+
+employment.unique.instance.prep <- employment.original %>%
+  group_by(PersonID, EmploymentOrganizationID, IndustryID, USIndustryCode, USIndustry, GroupCode, IndustryGroup, CountyName, EconomicDevelopmentRegionName) %>%
+  summarize(emp.quarters = n(),
+            total.hours.worked = sum(EmployeeQuarterlyHoursWorked),
+            total.wages = sum(EmployeeQuarterlyWages),
+            first.employment.year = min(CalendarYear),
+            last.employment.year = max(CalendarYear),
+            wages.earned = sum(EmployeeQuarterlyWages),
+            quarters.employed = n()) %>%
+  ungroup() %>%
+  right_join(meaningful.emp, by = c("PersonID", "EmploymentOrganizationID")) %>%
+  mutate(meaningful.emp = "Yes")
+
+employment.unique.instance <- qualified.personid %>%
+  left_join(employment.unique.instance.prep, by = "PersonID") %>%
+  mutate(meaningful.emp = ifelse(is.na(meaningful.emp), "No", "Yes")) %>%
+  rename(employment.county = 75,
+         emp.edr = 76) %>% 
+  mutate(emp.edr = str_replace(emp.edr, "  ", " "),
+         emp.edr = as.factor(emp.edr),
+         employment.county = str_replace(employment.county, " County", ""),
+         employment.county = str_replace(employment.county, "City of Duluth", "St. Louis"),
+         employment.county = str_replace(employment.county, "Saint Louis", "St. Louis"),
+         employment.county = str_replace(employment.county, "City of Minneapolis", "Hennepin"),
+         employment.county = str_replace(employment.county, "City of St. Paul", "Ramsey"),
+         employment.county = str_replace(employment.county, "White Earth Tribal Counci", "Mahnomen"),
+         employment.county = as.factor(employment.county)) %>%
+  left_join(counties.regions[,c(2, 4)], by = c("employment.county" = "Name")) %>%
+  rename(hs.Dem_Desc = Dem_Desc.x,
+         emp.Dem_Desc = Dem_Desc.y) %>%
+  select(1:76, 85, 77:84)
+
+names(employment.unique.instance)
+
+head(employment.unique.instance)
+```
+
+<br>
+
+`r comma(nrow(employment.unique.instance))` employment instances match the PersonID from the Master dataset built up to this point as well as being unique employer instances in which 1,000 hours or more was worked in a given year for that employer. 
+
+So now we want to create a new dataset that has each unique PersonID with the following additional columns;
+
+* Yes/No - after graduation, worked in same county as high school
+* Yes/No - after graduation, worked in same EDR
+* Yes/No - after graduation, worked in SW Minnesota
+* Yes/No - after graduation, worked in Minnesota
+* Yes/No - after graduation, worked in same RUCA county category
+
+
+<br>
+
+```{r compare locations}
+employment.post.hsgrad <- employment.unique.instance %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, hs.grad.year, county.name, countyfp, hs.Dem_Desc, edr, employment.county, meaningful.emp, emp.edr, emp.Dem_Desc, emp.quarters, first.employment.year, last.employment.year) %>%
+  left_join(regions, by = c("emp.edr" = "edr")) %>%
+  rename(emp.planning.region = planning.region) %>%
+  filter(first.employment.year >= hs.grad.year) %>%
+  filter(last.employment.year > hs.grad.year) 
+
+employment.hsgrad.location.match <- employment.post.hsgrad %>%
+  mutate(employment.county = ifelse(employment.county == "NULL", "Unknown", as.character(employment.county)),
+         employment.county = ifelse(is.na(employment.county), "Unknown", as.character(employment.county)),
+         emp.hsgrad.same.county = ifelse(employment.county == "Unknown", -1,
+                                         ifelse(employment.county == county.name, 1, 0)),
+         emp.edr = ifelse(employment.county == "Statewide (i.e. no fixed location)", "Statewide (i.e. no fixed location)", as.character(emp.edr)),
+         emp.Dem_Desc = ifelse(employment.county == "Statewide (i.e. no fixed location)", "Statewide (i.e. no fixed location)", emp.Dem_Desc),
+         emp.edr = ifelse(is.na(emp.edr), "Unknown", as.character(emp.edr)),
+         emp.edr = ifelse(emp.edr == "NULL", "Unknown", as.character(emp.edr)),
+         emp.hsgrad.same.edr = ifelse(emp.edr == "Unknown", -1,
+                                      ifelse(emp.edr == edr, 1, 0)),
+         emp.planning.region = ifelse(is.na(emp.planning.region), "Unknown", as.character(emp.planning.region)),
+         emp.hsgrad.same.pr = ifelse(emp.edr == "Unknown", -1, 
+                                     ifelse(emp.edr %in% c("EDR 6W- Upper Minnesota Valley", "EDR 8 - Southwest", "EDR 6E- Southwest Central"), 1, 0)),
+         emp.Dem_Desc = ifelse(is.na(emp.Dem_Desc), "Unknown", emp.Dem_Desc),
+         emp.hsgrad.same.ruca = ifelse(emp.Dem_Desc == "Unknown", -1,
+                                       ifelse(emp.Dem_Desc == hs.Dem_Desc, 1, 0)),
+         emp.hsgrad.same.mn = ifelse(employment.county == "Unknown", -1, 
+                                     ifelse(employment.county != "Unknown", 1, 0))) %>%
+  group_by(PersonID) %>%
+  summarize(emp.hsgrad.same.county = max(emp.hsgrad.same.county),
+            emp.hsgrad.same.edr = max(emp.hsgrad.same.edr),
+            emp.hsgrad.same.pr = max(emp.hsgrad.same.pr),
+            emp.hsgrad.same.ruca = max(emp.hsgrad.same.ruca),
+            emp.hsgrad.same.mn = max(emp.hsgrad.same.mn)) %>%
+  ungroup() %>%
+  mutate(meaningful.emp = "Yes")
+  
+head(employment.hsgrad.location.match)
+
+names(employment.hsgrad.location.match)
+
+```
+
+<br>
+
+The dataset has `r comma(nrow(employment.hsgrad.location.match))` unique PersonID that had meaningful employment with confirmation on whether they were ever employed in the same county, EDR, Planning Region, or in Minnesota at any point after graduating high school. We will merge this dataset with the master list later, below. The PersonID that do not have "meaningful employment" will be categorized correctly at that point.
+
+## Match employment industry with career cluster
+
+Next we need to find a way to compare the CTE careerclusters with the actual industry from which they work. We are not able to compare majors which is a bummer. But, the careerclusters from CTE coursework does align somewhat with NAICS codes. Here's what it looks like;
+
+```{r career cluster and naics crosswalk table}
+careercluster.naics.cw <- read_xlsx("Data/SLEDS/Employment/career-cluster-naics.xlsx") %>%
+  rename(cw.CareerCluster = `Career cluster code`,
+         cw.CareerClusterName = `Career Cluster`,
+         cw.emp.ind.code = 3,
+         cw.emp.ind.name = 4)
+
+
+datatable(careercluster.naics.cw, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) 
+
+```
+
+There is one industry in which two career clusters will have to be marged - Human Services and Health Science & Health Occupations. Due to this, we will create a new column with an "updated" careercluster code that includes the merged cluster.
+
+Once we create the new column that aligns with this crosswalk, we will compare it to the naics 2-code industry. 
+
+<br>
+
+```{r employment industry comp to degree}
+employment.careercluster.ind.post.hs <- employment.unique.instance %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, hs.grad.year, 20:39, GroupCode, first.employment.year, last.employment.year) %>%
+  filter(first.employment.year >= hs.grad.year) %>%
+  filter(last.employment.year > hs.grad.year)
+
+emp.cc.ind.match <- employment.careercluster.ind.post.hs %>%
+  mutate(emp.ind.code = ifelse(GroupCode == 6215, 6215, str_sub(GroupCode, 1, 2))) %>%
+  select(1, 3:22, 26) %>%
+  gather(key = "hs.CareerCluster", value = "n.courses", 2:21) %>%
+  filter(n.courses > 0) %>%
+  select(PersonID, emp.ind.code, hs.CareerCluster) %>%
+  distinct(PersonID, hs.CareerCluster, emp.ind.code) %>%
+  mutate(hs.CareerCluster = str_sub(hs.CareerCluster, 5, 6),
+         hs.CareerCluster = trimws(hs.CareerCluster, which = "both")) %>%
+  mutate(hs.CareerCluster = ifelse(hs.CareerCluster %in% c("10", "11"), "10 & 11", hs.CareerCluster),
+         emp.ind.code = as.integer(emp.ind.code)) %>%
+  left_join(careercluster.naics.cw[,c(1,3)], by = c("emp.ind.code" = "cw.emp.ind.code")) %>%
+  mutate(emp.careercluster.match = ifelse(hs.CareerCluster == cw.CareerCluster, 1, 0),
+         emp.careercluster.match = ifelse(is.na(emp.careercluster.match), 0, emp.careercluster.match)) %>%
+  group_by(PersonID) %>%
+  summarize(emp.careercluster.match = max(emp.careercluster.match)) %>%
+  ungroup() 
+
+head(emp.cc.ind.match)
+
+names(emp.cc.ind.match)
+
+```
+
+<br>
+
+The data table created provides each PersonID that had meaningful employment in an industry that matched a CTE course they took - "1" means yes, and "0" means no. There are `r comma(nrow(emp.cc.ind.match))` rows in the dataset with `r comma(ncol(emp.cc.ind.match))` columns.
+
+
+<br>
+
+## Confirm original master has MN employment record
+
+Next, we will want to merge this with the master list. One problem is that there will be individuals that are in that master list that are not in the employment list due to never having a MN employment record. So let's build that first, and then we can merge with the master list.
+
+```{r mn employment record confirm}
+master.10 <- read_csv("Data/SLEDS/Masters/Master-10.csv")
+
+mn.employment.record <- meaningful.emp %>%
+  distinct(PersonID, .keep_all = TRUE) %>%
+  right_join(master.10[,c(1)], by = "PersonID") %>%
+  mutate(mn.emp.record = ifelse(is.na(EmploymentOrganizationID), "No", "Yes")) %>%
+  select(PersonID, mn.emp.record)
+
+names(mn.employment.record)
+
+head(mn.employment.record)
+
+```
+
+<br>
+
+The above data object consists of each unique PersonID from the previous master list along with a confirmation column on whether they had an MN employment record. The data object contains `r comma(nrow(mn.employment.record))` individuals and `r comma(ncol(mn.employment.record))` columns.
+
+<br>
+
+
+Next we need to combine all of this together with the master dataset and we can begin the summary. The data that needs to be combined are;
+
+* Master 10
+* Confirmation of MN Employment record column
+* Confirmation of post high school graduation employment instance matching high school graduation locations/regions
+* Confirmation of post high school graduation employment instance matching CTE course taken.
+* A "yes" or "no" on whether the PersonID ever had "meaningful employment".
+
+<br>
+
+
+```{r creating master}
+master.11 <- master.10 %>%
+  left_join(mn.employment.record, by = "PersonID") %>%
+  left_join(employment.hsgrad.location.match, by = "PersonID") %>%
+  mutate(meaningful.emp = ifelse(is.na(meaningful.emp), "No", "Yes")) %>%
+  select(1:69, 75, 70:74) %>%
+  left_join(emp.cc.ind.match, by = c("PersonID")) 
+
+```
+
+<br>
+
+After combining the date we have `r comma(nrow(master.11))` rows with `r comma(ncol(master.11))` columns.
+
+<br>
+
+# Summary - MN employment record
+
+We will first summarize the number of individuals that had MN employment records.
+
+The table below shows that 60% of the individuals that graduated from a SW high school had a MN employment record either "meaningful" or "not meaningful". 
+
+<br>
+
+```{r mn employment record total}
+summary.mn.emp.record.total <- master.11 %>%
+  group_by(mn.emp.record) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) 
+
+datatable(summary.mn.emp.record.total, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, let's see if there is any significant differences by the EDR location of their high school.
+
+The first table below shows that the highest percentage of graduates that have a mn employment record is in EDR 6E with 65%, compared to 60% in EDR 6W and 56% in EDR 8.
+
+The cross tabs indicate that there is a relationship between the EDR of the high school graduate and whether they have a MN employment record.
+
+* EDR 6E: a significantly higher number of graduates had a MN employment record - 9,115 vs. 8,353 expected.
+* EDR 8: a significantly lower number of graduates had a MN employment record - 9,348 vs. 10,096 expected.
+
+<br>
+
+## Table - percent
+
+```{r mn employment records eda}
+summary.mn.emp.record.eda <- master.11 %>%
+  group_by(edr, mn.emp.record) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  select(edr, mn.emp.record, pct) %>%
+  spread(edr, pct)
+
+names(summary.mn.emp.record.eda)
+
+datatable(summary.mn.emp.record.eda, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+## Cross tabs
+
+<br>
+
+```{r mn employment records crosstabs eda}
+CrossTable(master.11$edr, master.11$mn.emp.record, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next we will check for differences by RUCA category of high school.
+
+The first table below shows a pretty consistent percentage of graduates that had a MN employment record. All RUCA categories had nearly 60% of their graduates have an MN employment record.
+
+The second table does show a relationship, but it's not nearly as strong and doesn't come through as much in the percentages.
+
+<br>
+
+## Table - percent
+
+<br>
+
+```{r mn employment record ruca}
+summary.mn.emp.record.ruca <- master.11 %>%
+  group_by(Dem_Desc, mn.emp.record) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  select(Dem_Desc, mn.emp.record, pct) %>%
+  spread(Dem_Desc, pct)
+
+datatable(summary.mn.emp.record.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4,  digits = 1) 
+  
+
+```
+
+<br>
+
+## Cross tabs
+
+<br>
+
+```{r mn employment record crosstabs ruca}
+CrossTable(master.11$Dem_Desc, master.11$mn.emp.record, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+<br>
+
+
+
+# Summary - meaningful employment
+
+First, let's check to see what percentage of individuals in the dataset had "meaningful" employment. This is defined as and individual having worked for an employer for 1,000 or more hours in any given year with that employer.
+
+The table below shows that 55% of the individuals in the dataset had an instance where they worked for an employer for 1,000 or more hours in a given year since graduating high school.
+
+<br>
+
+```{r summary meaningful emp total}
+summary.meaningful.emp.total <- master.11 %>%
+  group_by(meaningful.emp) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup()
+
+
+datatable(summary.meaningful.emp.total, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 2)
+
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, let's check to see if there are any differences in the percentages by the EDR of their high school.
+
+The first table shows that EDR 6E had the highest percentage of individuals that had meaningful employment with 61% compared to 54% and 51% for EDR 6W, and EDR 8, respectively.
+
+The cross table below indicates a relationship between EDR of a PersonID's high school and the percentage of individuals that had meaningful employment. The following are noteworthy;
+
+* EDR 6E: A significantly higher number of individuals had meaningful employment than expected - 8,467 vs. 7,687 expected.
+* EDR 8 : A significantly lower number of individuals had meaningful employment than expected - 8,563 vs. 9,290 expected.
+
+<br>
+
+## Table - PCT
+
+```{r summary meaningful emp EDR}
+summary.meaningful.emp.edr <- master.11 %>%
+  group_by(edr, meaningful.emp) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup()
+
+datatable(summary.meaningful.emp.edr, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatCurrency(3, "", digits = 0) %>%
+  formatPercentage(4, digits = 2)
+
+
+```
+
+
+<br>
+
+## Crosstabs
+
+<br>
+
+```{r summary meaningful emp crosstabs edr}
+summary.cross <- master.11 %>%
+  select(edr, meaningful.emp) %>%
+  mutate(edr = str_sub(edr, 1,6))
+
+CrossTable(summary.cross$edr, summary.cross$meaningful.emp, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next lets check to see what this looks like by RUCA category.
+
+The first table shows that all RUCA categories had similar percentages of individuals have meaningful employment - ~55%.
+
+The cross tabs, however, do indicate a relationship that would drive differences in the percentages. But it's pretty minimal. This is kind of interesting.
+
+<br>
+
+## Table - percent
+
+<br>
+
+```{r summary meaningful emp ruca}
+summary.meaningful.emp.ruca <- master.11 %>%
+  group_by(Dem_Desc, meaningful.emp) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup()
+
+datatable(summary.meaningful.emp.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatCurrency(3, "", digits = 0) %>%
+  formatPercentage(4, digits = 2)
+
+
+```
+
+<br>
+
+## Cross tabs
+
+<br>
+
+```{r summary meaningful emp crosstabs ruca}
+summary.cross <- master.11 %>%
+  select(Dem_Desc, meaningful.emp) 
+
+CrossTable(summary.cross$Dem_Desc, summary.cross$meaningful.emp, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+
+```
+
+
+<br>
+
+# Summary - matching employment locations and high school locations
+
+First we will summarize the percentage of students that had an employment instance in a location that matches their high school graduation. We will only use PersonID that had meaningful employment for the following summaries.
+
+We will begin with counties, then look at EDR, planning region, employed within Minnesota, and then by RUCA categories.
+
+<br>
+
+## High school grad and employment instance match
+
+First, let's look what percentage of individuals had an employment instance where the employer was located in the same county as their high school.
+
+The table below shows that 42% of the individuals that graduated from a Southwest highschool and had meaningful employment was for an employer locarted in the same high school as their high school.
+
+<br>
+
+```{r pct employed in county}
+match.region.summary.total.county <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(emp.hsgrad.same.county) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.county = ifelse(emp.hsgrad.same.county == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.county == 0, "No", "Unknown")),
+         emp.hsgrad.same.county = ifelse(is.na(emp.hsgrad.same.county), "Unknown", emp.hsgrad.same.county)) %>%
+  arrange(desc(pct))
+
+  
+datatable(match.region.summary.total.county, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatPercentage(3, digits = 1)
+
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, let's see if there are any differences when comparing across regions. We'll start by comparing percentage of individuals that have/had employment in their high school county by EDR and see if there are any significant differences.
+
+The first table below provides the percentage of individuals by high school edr that were employed for at least one meaningful employment instance in the same county as their high school. The percentages range from 32% for EDR 6W and 45% for EDR 8, with EDR 6E having 43%.
+
+The second table provides the crosstabs to determine if there is a significant difference in percentages across EDRs. The p-value was extremely low, meaning there does appear to be a relationship between the EDR from which an individual graduates from and whether they were ever employed in the same county as their high school after graduation year. Some of the main differences to note include;
+
+* EDR 6W: significantly lower number of individuals that were ever employed in their high school county from EDR 6W - 1,274 did while 1,677 was expected.
+
+
+<br>
+
+### Table - percent
+```{r pct employed in high school county table edr}
+match.county.summary.total.edr <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(edr, emp.hsgrad.same.county) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.county = ifelse(emp.hsgrad.same.county == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.county == 0, "No", "Unknown")),
+         emp.hsgrad.same.county = ifelse(is.na(emp.hsgrad.same.county), "Unknown", emp.hsgrad.same.county)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(key = edr, value = pct) %>%
+  arrange(desc(emp.hsgrad.same.county))
+  
+datatable(match.county.summary.total.edr, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+### Crosstabs
+
+<br>
+
+```{r pct employed in high school county crosstabs edr}
+match.county.summary.total.edr.ct<- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, edr, emp.hsgrad.same.county) %>%
+  mutate(edr = str_sub(edr, 1, 6),
+         emp.hsgrad.same.county = ifelse(emp.hsgrad.same.county == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.county == 0, "No", "Unknown")),
+         emp.hsgrad.same.county = ifelse(is.na(emp.hsgrad.same.county), "Unknown", emp.hsgrad.same.county))
+
+CrossTable(match.county.summary.total.edr.ct$edr, match.county.summary.total.edr.ct$emp.hsgrad.same.county, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, let's see if there are any significant differences by RUCA category.
+
+The first table below provides the percentage of individuals from each high school RUCA category that had meaningful employment in a county with the same RUCA category. The percentagres range from a low of 30% in entirely rural high schools to 45% for town/rural mix high schools. Urban/town/rural mix high schools were in the middle with 41%.
+
+The crosstabs shows a very low p-value, indicating a relationship between the high school RUCA category and the percentage of individuals that have employment in the same RUCA category. The following are especially noteworthy;
+
+* Entirely rural school: A significantly lower number of individuals had an employment experience in an entirely rural county after graduation than expected - 870 vs. 1,277.
+* Town/rural mix schools: A significantly higher number of individuals had an employment experience in an town/rural mix county after graduation than expected - 6,584 vs 6,180 expected.
+* Urban/town/rural mix schools: The number of individuals aligned with the expected results pretty closely.
+
+<br>
+
+### Table - percent
+
+<br>
+
+```{r pct employed in high school county table ruca}
+match.county.summary.total.ruca <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(Dem_Desc, emp.hsgrad.same.county) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.county = ifelse(emp.hsgrad.same.county == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.county == 0, "No", "Unknown")),
+         emp.hsgrad.same.county = ifelse(is.na(emp.hsgrad.same.county), "Unknown", emp.hsgrad.same.county)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(key = Dem_Desc, value = pct) %>%
+  arrange(desc(emp.hsgrad.same.county))
+  
+datatable(match.county.summary.total.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+### Crosstabs
+
+<br>
+
+```{r pct employed in high school county crosstabs ruca}
+match.county.summary.total.ruca.ct <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, Dem_Desc, emp.hsgrad.same.county) %>%
+  mutate(emp.hsgrad.same.county = ifelse(emp.hsgrad.same.county == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.county == 0, "No", "Unknown")),
+         emp.hsgrad.same.county = ifelse(is.na(emp.hsgrad.same.county), "Unknown", emp.hsgrad.same.county))
+
+CrossTable(match.county.summary.total.ruca.ct$Dem_Desc, match.county.summary.total.ruca.ct$emp.hsgrad.same.county, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+## High school grad EDR and employment instance match
+
+<br>
+
+Next we will look at the percentage of individuals in the total dataset that had a high school graduation and an employment instance in the same EDR in Southwest Minnesota.
+
+The table below shows that 56% of individuals had a meaninful employment instance in their high school EDR. 
+
+
+<br>
+
+```{r pct employed in edr}
+match.edr.summary.total.edr <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(emp.hsgrad.same.edr) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.edr = ifelse(emp.hsgrad.same.edr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.edr == 0, "No", "Unknown")),
+         emp.hsgrad.same.edr = ifelse(is.na(emp.hsgrad.same.edr), "Unknown", emp.hsgrad.same.edr)) %>%
+  arrange(desc(pct))
+  
+datatable(match.edr.summary.total.edr, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatPercentage(3, digits = 1)
+
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next we will see if there are any statistically significant differences when breaking this down by EDR.
+
+The first table below shows the percentage of individuals that had meaningful employment in their high school EDR. It shows that the highest percentage was in EDR 8 with 65%, followed by EDR 6E with 53% and EDR 6W with 44%.
+
+The cross tabs indicate a significant difference in the percentages across EDRs. Some highlights included;
+
+* EDR 6W: a signfiicantly lower number of individuals graduating from an EDR 6W high school had a meaningful employment experience in 6W - 1,753 vs. 2,253 expected.
+* EDR 8: a signficiantly higher number of individuals graduating from a EDR 8 high school had meaningful employment in EDR 8 - 5,589 vs. 4,814 expected.
+
+<br>
+
+### Table - percent
+```{r pct employed in high school edr table edr}
+match.edr.summary.edr <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(edr, emp.hsgrad.same.edr) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.edr = ifelse(emp.hsgrad.same.edr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.edr == 0, "No", "Unknown")),
+         emp.hsgrad.same.edr = ifelse(is.na(emp.hsgrad.same.edr), "Unknown", emp.hsgrad.same.edr)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(key = edr, value = pct) %>%
+  arrange(desc(emp.hsgrad.same.edr))
+  
+datatable(match.edr.summary.edr, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+### Crosstabs
+
+<br>
+
+```{r pct employed in high school edr crosstabs edr}
+match.edr.summary.edr.ct <-  master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, edr, emp.hsgrad.same.edr) %>%
+  mutate(edr = str_sub(edr, 1, 6),
+         emp.hsgrad.same.edr = ifelse(emp.hsgrad.same.edr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.edr == 0, "No", "Unknown")),
+         emp.hsgrad.same.edr = ifelse(is.na(emp.hsgrad.same.edr), "Unknown", emp.hsgrad.same.edr))
+
+CrossTable(match.edr.summary.edr.ct$edr, match.edr.summary.edr.ct$emp.hsgrad.same.edr, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, let's see if there are any significant differences by RUCA category.
+
+The first table below provides the percentage of individuals from each high school RUCA category that had meaningful employment in a county with the same RUCA category. The percentages range from a low of 49% in urban/town/rural mix high schools to 58% for town/rural mix high schools. Entirely rural high schools weren't far behind with 57%.
+
+The crosstabs shows a very low p-value, however, the values are fairly aligned. 
+<br>
+
+### Table - percent
+
+<br>
+
+```{r pct employed in high school edr table ruca}
+match.edr.summary.ruca <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(Dem_Desc, emp.hsgrad.same.edr) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.edr = ifelse(emp.hsgrad.same.edr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.edr == 0, "No", "Unknown")),
+         emp.hsgrad.same.edr = ifelse(is.na(emp.hsgrad.same.edr), "Unknown", emp.hsgrad.same.edr)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(key = Dem_Desc, value = pct) %>%
+  arrange(desc(emp.hsgrad.same.edr))
+  
+datatable(match.edr.summary.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+### Crosstabs
+
+<br>
+
+```{r pct employed in high school edr crosstabs ruca}
+match.edr.summary.ruca.ct <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, Dem_Desc, emp.hsgrad.same.edr) %>%
+  mutate(emp.hsgrad.same.edr = ifelse(emp.hsgrad.same.edr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.edr == 0, "No", "Unknown")),
+         emp.hsgrad.same.edr = ifelse(is.na(emp.hsgrad.same.edr), "Unknown", emp.hsgrad.same.edr))
+
+CrossTable(match.edr.summary.ruca.ct$Dem_Desc, match.edr.summary.ruca.ct$emp.hsgrad.same.edr, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+## 
+
+## High school grad Southwest region and employment instance match
+
+Next let's look at what percentage of individuals had a meaningful employment experience in one of the planning regions pertaining to this research project (EDR 6E, EDR 6W, EDR 8).
+
+The table below shows that 64% of high school graduates in EDR 6E, EDR 6W, or EDR 8 had a meaningful employment experience in one of those EDRs after high school graduation.
+
+<br>
+
+```{r pct employed in sw}
+match.pr.summary.total <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(emp.hsgrad.same.pr) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.pr = ifelse(emp.hsgrad.same.pr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.pr == 0, "No", "Unknown")),
+         emp.hsgrad.same.pr = ifelse(is.na(emp.hsgrad.same.pr), "Unknown", emp.hsgrad.same.pr)) %>%
+  arrange(desc(pct))
+  
+datatable(match.pr.summary.total, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatPercentage(3, digits = 1)
+
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, let's see if there are any significant differences by EDR.
+
+The first table below shows that 70% of high school graduates in EDR 8 had a meaningful employment instance in one of the three research EDRs. This was followed by 67% in EDR 6W and 57% in EDR 6E.
+
+The cross tab table does show a significant difference in percentages across EDRs. Some highlights include;
+
+* EDR 6E: a significantly lower number of individuals graduating from EDR 6E had a meaningful employment experience within one of the research EDRs - 4,833 vs. 5,448 expected.
+* EDR 8: a significantly higher number of individuals graduating from EDR 8 had a meaningful employment experience within one of the research EDRs - 6,020 vs. 5,511 expected.
+
+<br>
+
+### Table - percentages
+
+<br>
+
+```{r pct employed in high school region table edr}
+match.region.summary.edr <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(edr, emp.hsgrad.same.pr) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.pr = ifelse(emp.hsgrad.same.pr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.pr == 0, "No", "Unknown")),
+         emp.hsgrad.same.pr = ifelse(is.na(emp.hsgrad.same.pr), "Unknown", emp.hsgrad.same.pr)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(key = edr, value = pct) %>%
+  arrange(desc(emp.hsgrad.same.pr))
+  
+datatable(match.region.summary.edr, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+### Cross tabs 
+
+<br>
+```{r pct employed in high school region crosstabs edr}
+match.region.summary.edr.ct <-  master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, edr, emp.hsgrad.same.pr) %>%
+  mutate(edr = str_sub(edr, 1, 6),
+         emp.hsgrad.same.pr = ifelse(emp.hsgrad.same.pr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.pr == 0, "No", "Unknown")),
+         emp.hsgrad.same.pr = ifelse(is.na(emp.hsgrad.same.pr), "Unknown", emp.hsgrad.same.pr))
+
+CrossTable(match.region.summary.edr.ct$edr, match.region.summary.edr.ct$emp.hsgrad.same.pr, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+## {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next, let's see if there are any significant differences by RUCA.
+
+The first table below shows that 67% of graduates from a town/rural mix high school had a meaningful employment instance in one of the three research EDRs. This was closely followed by entirely rural high schools with 65%. Significantly less was urban/town/rural mix high school graudates with 51%.
+
+The cross tab table does show a significant difference especially for the urban/town/rural mix graduates - 1,678 of them had a meaningful employment instance in one of the three research EDRs compared to 2,137 that was expected.
+
+<br>
+
+### Table - percentages
+
+<br>
+
+```{r pct employed in high school region table ruca}
+match.region.summary.ruca <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  group_by(Dem_Desc, emp.hsgrad.same.pr) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n),
+         emp.hsgrad.same.pr = ifelse(emp.hsgrad.same.pr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.pr == 0, "No", "Unknown")),
+         emp.hsgrad.same.pr = ifelse(is.na(emp.hsgrad.same.pr), "Unknown", emp.hsgrad.same.pr)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(key = Dem_Desc, value = pct) %>%
+  arrange(desc(emp.hsgrad.same.pr))
+  
+datatable(match.region.summary.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+### Cross tabs 
+
+<br>
+```{r pct employed in high school region crosstabs ruca}
+match.region.summary.ruca.ct <-  master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  select(PersonID, Dem_Desc, emp.hsgrad.same.pr) %>%
+  mutate(emp.hsgrad.same.pr = ifelse(emp.hsgrad.same.pr == 1, "Yes",
+                                         ifelse(emp.hsgrad.same.pr == 0, "No", "Unknown")),
+         emp.hsgrad.same.pr = ifelse(is.na(emp.hsgrad.same.pr), "Unknown", emp.hsgrad.same.pr))
+
+CrossTable(match.region.summary.ruca.ct$Dem_Desc, match.region.summary.ruca.ct$emp.hsgrad.same.pr, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+# Summary - matching CTE careerclusters with employment industry
+
+Let's first take a look to see what the total is regarding the percentage of students that had CTE experience matching their employment industry at any point in their career after graduating high school.
+
+The table below shows that nearly 45% of the individuals that experienced meaningful employment and had taken a CTE course worked in  meaningful employmemt that matches one of the CTE courses.
+
+<br>
+
+```{r cte cc match emp industry total}
+match.cc.emp.ind.total <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  filter(cte.achievement != "No CTE") %>%
+  mutate(emp.careercluster.match = ifelse(emp.careercluster.match == 1, "Yes", "No"),
+         emp.careercluster.match = ifelse(is.na(emp.careercluster.match), "No", emp.careercluster.match)) %>%
+  group_by(emp.careercluster.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) 
+
+
+datatable(match.cc.emp.ind.total, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Let's see if there are any differences by EDR.
+
+The first table provides the percentage of individuals that had taken a CTE course and whether they had meaningful employment in the careercluster of a CTE course. When analyzign by EDR, EDR 8 has a significantly lower percentage of graduates with meaningful employment in an industry from which they took a CTE course (39% vs. 47% and 49%).
+
+The crosstabs indicate a relationship between the percentages and EDR. EDR 8 has significantly less number of graduates in meaningful employment industry similar to a CTE course they took - 2,667 vs. 3,052 expected.
+
+<br>
+
+## Table - percent
+
+<br>
+
+```{r cte cc match emp industry edr}
+match.cc.emp.ind.edr <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  filter(cte.achievement != "No CTE") %>%
+  mutate(emp.careercluster.match = ifelse(emp.careercluster.match == 1, "Yes", "No"),
+         emp.careercluster.match = ifelse(is.na(emp.careercluster.match), "No", emp.careercluster.match)) %>%
+  group_by(edr, emp.careercluster.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(edr) %>%
+  mutate(pct = n / sum(n))  %>%
+  ungroup() %>%
+  select(edr, emp.careercluster.match, pct) %>%
+  spread(key = edr, value = pct)
+
+
+datatable(match.cc.emp.ind.edr, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+## Crosstabs
+
+<br>
+
+```{r cte cc match emp industry crosstabs edr}
+match.cc.emp.ind.ct.edr <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  filter(cte.achievement != "No CTE") %>%
+  mutate(emp.careercluster.match = ifelse(emp.careercluster.match == 1, "Yes", "No"),
+         emp.careercluster.match = ifelse(is.na(emp.careercluster.match), "No", emp.careercluster.match)) %>%
+  group_by(edr, emp.careercluster.match)
+
+
+CrossTable(match.cc.emp.ind.ct.edr$edr, match.cc.emp.ind.ct.edr$emp.careercluster.match, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+# {.unnumbered .unlisted .toc-ignore .tabset}
+
+Next let's see if there are any differences by RUCA category.
+
+
+There isn't a huge difference here.
+
+<br>
+
+## Table - percent
+
+<br>
+
+```{r cte cc match emp industry ruca}
+match.cc.emp.ind.ruca <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  filter(cte.achievement != "No CTE") %>%
+  mutate(emp.careercluster.match = ifelse(emp.careercluster.match == 1, "Yes", "No"),
+         emp.careercluster.match = ifelse(is.na(emp.careercluster.match), "No", emp.careercluster.match)) %>%
+  group_by(Dem_Desc, emp.careercluster.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc) %>%
+  mutate(pct = n / sum(n))  %>%
+  ungroup() %>%
+  select(Dem_Desc, emp.careercluster.match, pct) %>%
+  spread(key = Dem_Desc, value = pct)
+
+
+datatable(match.cc.emp.ind.ruca, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:3)))) %>%
+  formatPercentage(2:4, digits = 1)
+
+```
+
+<br>
+
+## Crosstabs
+
+<br>
+
+```{r cte cc match emp industry crosstabs ruca}
+match.cc.emp.ind.ct.ruca <- master.11 %>%
+  filter(meaningful.emp == "Yes") %>%
+  filter(cte.achievement != "No CTE") %>%
+  mutate(emp.careercluster.match = ifelse(emp.careercluster.match == 1, "Yes", "No"),
+         emp.careercluster.match = ifelse(is.na(emp.careercluster.match), "No", emp.careercluster.match))
+
+
+CrossTable(match.cc.emp.ind.ct.ruca$Dem_Desc, match.cc.emp.ind.ct.ruca$emp.careercluster.match, expected = TRUE, prop.t = FALSE, prop.c = FALSE, prop.chisq = FALSE)
+```
+
+<br>
+
+```{r write master}
+write_csv(master.11, "Data/SLEDS/Masters/Master-11.csv")
+
+```
+
+
+
+
+
 
