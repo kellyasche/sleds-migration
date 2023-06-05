@@ -249,7 +249,7 @@ ap.summary.county <- master.3 %>%
   tabyl(county.name, ap.exam) %>%
   mutate(percent.took.exam = `Took AP exam` / (`Did not take AP exam` + `Took AP exam`)) %>%
   left_join(counties.regions, by = c("county.name" = "Name")) %>%
-  right_join(mn_counties[,c(4,7)], by = "countyfp")
+  right_join(mn_counties[,c(5,7)], by = "countyfp")
 
 ap.summary.county.map <- ggplot(ap.summary.county) +
   geom_sf_interactive(color = "grey85", aes(geometry = geometry, fill = percent.took.exam, data_id = countyfp, tooltip = paste(county.name, "\nNumber of students who took exam: ", comma(`Took AP exam`, accuracy = 1), "\nPercent of students who took AP exam: ", percent(percent.took.exam, accuracy = .1), sep = ""))) +

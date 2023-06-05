@@ -515,7 +515,7 @@ cte.cf.concentration.county <- master.4 %>%
   left_join(career.cluster.codes.names, by = c("CareerCluster")) %>%
   rename(CareerClusterName = CareerClusterName.new) %>%
   select(1,2,6,5) %>%
-  left_join(mn_counties[,c(4,7)], by = "countyfp")
+  left_join(mn_counties[,c(5,7)], by = "countyfp")
 
 cte.cf.concentration.county.map <- ggplot(cte.cf.concentration.county) +
   facet_wrap(~CareerClusterName, ncol = 2,

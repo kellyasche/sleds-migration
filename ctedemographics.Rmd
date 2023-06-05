@@ -284,7 +284,7 @@ cte.dem.summary.county.map <- master.5 %>%
   adorn_percentages("row") %>%
   gather(key = "cte.category", value = "pct", 2:4) %>%
   left_join(counties.regions[,c(1,2)], by = c("county.name" = "Name")) %>%
-  left_join(mn_counties[,c(4,7)], by = "countyfp")
+  left_join(mn_counties[,c(5,7)], by = "countyfp")
 
 cte.dem.summary.county.map.plot<- ggplot(cte.dem.summary.county.map) +
   facet_wrap(~cte.category, ncol = 2) +

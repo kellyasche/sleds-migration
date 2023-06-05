@@ -13,7 +13,7 @@
 
 <title>Summary</title>
 
-<script src="site_libs/header-attrs-2.20.1/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.21/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -32,8 +32,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.2.1/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.2.1/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -318,16 +318,28 @@ $(document).ready(function () {
 </div>
 
 
-<div id="section-largest-changes-to-original-dataset"
-class="section level1">
-<h1>Largest changes to original dataset</h1>
-<ul>
-<li>Removed all observations of students who graduated before 2008. This
-was due to the fact that the CTE information had a record for each class
-taken by a student. Therefore, if a student was in their senior year in
-2006, we only have one year of their CTE records, not the full Sophmore
-- Senior years like all the others.</li>
-</ul>
+<div id="section-research-question" class="section level1">
+<h1>Research question</h1>
+<p>The Office of Higher Education along with LYFT came up with a model
+attempting to tease out if CTE impacts migration trends. Below is that
+model.</p>
+<ol style="list-style-type: decimal">
+<li>Among high school graduates, which educational or employment
+experiences result in a higher probability of having a local geographic
+presence at Time X? This will include analysis of student moving from
+less dense areas (smaller towns) to more dense areas (cities) and vice
+versa.</li>
+<li>Among high school graduates, which educational or employment
+experiences result in a higher probability of a local geographic
+presence and working in a technical industry at Time X? And the
+probability of working anywhere in the state and working in a technical
+industry at Time X? (X = age 18, age 20, age 25, age 30). “Technical
+industry” will be defined by grouping industries by 4 or 6 digit NAICS
+code.</li>
+</ol>
+<p>Time X will be measured at 4 time points: HS grad year/age 18, HS
+grad year + 2/age 20, HS grad year + 8/age 25, HS grad year + 12/age
+30</p>
 </div>
 
 

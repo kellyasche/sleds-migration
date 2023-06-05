@@ -13,7 +13,7 @@
 
 <title>K12Enrollment</title>
 
-<script src="site_libs/header-attrs-2.20.1/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.21/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -35,7 +35,7 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<script src="site_libs/htmlwidgets-1.6.1/htmlwidgets.js"></script>
+<script src="site_libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
 <link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
 <script src="site_libs/datatables-binding-0.27/datatables.js"></script>
 <link href="site_libs/dt-core-1.12.1/css/jquery.dataTables.min.css" rel="stylesheet" />
@@ -47,8 +47,8 @@
 <script src="site_libs/selectize-0.12.0/selectize.min.js"></script>
 <link href="site_libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
 <script src="site_libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
-<link href="site_libs/font-awesome-6.2.1/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.2.1/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -413,20 +413,20 @@ div.tocify {
 high school in Southwest Minnesota.</p>
 <p><br></p>
 <pre><code>## # A tibble: 6 × 15
-##   PersonID K12Or…¹ K12En…² Grade Econo…³ Feder…⁴ PostS…⁵ PSEOC…⁶ RaceE…⁷ Statu…⁸
-##      &lt;int&gt;   &lt;int&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;
-## 1       68  124096  2.01e7    10       0 NULL    N       NULL          5      40
-## 2       68  124083  2.01e7    11       0 NULL    N       NULL          5      40
-## 3       68  124084  2.01e7    12       0 NULL    N       NULL          5       8
-## 4      161   77457  2.01e7     9       0 NULL    N       NULL          5      40
-## 5      161   77450  2.01e7    10       0 NULL    N       NULL          5      40
-## 6      161   77451  2.01e7    11       0 NULL    N       NULL          5      40
-## # … with 5 more variables: Gender &lt;chr&gt;, SpecialEdStatus &lt;dbl&gt;,
+##   PersonID K12OrganizationID K12EnrTimeID Grade EconomicStatusIndicator
+##      &lt;int&gt;             &lt;int&gt;        &lt;dbl&gt; &lt;dbl&gt;                   &lt;dbl&gt;
+## 1       68            124096     20050630    10                       0
+## 2       68            124083     20060630    11                       0
+## 3       68            124084     20070630    12                       0
+## 4      161             77457     20060630     9                       0
+## 5      161             77450     20070630    10                       0
+## 6      161             77451     20080630    11                       0
+## # ℹ 10 more variables: FederalRaceIndicator &lt;chr&gt;,
+## #   PostSecondaryEnrollmentOptionsIndicator &lt;chr&gt;,
+## #   PSEOConcurrentEnrollmentIndicator &lt;chr&gt;, RaceEthnicity &lt;dbl&gt;,
+## #   StatusEnd &lt;dbl&gt;, Gender &lt;chr&gt;, SpecialEdStatus &lt;dbl&gt;,
 ## #   LimitedEnglishProficiencyIndicator &lt;chr&gt;, HomePrimaryLanguage &lt;dbl&gt;,
-## #   HomelessIndicator &lt;chr&gt;, and abbreviated variable names ¹​K12OrganizationID,
-## #   ²​K12EnrTimeID, ³​EconomicStatusIndicator, ⁴​FederalRaceIndicator,
-## #   ⁵​PostSecondaryEnrollmentOptionsIndicator,
-## #   ⁶​PSEOConcurrentEnrollmentIndicator, ⁷​RaceEthnicity, ⁸​StatusEnd</code></pre>
+## #   HomelessIndicator &lt;chr&gt;</code></pre>
 <pre><code>##  [1] &quot;PersonID&quot;                               
 ##  [2] &quot;K12OrganizationID&quot;                      
 ##  [3] &quot;K12EnrTimeID&quot;                           
@@ -512,17 +512,16 @@ PSEOConcurrentEnrollmentIndicator</li>
 indicators.</p>
 <p><br></p>
 <pre><code>## # A tibble: 6 × 10
-##   Perso…¹ K12Or…² grad.…³ Gender Limit…⁴ Homel…⁵ econo…⁶ pseo.…⁷ Speci…⁸ non.e…⁹
-##     &lt;int&gt;   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
-## 1     161   77452    2009 M      N       N             0       1       0       0
-## 2     641   38385    2009 M      N       N             1       0       0       0
-## 3     676   55598    2008 M      N       N             0       0       1       0
-## 4     786   56633    2010 F      N       N             0       0       0       0
-## 5    1162  181770    2019 M      N       N             1       0       0       1
-## 6    2292   55659    2010 F      N       N             0       1       0       0
-## # … with abbreviated variable names ¹​PersonID, ²​K12OrganizationID, ³​grad.year,
-## #   ⁴​LimitedEnglishProficiencyIndicator, ⁵​HomelessIndicator, ⁶​economic.status,
-## #   ⁷​pseo.participant, ⁸​SpecialEdStatus, ⁹​non.english.home</code></pre>
+##   PersonID K12OrganizationID grad.year Gender LimitedEnglishProficiencyIndicator
+##      &lt;int&gt;             &lt;int&gt;     &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;                             
+## 1      161             77452      2009 M      N                                 
+## 2      641             38385      2009 M      N                                 
+## 3      676             55598      2008 M      N                                 
+## 4      786             56633      2010 F      N                                 
+## 5     1162            181770      2019 M      N                                 
+## 6     2292             55659      2010 F      N                                 
+## # ℹ 5 more variables: HomelessIndicator &lt;chr&gt;, economic.status &lt;dbl&gt;,
+## #   pseo.participant &lt;dbl&gt;, SpecialEdStatus &lt;dbl&gt;, non.english.home &lt;dbl&gt;</code></pre>
 <pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
 ##  [3] &quot;grad.year&quot;                          &quot;Gender&quot;                            
 ##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
@@ -553,8 +552,8 @@ indicated that there was a non-english speaker at home, 2% had limited
 english proficiency and 0.4% indicated that were homeless at some
 point.</p>
 <p><br></p>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-31d8736f3cae5f9ce9a4" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-31d8736f3cae5f9ce9a4">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"161\" data-max=\"18861\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Female","Free or reduced lunch","Homeless","Limited English Proficiency","Non-english in home","PSEO participant","Special Ed"],[18861,14977,161,809,3326,13235,5266],[38184,38184,38184,38184,38184,38184,38184],["49.4%","39.2%","0.4%","2.1%","8.7%","34.7%","13.8%"]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>indicator<\/th>\n      <th>confirmed.indicator<\/th>\n      <th>total.observations<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-9e647903abca579cfec1" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-9e647903abca579cfec1">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"161\" data-max=\"18861\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\" disabled=\"\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["Female","Free or reduced lunch","Homeless","Limited English Proficiency","Non-english in home","PSEO participant","Special Ed"],[18861,14977,161,809,3326,13235,5266],[38184,38184,38184,38184,38184,38184,38184],["49.4%","39.2%","0.4%","2.1%","8.7%","34.7%","13.8%"]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>indicator<\/th>\n      <th>confirmed.indicator<\/th>\n      <th>total.observations<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":[],"jsHooks":[]}</script>
 <p><br></p>
 </div>
 

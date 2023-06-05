@@ -369,7 +369,7 @@ theme_sf <- theme_bw() +
 k12.org.summary.county <- master %>%
   tabyl(county.name) %>%
   left_join(counties.regions, by = c("county.name" = "Name")) %>%
-  right_join(mn_counties[,c(4,7)], by = "countyfp")
+  right_join(mn_counties[,c(5,7)], by = "countyfp")
 
 k12.org.summary.county.map <- ggplot(k12.org.summary.county) +
   geom_sf_interactive(color = "grey85", aes(geometry = geometry, fill = percent, data_id = countyfp, tooltip = paste(county.name, "\nNumber of observations: ", comma(n, accuracy = 1), "\nPercent of total observations: ", percent(percent, accuracy = .1), sep = ""))) +

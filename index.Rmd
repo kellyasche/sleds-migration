@@ -27,8 +27,13 @@ reset_font_cache()
 library(ggtext)
 ```
 
-# Largest changes to original dataset
+# Research question
 
-* Removed all observations of students who graduated before 2008. This was due to the fact that the CTE information had a record for each class taken by a student. Therefore, if a student was in their senior year in 2006, we only have one year of their CTE records, not the full Sophmore - Senior years like all the others.
+The Office of Higher Education along with LYFT came up with a model attempting to tease out if CTE impacts migration trends. Below is that model. 
+ 
+1. Among high school graduates, which educational or employment experiences result in a higher probability of having a local geographic presence at Time X? This will include analysis of student moving from less dense areas (smaller towns) to more dense areas (cities) and vice versa. 
+2. Among high school graduates, which educational or employment experiences result in a higher probability of a local geographic presence and working in a technical industry at Time X? And the probability of working anywhere in the state and working in a technical industry at Time X? (X = age 18, age 20, age 25, age 30). “Technical industry” will be defined by grouping industries by 4 or 6 digit NAICS code. 
+
+Time X will be measured at 4 time points: HS grad year/age 18, HS grad year + 2/age 20, HS grad year + 8/age 25, HS grad year + 12/age 30 
 
 

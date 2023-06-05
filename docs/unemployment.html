@@ -13,7 +13,7 @@
 
 <title>Unemployment</title>
 
-<script src="site_libs/header-attrs-2.20.1/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.21/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -35,8 +35,8 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/font-awesome-6.2.1/css/all.min.css" rel="stylesheet" />
-<link href="site_libs/font-awesome-6.2.1/css/v4-shims.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -418,21 +418,21 @@ rolling average of unemployment rate.</p>
 graduation year and county of high school.</p>
 <p><br></p>
 <pre><code>## # A tibble: 6 × 77
-##   Perso…¹ K12Or…² hs.gr…³ Gender Limit…⁴ Homel…⁵ econo…⁶ pseo.…⁷ Speci…⁸ non.e…⁹
-##     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
-## 1     161   77452    2009 M      N       N             0       1       0       0
-## 2     641   38385    2009 M      N       N             1       0       0       0
-## 3     676   55598    2008 M      N       N             0       0       1       0
-## 4     786   56633    2010 F      N       N             0       0       0       0
-## 5    1162  181770    2019 M      N       N             1       0       0       1
-## 6    2292   55659    2010 F      N       N             0       1       0       0
-## # … with 67 more variables: DistrictName &lt;chr&gt;, county.name &lt;chr&gt;,
-## #   countyfp &lt;chr&gt;, Dem_Desc &lt;chr&gt;, edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;,
-## #   ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;, total.cte.courses.taken &lt;dbl&gt;,
-## #   cte.0 &lt;dbl&gt;, cte.1 &lt;dbl&gt;, cte.2 &lt;dbl&gt;, cte.3 &lt;dbl&gt;, cte.4 &lt;dbl&gt;,
-## #   cte.5 &lt;dbl&gt;, cte.6 &lt;dbl&gt;, cte.7 &lt;dbl&gt;, cte.8 &lt;dbl&gt;, cte.9 &lt;dbl&gt;,
-## #   cte.10 &lt;dbl&gt;, cte.11 &lt;dbl&gt;, cte.12 &lt;dbl&gt;, cte.14 &lt;dbl&gt;, cte.21 &lt;dbl&gt;,
-## #   cte.22 &lt;dbl&gt;, cte.23 &lt;dbl&gt;, cte.24 &lt;dbl&gt;, cte.25 &lt;dbl&gt;, cte.26 &lt;dbl&gt;, …</code></pre>
+##   PersonID K12OrganizationID hs.grad.year Gender LimitedEnglishProficiencyIndi…¹
+##      &lt;dbl&gt;             &lt;dbl&gt;        &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                          
+## 1      161             77452         2009 M      N                              
+## 2      641             38385         2009 M      N                              
+## 3      676             55598         2008 M      N                              
+## 4      786             56633         2010 F      N                              
+## 5     1162            181770         2019 M      N                              
+## 6     2292             55659         2010 F      N                              
+## # ℹ abbreviated name: ¹​LimitedEnglishProficiencyIndicator
+## # ℹ 72 more variables: HomelessIndicator &lt;chr&gt;, economic.status &lt;dbl&gt;,
+## #   pseo.participant &lt;dbl&gt;, SpecialEdStatus &lt;dbl&gt;, non.english.home &lt;dbl&gt;,
+## #   DistrictName &lt;chr&gt;, county.name &lt;chr&gt;, countyfp &lt;chr&gt;, Dem_Desc &lt;chr&gt;,
+## #   edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;, ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;,
+## #   total.cte.courses.taken &lt;dbl&gt;, cte.0 &lt;dbl&gt;, cte.1 &lt;dbl&gt;, cte.2 &lt;dbl&gt;,
+## #   cte.3 &lt;dbl&gt;, cte.4 &lt;dbl&gt;, cte.5 &lt;dbl&gt;, cte.6 &lt;dbl&gt;, cte.7 &lt;dbl&gt;, …</code></pre>
 <pre><code>##  [1] &quot;PersonID&quot;                            
 ##  [2] &quot;K12OrganizationID&quot;                   
 ##  [3] &quot;hs.grad.year&quot;                        
