@@ -36,6 +36,13 @@ navbar:
           href: unemployment.html
         - text: "Average wages"
           href: avgwages.html
+    - text: "Analysis"
+      icon: fa-gear
+      menu:
+        - text: "Analysis methods"
+          href: analysis_methods.html
+        - text: "Local employment"
+          href: analysis_local_employment.html
 output:
   html_document:
     css: "styles.css"

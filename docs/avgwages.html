@@ -13,7 +13,7 @@
 
 <title>Average wages and salaries</title>
 
-<script src="site_libs/header-attrs-2.21/header-attrs.js"></script>
+<script src="site_libs/header-attrs-2.22/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
@@ -29,7 +29,7 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
-<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
@@ -377,6 +377,23 @@ div.tocify {
     </li>
   </ul>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="fa fa-gear"></span>
+     
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="analysis_methods.html">Analysis methods</a>
+    </li>
+    <li>
+      <a href="analysis_local_employment.html">Local employment</a>
+    </li>
+  </ul>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         
@@ -469,32 +486,53 @@ The rolling average is a three year rolling average.</p>
 ## [51] &quot;attended.ps.within.first.year.hsgrad&quot;
 ## [52] &quot;n.institutions&quot;                      
 ## [53] &quot;first.InstitutionSector&quot;             
-## [54] &quot;ps.attend.InstitutionSector&quot;         
-## [55] &quot;ps.in.same.ruca&quot;                     
-## [56] &quot;ps.in.same.edr&quot;                      
-## [57] &quot;ps.in.same.pr&quot;                       
-## [58] &quot;ps.in.MN&quot;                            
-## [59] &quot;ps.grad&quot;                             
-## [60] &quot;min.ps.grad.year&quot;                    
-## [61] &quot;max.ps.grad.year&quot;                    
-## [62] &quot;years.between.grads&quot;                 
-## [63] &quot;ps.grad.InstitutionSector&quot;           
-## [64] &quot;highest.cred.level&quot;                  
-## [65] &quot;ps.grad.in.same.ruca&quot;                
-## [66] &quot;ps.grad.in.same.edr&quot;                 
-## [67] &quot;ps.grad.in.same.pr&quot;                  
-## [68] &quot;ps.grad.in.MN&quot;                       
-## [69] &quot;mn.emp.record&quot;                       
-## [70] &quot;meaningful.emp&quot;                      
-## [71] &quot;emp.hsgrad.same.county&quot;              
-## [72] &quot;emp.hsgrad.same.edr&quot;                 
-## [73] &quot;emp.hsgrad.same.pr&quot;                  
-## [74] &quot;emp.hsgrad.same.ruca&quot;                
-## [75] &quot;emp.hsgrad.same.mn&quot;                  
-## [76] &quot;emp.careercluster.match&quot;             
-## [77] &quot;avg.unemp.rate&quot;                      
-## [78] &quot;wages.3year.avg&quot;</code></pre>
-<pre><code>## # A tibble: 6 × 78
+## [54] &quot;ps.sector.1&quot;                         
+## [55] &quot;ps.sector.2&quot;                         
+## [56] &quot;ps.sector.3&quot;                         
+## [57] &quot;ps.sector.4&quot;                         
+## [58] &quot;ps.sector.5&quot;                         
+## [59] &quot;ps.sector.6&quot;                         
+## [60] &quot;ps.sector.7&quot;                         
+## [61] &quot;ps.sector.8&quot;                         
+## [62] &quot;ps.sector.9&quot;                         
+## [63] &quot;ps.attended.in.same.ruca&quot;            
+## [64] &quot;ps.attended.in.same.edr&quot;             
+## [65] &quot;ps.attended.in.same.pr&quot;              
+## [66] &quot;ps.attended.in.MN&quot;                   
+## [67] &quot;ps.grad&quot;                             
+## [68] &quot;min.ps.grad.year&quot;                    
+## [69] &quot;max.ps.grad.year&quot;                    
+## [70] &quot;years.between.grads&quot;                 
+## [71] &quot;ps.grad.InstitutionSector&quot;           
+## [72] &quot;highest.cred.level&quot;                  
+## [73] &quot;ps.grad.in.same.ruca&quot;                
+## [74] &quot;ps.grad.in.same.edr&quot;                 
+## [75] &quot;ps.grad.in.same.pr&quot;                  
+## [76] &quot;ps.grad.in.MN&quot;                       
+## [77] &quot;mn.emp.record.hs.grad.year&quot;          
+## [78] &quot;mn.emp.record.hs.grad.year.2&quot;        
+## [79] &quot;mn.emp.record.hs.grad.year.7&quot;        
+## [80] &quot;meaningful.emp.hs.grad.year&quot;         
+## [81] &quot;meaningful.emp.hs.grad.year.2&quot;       
+## [82] &quot;meaningful.emp.hs.grad.year.7&quot;       
+## [83] &quot;hs.grad.year.county.match&quot;           
+## [84] &quot;hs.grad.year.2.county.match&quot;         
+## [85] &quot;hs.grad.year.7.county.match&quot;         
+## [86] &quot;hs.grad.year.edr.match&quot;              
+## [87] &quot;hs.grad.year.2.edr.match&quot;            
+## [88] &quot;hs.grad.year.7.edr.match&quot;            
+## [89] &quot;hs.grad.year.region.match&quot;           
+## [90] &quot;hs.grad.year.2.region.match&quot;         
+## [91] &quot;hs.grad.year.7.region.match&quot;         
+## [92] &quot;hs.grad.year.state.match&quot;            
+## [93] &quot;hs.grad.year.2.state.match&quot;          
+## [94] &quot;hs.grad.year.7.state.match&quot;          
+## [95] &quot;ind.match.hs.grad.year&quot;              
+## [96] &quot;ind.match.hs.grad.year.2&quot;            
+## [97] &quot;ind.match.hs.grad.year.7&quot;            
+## [98] &quot;avg.unemp.rate&quot;                      
+## [99] &quot;wages.3year.avg&quot;</code></pre>
+<pre><code>## # A tibble: 6 × 99
 ##   PersonID K12OrganizationID hs.grad.year Gender LimitedEnglishProficiencyIndi…¹
 ##      &lt;dbl&gt;             &lt;dbl&gt;        &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                          
 ## 1      161             77452         2009 M      N                              
@@ -504,14 +542,14 @@ The rolling average is a three year rolling average.</p>
 ## 5     1162            181770         2019 M      N                              
 ## 6     2292             55659         2010 F      N                              
 ## # ℹ abbreviated name: ¹​LimitedEnglishProficiencyIndicator
-## # ℹ 73 more variables: HomelessIndicator &lt;chr&gt;, economic.status &lt;dbl&gt;,
+## # ℹ 94 more variables: HomelessIndicator &lt;chr&gt;, economic.status &lt;dbl&gt;,
 ## #   pseo.participant &lt;dbl&gt;, SpecialEdStatus &lt;dbl&gt;, non.english.home &lt;dbl&gt;,
 ## #   DistrictName &lt;chr&gt;, county.name &lt;chr&gt;, countyfp &lt;chr&gt;, Dem_Desc &lt;chr&gt;,
 ## #   edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;, ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;,
 ## #   total.cte.courses.taken &lt;dbl&gt;, cte.0 &lt;dbl&gt;, cte.1 &lt;dbl&gt;, cte.2 &lt;dbl&gt;,
 ## #   cte.3 &lt;dbl&gt;, cte.4 &lt;dbl&gt;, cte.5 &lt;dbl&gt;, cte.6 &lt;dbl&gt;, cte.7 &lt;dbl&gt;, …</code></pre>
 <p><br></p>
-<p>The new master dataset has 38,154 rows and 78 columns.</p>
+<p>The new master dataset has 38,154 rows and 99 columns.</p>
 <p><br></p>
 </div>
 <div id="section-summary" class="section level1">

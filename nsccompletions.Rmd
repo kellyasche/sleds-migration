@@ -487,9 +487,12 @@ master.10 <- read_csv("Data/SLEDS/Masters/Master-9.csv") %>%
   left_join(nsccompletions.same.pr, by = "PersonID") %>%
   left_join(nsccompletions.in.MN, by = "PersonID") %>%
   rename(ps.grad = Graduated,
-         ps.attend.InstitutionSector = InstitutionSector.x,
-         ps.grad.InstitutionSector = InstitutionSector.y,
-         hs.grad.year = grad.year)
+         hs.grad.year = grad.year,
+         ps.attended.in.same.ruca = ps.in.same.ruca,
+         ps.attended.in.same.edr = ps.in.same.edr,
+         ps.attended.in.same.pr = ps.in.same.pr,
+         ps.attended.in.MN = ps.in.MN,
+         ps.grad.InstitutionSector = InstitutionSector)
 
 head(master.10)
 

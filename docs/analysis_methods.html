@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Analysis - local employment</title>
+
+<script src="site_libs/header-attrs-2.22/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.4.0/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#section-TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#section-TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="section-TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">CTE impacts on migration trends in SW Minnesota</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Summary of results</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="fa fa-gear"></span>
+     
+    Data prep and summaries
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="k12enrollment.html">K12Enrollment</a>
+    </li>
+    <li>
+      <a href="k12orgs.html">K12Orgs</a>
+    </li>
+    <li>
+      <a href="act.html">ACT</a>
+    </li>
+    <li>
+      <a href="ap.html">AP</a>
+    </li>
+    <li>
+      <a href="cteenrollment.html">CTEEnrollment</a>
+    </li>
+    <li>
+      <a href="ctedemographics.html">CTEDemographics</a>
+    </li>
+    <li>
+      <a href="cteintensity.html">CTEIntensity</a>
+    </li>
+    <li>
+      <a href="assessments.html">Assessments</a>
+    </li>
+    <li>
+      <a href="sat.html">SAT</a>
+    </li>
+    <li>
+      <a href="nscenrollment.html">National Student Clearinghouse - enrollment</a>
+    </li>
+    <li>
+      <a href="nsccompletions.html">National Student Clearinghouse - completions</a>
+    </li>
+    <li>
+      <a href="employment.html">Employment</a>
+    </li>
+    <li>
+      <a href="unemployment.html">Unemployment</a>
+    </li>
+    <li>
+      <a href="avgwages.html">Average wages</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="fa fa-gear"></span>
+     
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="analysis_methods.html">Analysis methods</a>
+    </li>
+    <li>
+      <a href="analysis_local_employment.html">Local employment</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="section-header">
+
+
+
+<h1 class="title toc-ignore">Analysis - local employment</h1>
+
+</div>
+
+
+<pre><code>##  [1] &quot;PersonID&quot;                            
+##  [2] &quot;K12OrganizationID&quot;                   
+##  [3] &quot;hs.grad.year&quot;                        
+##  [4] &quot;Gender&quot;                              
+##  [5] &quot;LimitedEnglishProficiencyIndicator&quot;  
+##  [6] &quot;HomelessIndicator&quot;                   
+##  [7] &quot;economic.status&quot;                     
+##  [8] &quot;pseo.participant&quot;                    
+##  [9] &quot;SpecialEdStatus&quot;                     
+## [10] &quot;non.english.home&quot;                    
+## [11] &quot;DistrictName&quot;                        
+## [12] &quot;county.name&quot;                         
+## [13] &quot;countyfp&quot;                            
+## [14] &quot;Dem_Desc&quot;                            
+## [15] &quot;edr&quot;                                 
+## [16] &quot;n.years.attended&quot;                    
+## [17] &quot;ACTCompositeScore&quot;                   
+## [18] &quot;ap.exam&quot;                             
+## [19] &quot;total.cte.courses.taken&quot;             
+## [20] &quot;cte.0&quot;                               
+## [21] &quot;cte.1&quot;                               
+## [22] &quot;cte.2&quot;                               
+## [23] &quot;cte.3&quot;                               
+## [24] &quot;cte.4&quot;                               
+## [25] &quot;cte.5&quot;                               
+## [26] &quot;cte.6&quot;                               
+## [27] &quot;cte.7&quot;                               
+## [28] &quot;cte.8&quot;                               
+## [29] &quot;cte.9&quot;                               
+## [30] &quot;cte.10&quot;                              
+## [31] &quot;cte.11&quot;                              
+## [32] &quot;cte.12&quot;                              
+## [33] &quot;cte.14&quot;                              
+## [34] &quot;cte.21&quot;                              
+## [35] &quot;cte.22&quot;                              
+## [36] &quot;cte.23&quot;                              
+## [37] &quot;cte.24&quot;                              
+## [38] &quot;cte.25&quot;                              
+## [39] &quot;cte.26&quot;                              
+## [40] &quot;cte.achievement&quot;                     
+## [41] &quot;avg.cte.intensity&quot;                   
+## [42] &quot;english.learner&quot;                     
+## [43] &quot;MCA.M&quot;                               
+## [44] &quot;MCA.R&quot;                               
+## [45] &quot;MCA.S&quot;                               
+## [46] &quot;sat.taken&quot;                           
+## [47] &quot;attended.ps&quot;                         
+## [48] &quot;first.attend.ps&quot;                     
+## [49] &quot;attended.ps.first.year&quot;              
+## [50] &quot;attended.ps.years.hsgrad&quot;            
+## [51] &quot;attended.ps.within.first.year.hsgrad&quot;
+## [52] &quot;n.institutions&quot;                      
+## [53] &quot;first.InstitutionSector&quot;             
+## [54] &quot;ps.sector.1&quot;                         
+## [55] &quot;ps.sector.2&quot;                         
+## [56] &quot;ps.sector.3&quot;                         
+## [57] &quot;ps.sector.4&quot;                         
+## [58] &quot;ps.sector.5&quot;                         
+## [59] &quot;ps.sector.6&quot;                         
+## [60] &quot;ps.sector.7&quot;                         
+## [61] &quot;ps.sector.8&quot;                         
+## [62] &quot;ps.sector.9&quot;                         
+## [63] &quot;ps.attended.in.same.ruca&quot;            
+## [64] &quot;ps.attended.in.same.edr&quot;             
+## [65] &quot;ps.attended.in.same.pr&quot;              
+## [66] &quot;ps.attended.in.MN&quot;                   
+## [67] &quot;ps.grad&quot;                             
+## [68] &quot;min.ps.grad.year&quot;                    
+## [69] &quot;max.ps.grad.year&quot;                    
+## [70] &quot;years.between.grads&quot;                 
+## [71] &quot;ps.grad.InstitutionSector&quot;           
+## [72] &quot;highest.cred.level&quot;                  
+## [73] &quot;ps.grad.in.same.ruca&quot;                
+## [74] &quot;ps.grad.in.same.edr&quot;                 
+## [75] &quot;ps.grad.in.same.pr&quot;                  
+## [76] &quot;ps.grad.in.MN&quot;                       
+## [77] &quot;mn.emp.record.hs.grad.year&quot;          
+## [78] &quot;mn.emp.record.hs.grad.year.2&quot;        
+## [79] &quot;mn.emp.record.hs.grad.year.7&quot;        
+## [80] &quot;meaningful.emp.hs.grad.year&quot;         
+## [81] &quot;meaningful.emp.hs.grad.year.2&quot;       
+## [82] &quot;meaningful.emp.hs.grad.year.7&quot;       
+## [83] &quot;hs.grad.year.county.match&quot;           
+## [84] &quot;hs.grad.year.2.county.match&quot;         
+## [85] &quot;hs.grad.year.7.county.match&quot;         
+## [86] &quot;hs.grad.year.edr.match&quot;              
+## [87] &quot;hs.grad.year.2.edr.match&quot;            
+## [88] &quot;hs.grad.year.7.edr.match&quot;            
+## [89] &quot;hs.grad.year.region.match&quot;           
+## [90] &quot;hs.grad.year.2.region.match&quot;         
+## [91] &quot;hs.grad.year.7.region.match&quot;         
+## [92] &quot;hs.grad.year.state.match&quot;            
+## [93] &quot;hs.grad.year.2.state.match&quot;          
+## [94] &quot;hs.grad.year.7.state.match&quot;          
+## [95] &quot;ind.match.hs.grad.year&quot;              
+## [96] &quot;ind.match.hs.grad.year.2&quot;            
+## [97] &quot;ind.match.hs.grad.year.7&quot;            
+## [98] &quot;avg.unemp.rate&quot;                      
+## [99] &quot;wages.3year.avg&quot;</code></pre>
+<p><br></p>
+<p>The master dataset is composed of 38,154 rows. Each row represents an
+individual that graduated (StatusEnd = 8 or 9) from a high school
+located in EDR 6W, EDR 6E, and EDR 8 between 2008 and 2019.</p>
+<p>The master dataset is also composed of 99 columns. Columns mainly
+represent various socio-economic, demographic, and educational career
+characteristics of the indivdual as well as a few characteristics of the
+high school geographic from which they graduated (i.e. county
+unemployment).</p>
+<p>Here is a list of all the variables that will be included in the
+model and a description of each.</p>
+<ul>
+<li><strong>Individual Characteristics</strong>
+<ul>
+<li><strong>hs.grad.year:</strong> year the individual graduated high
+school</li>
+<li><strong>Gender:</strong> male of female (M or F)</li>
+<li><strong>LimitedEnglishProficiencyIndicator:</strong> a yes or no (Y
+or N) on whether the individual was identified as having limited english
+proficency at any point between 10th and 12th grade.</li>
+<li><strong>HomelessIndicator:</strong> a yes or no (Y or N) indicator
+on whether the individual was ever identified as homeless at any point
+between 10th and 12th grade.</li>
+<li><strong>economic.status:</strong> an indicator where 1 equals
+whether the individual was eligible for free or reduced lunch (codes
+1,2,4,5) at any point between 10th and 12th grade. Otherwise the
+individual is coded as 0.</li>
+<li><strong>pseo.participant:</strong> an indicator where 1 means the
+individual participated in a PSEO course sometime between 10th and 12th
+grade, otherwise 0.</li>
+<li><strong>SpecialEdStatus:</strong> an indicator where 1 means the
+individual required special education services at some point between
+10th and 12th grade, otherwise 0.</li>
+<li><strong>non.english.home:</strong> an indicator where 1 means that
+English is not the primary langauge spoken at home, otherwise 0.</li>
+<li><strong>n.years.attended:</strong> the number of years the
+individual attended the high school and is identified in the dataset.
+Max is 6 years.</li>
+<li><strong>ACTCompositeScore:</strong> the composite ACT score of the
+individual. If the ACT was not taken, the individual is NA.</li>
+<li><strong>ap.exam:</strong> an indicator where 1 means the individual
+took an AP exam at some point, otherwise 0.</li>
+<li><strong>total.cte.courses.taken:</strong> the total number of CTE
+courses the individual has taken in their career since 10th grade.</li>
+<li><strong>cte.0 through cte.26:</strong> the number of CTE courses
+taken in each CTE career cluster, where;
+<ul>
+<li>0 = NULL - no career field or career name</li>
+<li>1 = Agriculture, Food, and Natural Resources<br />
+</li>
+<li>2 = Architecture &amp; Construction</li>
+<li>3 = Manufacturing<br />
+</li>
+<li>4 = Transportation, Distribution &amp; Logistics<br />
+</li>
+<li>5 = Information Technology<br />
+</li>
+<li>6 = Marketing, Sales &amp; Service<br />
+</li>
+<li>7 = Finance</li>
+<li>8 = Hospitality &amp; Tourism<br />
+</li>
+<li>9 = Business, Management &amp; Administrative<br />
+</li>
+<li>10 = Health Science &amp; Health Occupations<br />
+</li>
+<li>11 = Human Services</li>
+<li>12 = Arts, A/V Technology, &amp; Communication<br />
+</li>
+<li>14 = Science, Technology, Engineering, &amp; Mathematics<br />
+</li>
+<li>21 = Work-Experience-Disadvantaged<br />
+</li>
+<li>22 = Work Experience-Handicapped<br />
+</li>
+<li>23 = Work Experience-Handicapped (16-20+ on IEP)</li>
+<li>24 = Work Experience/Career Exploration (age 14-15 on IEP)</li>
+<li>25 = Diversified Occupations</li>
+<li>26 = Administrative Only</li>
+</ul></li>
+<li><strong>cte.achievement:</strong> three indicators with “CTE
+concentrator or completor” being one, “CTE participant” meaning they
+took a CTE course but was not a concentrator or completor, and”No CTE”
+meaning they didn’t take a CTE course.</li>
+<li><strong>english.learner:</strong> the individual was identified as
+an “english learner” at least one time between 10th and 12th grade.</li>
+<li><strong>MCA.M &amp; MCA.R &amp; MCA.S:</strong> this is the
+Minnesota Comprehensive Assessment tests for reading, math and science.
+Each individual is given 1 of 4 grades for each subject;
+<ul>
+<li>1 = Does not meet standards</li>
+<li>2 = Partially meets standards</li>
+<li>3 = Meets standards</li>
+<li>4 = Exceeds standards</li>
+</ul></li>
+<li><strong>sat.taken:</strong> this is an identifier with 1 meaning the
+took the SAT and 0 meaning they did not take the SAT.</li>
+<li><strong>attended.ps:</strong> this is an identifier where Yes means
+they attended a post-secondary education institution and No means they
+did not attend a post-secondary institution.</li>
+<li><strong>first.InstitutionSector:</strong> this identifies the
+institution sector of their first post-secondary school. There are 10
+different sectors.
+<ul>
+<li>1 - Public, 4-year or above</li>
+<li>2 - Private not-for-profit, 4-year or above</li>
+<li>3 - Private for-profit, 4-year or above</li>
+<li>4 - Public, 2-year</li>
+<li>5 - Private not-for-profit, 2-year</li>
+<li>6 - Private for-profit, 2-year</li>
+<li>7 - Public, less-than 2-year</li>
+<li>8 - Private not-for-profit, less-than 2-year</li>
+<li>9 - Private for-profit, less-than 2-year</li>
+<li>99 - Sector unknown (not active)</li>
+<li>NA - did not attend post-secondary</li>
+</ul></li>
+<li><strong>ps.sector.(1-9):</strong> this is an identifier on whether
+they attended the particular post-secondary institution sector. A column
+is provided for each sector: 1 through 9. In each column 1 means “yes”,
+and 0 means “no” for that given sector.</li>
+<li><strong>ps.attended.in.same.ruca(edr &amp; pr &amp; MN):</strong>
+this is an identifier on whether the PersonID ever attended a
+post-secondary institution in the same RUCA category, EDR, research
+region as their high school, or attended in Minnesota.</li>
+<li><strong>ps.grad:</strong> whether the individual gradated from a
+post-secondary institution. Y means yes.</li>
+<li><strong>ps.grad.InstitutionSector:</strong> the institution sector
+of the post-secondary school from which they last graduated.</li>
+<li><strong>highest.cred.level:</strong> an identifier of the highest
+credential earned by the PersonID. The categories are;
+<ul>
+<li>Less than associate degree</li>
+<li>Associate degree</li>
+<li>Bachelors degree</li>
+<li>Higher than bachelors degree.</li>
+</ul></li>
+<li><strong>ps.grad.in.same.ruca-pr:</strong> did the student graduate
+from an institution located in the same RUCA category or EDR as their
+high school. “PR” is whether they graduated from an institution within
+the research area (three EDRs) and “MN” is whether they graduated from
+an institution in Minnesota.</li>
+<li><strong>mn.emp.record.hs.grad.year(.2 &amp; .7):</strong> did the
+individual have a MN employment record the year of graduating high
+school, two years after graduating, and seven years after
+graduating.</li>
+<li><strong>meaningful.emp.hs.grad.year(.2 &amp; .7):</strong> did the
+individual work 1,000 hours or more for one employer the year of
+graduation, two years after graduation, and seven years after
+graduation.</li>
+<li><strong>hs.grad.year.(2 &amp; 7).county.match:</strong> did the
+individual have meaningful employment for an employer located in the
+same county as their high school - the year of graduation, two years
+after graduation, and seven years after graduation.</li>
+<li><strong>hs.grad.year.(2 &amp; 7).edr.match:</strong> did the
+individual have meaningful employment for an employer located in the
+same EDR as their high school - the year of graduation, two years after
+graduation, and seven years after graduation.</li>
+<li><strong>hs.grad.year.(2 &amp; 7).region.match:</strong> did the
+individual have meaningful employment in one of the three EDRs - the
+year of graduation, two years after graduation, and seven years after
+graduation.</li>
+<li><strong>hs.grad.year.state.match:</strong> did the individual have
+meaningful employment for an employer located in Minnesota the year of
+graduation, two years after graduation and seven years after
+graduation.</li>
+<li><strong>ind.match.hs.grad.year(.2 and .7):</strong> did the
+individual have meaningful employment in an industry that matches a CTE
+course they took - the year of graduation, two years after graduation
+and seven years after graduation.</li>
+</ul></li>
+<li><strong>High School Characteristics</strong>
+<ul>
+<li><strong>K12OrganizationID:</strong> Identification code for each
+high school in research region.</li>
+<li><strong>countyfp:</strong> the fips code of the code in which the
+high school is located.</li>
+<li><strong>Dem_Desc:</strong> the RUCA category in which the high
+school is located.</li>
+<li><strong>edr:</strong> the economic development region in which the
+high school is located.</li>
+<li><strong>avg.cte.intensity:</strong> The purpose of the CTE intensity
+measure is to determine whether a strong presence of CTE programming and
+participation impacts migration patterns. The thinking is that there
+will be plenty of students that may not dive deep into CTE coursework,
+but just seeing it in your school and constantly being reminded of all
+the local opportunities and occupational needs in the local area might
+impact how a student views employment opportunities for themselves in
+the future.We needed to come up with a measure of what the CTE
+“intensity” was for each school by each year. To do this, Eric Shwankl,
+Education Consultant with the Southwest West Central Service
+Cooperative, came up with an ingenious way to measure “CTE intensity”
+using the z-score (also called standard score). The z-score calculates
+how far a value is (in terms of standard deviation) from the average in
+the population. In this case z-score is used to measure how far one
+schools CTE student participation % is from the mean of the percentage
+of all schools that year, and how far one schools CTE courses offered
+per student % is from the percentage of all schools for that year. This
+particular column takes the average z-score from all the school
+instances for each individual.</li>
+<li><strong>avg.unemp.rate:</strong> the three year average unemployment
+rate during an individuals Sophmore, Junior and Senior years.</li>
+<li><strong>wages.3year.avg:</strong> the average county median
+household income of an individuals SOphomore, Junior and Senior
+years.</li>
+</ul></li>
+</ul>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("section-TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#section-TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

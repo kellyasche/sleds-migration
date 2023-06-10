@@ -307,18 +307,21 @@ Next we will determine thy type(s) of college(s) they attended during their post
 <br>
 
 ```{r nsc enrollment institution type attended}
+grad.list <- read_csv("Data/SLEDS/Masters/Master-8.csv") %>%
+  select(PersonID)
+
 nsc.enrollment.institution.types <- nsc.enrollment.ipeds %>%
-  group_by(PersonID, InstitutionSector) %>%
-  summarize(n = n()) %>%
-  ungroup() %>%
-  group_by(PersonID) %>%
-  mutate(n = n()) %>%
-  ungroup() %>%
-  mutate(multiple.sectors = ifelse(n > 1, 10, InstitutionSector)) %>%
-  select(PersonID, multiple.sectors) %>%
-  rename(InstitutionSector = 2) %>%
-  distinct(PersonID, .keep_all = TRUE)
-  
+  distinct(PersonID, InstitutionSector) %>%
+  mutate(attended = 1) %>%
+  complete(PersonID, InstitutionSector, fill = list(attended = 0)) %>%
+  mutate(label = paste("ps.sector.", InstitutionSector, sep = "")) %>%
+  select(PersonID, label, attended) %>%
+  spread(label, attended) %>%
+  right_join(grad.list, by = "PersonID") %>%
+  gather(key = "key", value = "value", 2:10) %>%
+  mutate(value = ifelse(is.na(value), 0, value)) %>%
+  spread(key, value)
+
 head(nsc.enrollment.institution.types)
 
 names(nsc.enrollment.institution.types)
@@ -509,7 +512,8 @@ master.9 <- master %>%
   left_join(nsc.enrollment.same.ruca, by = "PersonID") %>%
   left_join(nsc.enrollment.same.edr, by = "PersonID") %>%
   left_join(nsc.enrollment.same.pr, by = "PersonID") %>%
-  left_join(nsc.enrollment.in.MN, by = "PersonID")
+  left_join(nsc.enrollment.in.MN, by = "PersonID") %>%
+  mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions))
 
 head(master.9)
 

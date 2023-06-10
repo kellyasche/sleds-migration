@@ -1,0 +1,231 @@
+---
+title: "Analysis - local employment"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(systemfonts)
+reset_font_cache()
+library(ggtext)
+library(gmodels)
+
+
+```
+
+```{r join docs, include=FALSE}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+    select(5,6) %>%
+    unique() %>%
+    mutate(edr = str_replace(edr, "  ", " "),
+           planning.region = str_replace(planning.region, " Minnesota", ""),
+           planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+           edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"))
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+
+color.ruca <- c("Entirely rural" = "#009933", "Town/rural mix" = "#99CC33", "Urban/town/rural mix" = "#CC9966", "Entirely urban" = "#754C29", "Minnesota" = "black")
+
+color.pr <- c("Northwest" = 	"#4575b4", "Northeast" = "grey", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black")
+
+color.edr <- c("EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365", "Minnesota" = "black")
+
+color.pr.edr <- c ("Northwest" = "#4575b4","Northeast" = "#e0f3f8", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black", "EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365")
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+
+```
+
+```{r master original}
+master.original <- read_csv("Data/SLEDS/Masters/Master-13.csv") %>%
+  mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions))
+
+names(master.original)
+
+```
+
+<br>
+
+The master dataset is composed of `r comma(nrow(master.original))` rows. Each row represents an individual that graduated (StatusEnd = 8 or 9) from a high school located in EDR 6W, EDR 6E, and EDR 8 between 2008 and 2019.
+
+The master dataset is also composed of `r comma(ncol(master.original))` columns. Columns mainly represent various socio-economic, demographic, and educational career characteristics of the indivdual as well as a few characteristics of the high school geographic from which they graduated (i.e. county unemployment).
+
+Here is a list of all the variables that will be included in the model and a description of each.
+
+* **Individual Characteristics**
+    + **hs.grad.year:** year the individual graduated high school 
+    + **Gender:** male of female (M or F)
+    + **LimitedEnglishProficiencyIndicator:** a yes or no (Y or N) on whether the individual was identified as having limited english proficency at any point between 10th and 12th grade.
+    + **HomelessIndicator:** a yes or no (Y or N) indicator on whether the individual was ever identified as homeless at any point between 10th and 12th grade.
+    + **economic.status:** an indicator where 1 equals whether the individual was eligible for free or reduced lunch (codes 1,2,4,5) at any point between 10th and 12th grade. Otherwise the individual is coded as 0.
+    + **pseo.participant:** an indicator where 1 means the individual participated in a PSEO course sometime between 10th and 12th grade, otherwise 0.
+    + **SpecialEdStatus:** an indicator where 1 means the individual required special education services at some point between 10th and 12th grade, otherwise 0.
+    + **non.english.home:** an indicator where 1 means that English is not the primary langauge spoken at home, otherwise 0.
+    + **n.years.attended:** the number of years the individual attended the high school and is identified in the dataset. Max is 6 years.
+    + **ACTCompositeScore:** the composite ACT score of the individual. If the ACT was not taken, the individual is NA.
+    + **ap.exam:** an indicator where 1 means the individual took an AP exam at some point, otherwise 0.
+    + **total.cte.courses.taken:** the total number of CTE courses the individual has taken in their career since 10th grade.
+    + **cte.0 through cte.26:** the number of CTE courses taken in each CTE career cluster, where;
+      + 0 = NULL - no career field or career name
+      + 1 = Agriculture, Food, and Natural Resources	
+      + 2 = Architecture & Construction	
+      + 3 = Manufacturing	
+      + 4 = Transportation, Distribution & Logistics	
+      + 5 = Information Technology	
+      + 6 = Marketing, Sales & Service	
+      + 7 = Finance
+      + 8 = Hospitality & Tourism	
+      + 9 = Business, Management & Administrative	
+      + 10 = Health Science & Health Occupations	
+      + 11 = Human Services	
+      + 12 = Arts, A/V Technology, & Communication	
+      + 14 = Science, Technology, Engineering, & Mathematics	
+      + 21 = Work-Experience-Disadvantaged	
+      + 22 = Work Experience-Handicapped	
+      + 23 = Work Experience-Handicapped (16-20+ on IEP)
+      + 24 = Work Experience/Career Exploration (age 14-15 on IEP)
+      + 25 = Diversified Occupations
+      + 26 = Administrative Only
+    + **cte.achievement:** three indicators with "CTE concentrator or completor" being one, "CTE participant" meaning they took a CTE course but was not a concentrator or completor, and"No CTE" meaning they didn't take a CTE course.
+    + **english.learner:** the individual was identified as an "english learner" at least one time between 10th and 12th grade.
+    + **MCA.M & MCA.R & MCA.S:** this is the Minnesota Comprehensive Assessment tests for reading, math and science. Each individual is given 1 of 4 grades for each subject;
+      + 1 = Does not meet standards
+      + 2 = Partially meets standards
+      + 3 = Meets standards
+      + 4 = Exceeds standards
+    + **sat.taken:** this is an identifier with 1 meaning the took the SAT and 0 meaning they did not take the SAT.
+    + **attended.ps:** this is an identifier where Yes means they attended a post-secondary education institution and No means they did not attend a post-secondary institution.
+    + **first.InstitutionSector:** this identifies the institution sector of their first post-secondary school. There are 10 different sectors.
+      + 1 - Public, 4-year or above
+      + 2 - Private not-for-profit, 4-year or above
+      + 3 - Private for-profit, 4-year or above
+      + 4 - Public, 2-year
+      + 5 - Private not-for-profit, 2-year
+      + 6 - Private for-profit, 2-year
+      + 7 - Public, less-than 2-year
+      + 8 - Private not-for-profit, less-than 2-year
+      + 9 - Private for-profit, less-than 2-year
+      + 99 - Sector unknown (not active)
+      + NA - did not attend post-secondary
+    + **ps.sector.(1-9):** this is an identifier on whether they attended the particular post-secondary institution sector. A column is provided for each sector: 1 through 9. In each column 1 means "yes", and 0 means "no" for that given sector.
+    + **ps.attended.in.same.ruca(edr & pr & MN):** this is an identifier on whether the PersonID ever attended a post-secondary institution in the same RUCA category, EDR, research region as their high school, or attended in Minnesota.
+    + **ps.grad:** whether the individual gradated from a post-secondary institution. Y means yes.
+    + **ps.grad.InstitutionSector:** the institution sector of the post-secondary school from which they last graduated.
+    + **highest.cred.level:** an identifier of the highest credential earned by the PersonID. The categories are;
+      + Less than associate degree
+      + Associate degree
+      + Bachelors degree
+      + Higher than bachelors degree.
+    + **ps.grad.in.same.ruca-pr:** did the student graduate from an institution located in the same RUCA category or EDR as their high school. "PR" is whether they graduated from an institution within the research area (three EDRs) and "MN" is whether they graduated from an institution in Minnesota.
+    + **mn.emp.record.hs.grad.year(.2 & .7):** did the individual have a MN employment record the year of graduating high school, two years after graduating, and seven years after graduating.
+    + **meaningful.emp.hs.grad.year(.2 & .7):** did the individual work 1,000 hours or more for one employer the year of graduation, two years after graduation, and seven years after graduation.
+    + **hs.grad.year.(2 & 7).county.match:** did the individual have meaningful employment for an employer located in the same county as their high school - the year of graduation, two years after graduation, and seven years after graduation.
+    + **hs.grad.year.(2 & 7).edr.match:** did the individual have meaningful employment for an employer located in the same EDR as their high school - the year of graduation, two years after graduation, and seven years after graduation.
+    + **hs.grad.year.(2 & 7).region.match:** did the individual have meaningful employment in one of the three EDRs - the year of graduation, two years after graduation, and seven years after graduation.
+    + **hs.grad.year.state.match:** did the individual have meaningful employment for an employer located in Minnesota the year of graduation, two years after graduation and seven years after graduation.
+    + **ind.match.hs.grad.year(.2 and .7):** did the individual have meaningful employment in an industry that matches a CTE course they took - the year of graduation, two years after graduation and seven years after graduation.
+    
+    
+* **High School Characteristics**
+    + **K12OrganizationID:** Identification code for each high school in research region.
+    + **countyfp:** the fips code of the code in which the high school is located.
+    + **Dem_Desc:** the RUCA category in which the high school is located.
+    + **edr:** the economic development region in which the high school is located.
+    + **avg.cte.intensity:** The purpose of the CTE intensity measure is to determine whether a strong presence of CTE programming and participation impacts migration patterns. The thinking is that there will be plenty of students that may not dive deep into CTE coursework, but just seeing it in your school and constantly being reminded of all the local opportunities and occupational needs in the local area might impact how a student views employment opportunities for themselves in the future.We needed to come up with a measure of what the CTE “intensity” was for each school by each year. To do this, Eric Shwankl, Education Consultant with the Southwest West Central Service Cooperative, came up with an ingenious way to measure “CTE intensity” using the z-score (also called standard score). The z-score calculates how far a value is (in terms of standard deviation) from the average in the population. In this case z-score is used to measure how far one schools CTE student participation % is from the mean of the percentage of all schools that year, and how far one schools CTE courses offered per student % is from the percentage of all schools for that year. This particular column takes the average z-score from all the school instances for each individual.
+    + **avg.unemp.rate:** the three year average unemployment rate during an individuals Sophmore, Junior and Senior years.
+    + **wages.3year.avg:** the average county median household income of an individuals SOphomore, Junior and Senior years.
+    
