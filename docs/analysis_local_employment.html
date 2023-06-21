@@ -43,6 +43,8 @@
 <link href="site_libs/ggiraphjs-0.4.6/ggiraphjs.min.css" rel="stylesheet" />
 <script src="site_libs/ggiraphjs-0.4.6/ggiraphjs.min.js"></script>
 <script src="site_libs/girafe-binding-0.8.7/girafe.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.4.0/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -438,6 +440,66 @@ not for that exact “time X” year, it’s still considered
 <p>Due to time x potentially being passed the date of the latest data
 (2019) for some individuals, the analysis below will filter out all
 individuals where time x is after 2019.</p>
+<p>There are a number of independent variables in the master dataset.
+And they are likely to have significant colinearity, so we are going to
+split them up into larger “Groups” that will then have sub groups. For
+example, instead of modeling whether the institution sector from which
+an individual has graduated from impacts the dependent variable, we will
+just check to see if graduating from a post-seconary institution impacts
+the dependent variable. If so, then we will dig deeper to see if the
+institution type is significant.</p>
+<p>The primary independent variables we will use in the model is the
+following;</p>
+<ul>
+<li>hs.grad.year</li>
+<li>Gender</li>
+<li>LimitedEnglishProficiencyIndicator</li>
+<li>HomelessIndicator</li>
+<li>economic.status</li>
+<li>pseo.participant</li>
+<li>SpecialEdStatus</li>
+<li>non.english.home</li>
+<li>Dem_Desc</li>
+<li>edr</li>
+<li>took.ACT</li>
+<li>ap.exam</li>
+<li>total.cte.courses.taken</li>
+<li>cte.achievement</li>
+<li>avg.cte.intensity</li>
+<li>MCA.M</li>
+<li>MCA.R</li>
+<li>MCA.S</li>
+<li>sat.taken</li>
+<li>attended.ps</li>
+<li>ps.grad</li>
+<li>highest.cred.level</li>
+<li>avg.unemp.rate</li>
+<li>wages.3year.avg</li>
+</ul>
+<p>The following are the remaining independent variables will be a part
+of sub-variables that will be included in a follow-up model if the
+larger variable does indicate a relationship;</p>
+<ul>
+<li>total.cte.courses.taken
+<ul>
+<li>cte.0 - cte.26</li>
+</ul></li>
+<li>ps.grad
+<ul>
+<li>ps.grad.InstitutionSector</li>
+<li>ps.sector.1 - ps.sector.9</li>
+</ul></li>
+<li>EDR
+<ul>
+<li>county.name</li>
+<li>K12OrganizationID</li>
+</ul></li>
+<li>Dem_Desc
+<ul>
+<li>county.name</li>
+<li>K12OrganizationID</li>
+</ul></li>
+</ul>
 <p><br></p>
 <div id="section-employment-in-county-at-time-x" class="section level1">
 <h1>Employment in county at time X</h1>
@@ -456,12 +518,2978 @@ school - 7.1%, to 17.2%, and then 36.2% seven years after graduation.
 The percentage of individuals that didn’t hav a MN employment record at
 time X also increased from 21.7% at the year of graduation to 33.2%.</p>
 <p><br></p>
-<div class="girafe html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-00b079e786df3913c789" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-00b079e786df3913c789">{"x":{"html":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' class='ggiraph-svg' role='img' id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8' viewBox='0 0 720 720'>\n <defs id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_defs'>\n  <clipPath id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_c1'>\n   <rect x='0' y='0' width='720' height='720'/>\n  <\/clipPath>\n  <clipPath id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_c2'>\n   <rect x='58.64' y='54.3' width='655.88' height='542'/>\n  <\/clipPath>\n <\/defs>\n <g id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_rootg' class='ggiraph-svg-rootg'>\n  <g clip-path='url(#svg_c9597acf_6075_4885_8c35_dc4d92e802f8_c1)'>\n   <rect x='0' y='0' width='720' height='720' fill='#FFFFFF' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.75' stroke-linejoin='round' stroke-linecap='round' class='ggiraph-svg-bg'/>\n   <rect x='0' y='0' width='720' height='720' fill='#FFFFFF' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='1.07' stroke-linejoin='round' stroke-linecap='round'/>\n  <\/g>\n  <g clip-path='url(#svg_c9597acf_6075_4885_8c35_dc4d92e802f8_c2)'>\n   <rect x='58.64' y='54.3' width='655.88' height='542' fill='#FFFFFF' fill-opacity='1' stroke='none'/>\n   <polyline points='58.64,571.66 714.52,571.66' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='58.64,403.27 714.52,403.27' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='58.64,234.89 714.52,234.89' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='58.64,66.50 714.52,66.50' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='134.32,596.30 134.32,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='260.45,596.30 260.45,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='386.58,596.30 386.58,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='512.71,596.30 512.71,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='638.84,596.30 638.84,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e1' x='115.4' y='425.97' width='37.84' height='145.69' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='1' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - Location match&amp;lt;br/&amp;gt;Number of individuals: 5,537&amp;lt;br/&amp;gt;Percent of total individuals: 17.3%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e2' x='493.79' y='361.8' width='37.84' height='209.87' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='2' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - No MN emp record&amp;lt;br/&amp;gt;Number of individuals: 7,976&amp;lt;br/&amp;gt;Percent of total individuals: 24.9%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e3' x='241.53' y='426.6' width='37.84' height='145.06' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='3' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - No location match&amp;lt;br/&amp;gt;Number of individuals: 5,513&amp;lt;br/&amp;gt;Percent of total individuals: 17.2%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e4' x='367.66' y='235.94' width='37.84' height='335.72' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='4' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - No meaningful emp&amp;lt;br/&amp;gt;Number of individuals: 12,759&amp;lt;br/&amp;gt;Percent of total individuals: 39.9%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e5' x='619.92' y='566.06' width='37.84' height='5.6' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='5' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - Unknown&amp;lt;br/&amp;gt;Number of individuals: 213&amp;lt;br/&amp;gt;Percent of total individuals: 0.7%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e6' x='153.24' y='405.39' width='37.84' height='166.27' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='6' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - Location match&amp;lt;br/&amp;gt;Number of individuals: 3,304&amp;lt;br/&amp;gt;Percent of total individuals: 19.7%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e7' x='531.63' y='292.56' width='37.84' height='279.1' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='7' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - No MN emp record&amp;lt;br/&amp;gt;Number of individuals: 5,546&amp;lt;br/&amp;gt;Percent of total individuals: 33.2%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e8' x='279.37' y='266.79' width='37.84' height='304.87' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='8' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - No location match&amp;lt;br/&amp;gt;Number of individuals: 6,058&amp;lt;br/&amp;gt;Percent of total individuals: 36.2%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e9' x='405.5' y='489.28' width='37.84' height='82.38' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='9' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - No meaningful emp&amp;lt;br/&amp;gt;Number of individuals: 1,637&amp;lt;br/&amp;gt;Percent of total individuals: 9.8%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e10' x='657.76' y='562.35' width='37.84' height='9.31' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='10' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - Unknown&amp;lt;br/&amp;gt;Number of individuals: 185&amp;lt;br/&amp;gt;Percent of total individuals: 1.1%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e11' x='77.56' y='467.51' width='37.84' height='104.16' fill='#D7191C' fill-opacity='1' stroke='none' data-id='11' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - Location match&amp;lt;br/&amp;gt;Number of individuals: 4,720&amp;lt;br/&amp;gt;Percent of total individuals: 12.4%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e12' x='455.95' y='388.9' width='37.84' height='182.76' fill='#D7191C' fill-opacity='1' stroke='none' data-id='12' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - No MN emp record&amp;lt;br/&amp;gt;Number of individuals: 8,282&amp;lt;br/&amp;gt;Percent of total individuals: 21.7%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e13' x='203.69' y='511.66' width='37.84' height='60' fill='#D7191C' fill-opacity='1' stroke='none' data-id='13' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - No location match&amp;lt;br/&amp;gt;Number of individuals: 2,719&amp;lt;br/&amp;gt;Percent of total individuals: 7.1%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e14' x='329.82' y='78.93' width='37.84' height='492.73' fill='#D7191C' fill-opacity='1' stroke='none' data-id='14' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - No meaningful emp&amp;lt;br/&amp;gt;Number of individuals: 22,329&amp;lt;br/&amp;gt;Percent of total individuals: 58.5%'/>\n   <rect id='svg_c9597acf_6075_4885_8c35_dc4d92e802f8_e15' x='582.08' y='569.37' width='37.84' height='2.29' fill='#D7191C' fill-opacity='1' stroke='none' data-id='15' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - Unknown&amp;lt;br/&amp;gt;Number of individuals: 104&amp;lt;br/&amp;gt;Percent of total individuals: 0.3%'/>\n   <polygon points='112.72,434.67 155.92,434.67 155.83,434.67 156.18,434.66 156.52,434.59 156.84,434.46 157.14,434.29 157.41,434.07 157.64,433.81 157.83,433.52 157.96,433.20 158.05,432.86 158.08,432.51 158.08,432.51 158.08,419.43 158.08,419.43 158.05,419.08 157.96,418.75 157.83,418.43 157.64,418.13 157.41,417.87 157.14,417.65 156.84,417.48 156.52,417.35 156.18,417.28 155.92,417.27 112.72,417.27 112.98,417.28 112.64,417.27 112.29,417.31 111.96,417.41 111.64,417.56 111.36,417.76 111.11,418.00 110.90,418.27 110.74,418.58 110.63,418.91 110.57,419.26 110.56,419.43 110.56,432.51 110.57,432.34 110.57,432.69 110.63,433.03 110.74,433.36 110.90,433.67 111.11,433.94 111.36,434.18 111.64,434.38 111.96,434.53 112.29,434.63 112.64,434.67' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='114.16' y='431.07' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>17.3%<\/text>\n   <polygon points='491.11,370.50 534.31,370.50 534.22,370.49 534.57,370.48 534.91,370.41 535.23,370.29 535.53,370.11 535.80,369.89 536.03,369.63 536.22,369.34 536.36,369.02 536.44,368.68 536.47,368.34 536.47,368.34 536.47,355.25 536.47,355.25 536.44,354.91 536.36,354.57 536.22,354.25 536.03,353.96 535.80,353.70 535.53,353.48 535.23,353.30 534.91,353.18 534.57,353.11 534.31,353.09 491.11,353.09 491.38,353.11 491.03,353.10 490.68,353.14 490.35,353.23 490.03,353.38 489.75,353.58 489.50,353.82 489.29,354.10 489.13,354.41 489.02,354.74 488.96,355.08 488.95,355.25 488.95,368.34 488.96,368.16 488.96,368.51 489.02,368.85 489.13,369.18 489.29,369.49 489.50,369.77 489.75,370.01 490.03,370.21 490.35,370.36 490.68,370.45 491.03,370.49' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='492.55' y='366.9' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>24.9%<\/text>\n   <polygon points='238.85,435.30 282.05,435.30 281.96,435.30 282.31,435.29 282.65,435.22 282.97,435.09 283.27,434.92 283.54,434.70 283.77,434.44 283.96,434.15 284.09,433.83 284.18,433.49 284.21,433.14 284.21,433.14 284.21,420.06 284.21,420.06 284.18,419.71 284.09,419.38 283.96,419.06 283.77,418.76 283.54,418.50 283.27,418.28 282.97,418.11 282.65,417.99 282.31,417.92 282.05,417.90 238.85,417.90 239.11,417.92 238.77,417.90 238.42,417.94 238.09,418.04 237.77,418.19 237.49,418.39 237.24,418.63 237.03,418.91 236.87,419.21 236.76,419.54 236.70,419.89 236.69,420.06 236.69,433.14 236.70,432.97 236.70,433.32 236.76,433.66 236.87,433.99 237.03,434.30 237.24,434.58 237.49,434.82 237.77,435.01 238.09,435.16 238.42,435.26 238.77,435.30' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='240.29' y='431.7' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>17.2%<\/text>\n   <polygon points='364.98,244.65 408.18,244.65 408.09,244.64 408.44,244.63 408.78,244.56 409.10,244.44 409.40,244.26 409.67,244.04 409.90,243.78 410.09,243.49 410.23,243.17 410.31,242.83 410.34,242.49 410.34,242.49 410.34,229.40 410.34,229.40 410.31,229.06 410.23,228.72 410.09,228.40 409.90,228.11 409.67,227.85 409.40,227.63 409.10,227.45 408.78,227.33 408.44,227.26 408.18,227.24 364.98,227.24 365.24,227.26 364.90,227.24 364.55,227.29 364.22,227.38 363.90,227.53 363.62,227.73 363.37,227.97 363.16,228.25 363.00,228.56 362.89,228.89 362.83,229.23 362.82,229.40 362.82,242.49 362.83,242.31 362.83,242.66 362.89,243.00 363.00,243.33 363.16,243.64 363.37,243.92 363.62,244.16 363.90,244.36 364.22,244.51 364.55,244.60 364.90,244.64' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='366.42' y='241.05' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>39.9%<\/text>\n   <polygon points='621.20,574.76 656.49,574.76 656.40,574.76 656.75,574.74 657.09,574.67 657.41,574.55 657.71,574.37 657.98,574.15 658.21,573.89 658.40,573.60 658.53,573.28 658.62,572.94 658.65,572.60 658.65,572.60 658.65,559.51 658.65,559.51 658.62,559.17 658.53,558.83 658.40,558.51 658.21,558.22 657.98,557.96 657.71,557.74 657.41,557.56 657.09,557.44 656.75,557.37 656.49,557.35 621.20,557.35 621.46,557.37 621.11,557.36 620.77,557.40 620.43,557.50 620.12,557.64 619.83,557.84 619.58,558.08 619.37,558.36 619.21,558.67 619.10,559.00 619.05,559.34 619.04,559.51 619.04,572.60 619.05,572.42 619.05,572.77 619.10,573.11 619.21,573.44 619.37,573.75 619.58,574.03 619.83,574.27 620.12,574.47 620.43,574.62 620.77,574.71 621.11,574.76' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='622.64' y='571.16' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>0.7%<\/text>\n   <polygon points='150.56,414.09 193.75,414.09 193.67,414.09 194.01,414.07 194.36,414.00 194.68,413.88 194.98,413.71 195.25,413.49 195.48,413.23 195.67,412.93 195.80,412.61 195.89,412.27 195.91,411.93 195.91,411.93 195.91,398.85 195.91,398.85 195.89,398.50 195.80,398.16 195.67,397.84 195.48,397.55 195.25,397.29 194.98,397.07 194.68,396.89 194.36,396.77 194.01,396.70 193.75,396.69 150.56,396.69 150.82,396.70 150.47,396.69 150.13,396.73 149.80,396.83 149.48,396.98 149.20,397.17 148.94,397.41 148.74,397.69 148.57,398.00 148.46,398.33 148.41,398.67 148.40,398.85 148.40,411.93 148.41,411.75 148.41,412.10 148.46,412.45 148.57,412.77 148.74,413.08 148.94,413.36 149.20,413.60 149.48,413.80 149.80,413.95 150.13,414.04 150.47,414.09' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='152' y='410.49' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>19.7%<\/text>\n   <polygon points='528.95,301.26 572.15,301.26 572.06,301.26 572.41,301.24 572.75,301.17 573.07,301.05 573.37,300.88 573.64,300.66 573.87,300.40 574.06,300.10 574.20,299.78 574.28,299.45 574.31,299.10 574.31,299.10 574.31,286.02 574.31,286.02 574.28,285.67 574.20,285.33 574.06,285.01 573.87,284.72 573.64,284.46 573.37,284.24 573.07,284.07 572.75,283.94 572.41,283.87 572.15,283.86 528.95,283.86 529.21,283.87 528.87,283.86 528.52,283.90 528.19,284.00 527.87,284.15 527.59,284.34 527.34,284.59 527.13,284.86 526.97,285.17 526.86,285.50 526.80,285.84 526.79,286.02 526.79,299.10 526.80,298.93 526.80,299.27 526.86,299.62 526.97,299.95 527.13,300.25 527.34,300.53 527.59,300.77 527.87,300.97 528.19,301.12 528.52,301.22 528.87,301.26' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='530.39' y='297.66' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>33.2%<\/text>\n   <polygon points='276.69,275.49 319.89,275.49 319.80,275.49 320.15,275.48 320.49,275.41 320.81,275.29 321.11,275.11 321.38,274.89 321.61,274.63 321.80,274.34 321.93,274.02 322.02,273.68 322.05,273.33 322.05,273.33 322.05,260.25 322.05,260.25 322.02,259.90 321.93,259.57 321.80,259.25 321.61,258.95 321.38,258.69 321.11,258.47 320.81,258.30 320.49,258.18 320.15,258.11 319.89,258.09 276.69,258.09 276.95,258.11 276.61,258.09 276.26,258.13 275.93,258.23 275.61,258.38 275.33,258.58 275.08,258.82 274.87,259.10 274.71,259.40 274.60,259.73 274.54,260.08 274.53,260.25 274.53,273.33 274.54,273.16 274.54,273.51 274.60,273.85 274.71,274.18 274.87,274.49 275.08,274.77 275.33,275.01 275.61,275.20 275.93,275.35 276.26,275.45 276.61,275.49' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='278.13' y='271.89' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>36.2%<\/text>\n   <polygon points='406.78,497.98 442.06,497.98 441.98,497.98 442.32,497.96 442.66,497.89 442.99,497.77 443.29,497.60 443.56,497.38 443.79,497.12 443.98,496.82 444.11,496.50 444.20,496.17 444.22,495.82 444.22,495.82 444.22,482.74 444.22,482.74 444.20,482.39 444.11,482.05 443.98,481.73 443.79,481.44 443.56,481.18 443.29,480.96 442.99,480.79 442.66,480.66 442.32,480.59 442.06,480.58 406.78,480.58 407.04,480.59 406.69,480.58 406.34,480.62 406.01,480.72 405.70,480.87 405.41,481.06 405.16,481.31 404.95,481.58 404.79,481.89 404.68,482.22 404.62,482.56 404.62,482.74 404.62,495.82 404.62,495.65 404.62,495.99 404.68,496.34 404.79,496.67 404.95,496.97 405.16,497.25 405.41,497.49 405.70,497.69 406.01,497.84 406.34,497.94 406.69,497.98' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='408.22' y='494.38' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>9.8%<\/text>\n   <polygon points='659.04,571.05 694.32,571.05 694.24,571.05 694.59,571.04 694.93,570.97 695.25,570.84 695.55,570.67 695.82,570.45 696.05,570.19 696.24,569.90 696.37,569.58 696.46,569.24 696.48,568.89 696.48,568.89 696.48,555.81 696.48,555.81 696.46,555.46 696.37,555.13 696.24,554.81 696.05,554.51 695.82,554.25 695.55,554.03 695.25,553.86 694.93,553.73 694.59,553.66 694.32,553.65 659.04,553.65 659.30,553.66 658.95,553.65 658.61,553.69 658.27,553.79 657.96,553.94 657.67,554.14 657.42,554.38 657.21,554.65 657.05,554.96 656.94,555.29 656.88,555.64 656.88,555.81 656.88,568.89 656.88,568.72 656.88,569.07 656.94,569.41 657.05,569.74 657.21,570.05 657.42,570.32 657.67,570.56 657.96,570.76 658.27,570.91 658.61,571.01 658.95,571.05' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='660.48' y='567.45' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>1.1%<\/text>\n   <polygon points='74.88,476.21 118.08,476.21 117.99,476.20 118.34,476.19 118.68,476.12 119.00,476.00 119.30,475.82 119.57,475.60 119.80,475.34 119.99,475.05 120.12,474.73 120.21,474.39 120.24,474.05 120.24,474.05 120.24,460.96 120.24,460.96 120.21,460.62 120.12,460.28 119.99,459.96 119.80,459.67 119.57,459.41 119.30,459.19 119.00,459.01 118.68,458.89 118.34,458.82 118.08,458.80 74.88,458.80 75.14,458.82 74.80,458.81 74.45,458.85 74.12,458.94 73.80,459.09 73.52,459.29 73.27,459.53 73.06,459.81 72.90,460.12 72.79,460.45 72.73,460.79 72.72,460.96 72.72,474.05 72.73,473.87 72.73,474.22 72.79,474.56 72.90,474.89 73.06,475.20 73.27,475.48 73.52,475.72 73.80,475.92 74.12,476.07 74.45,476.16 74.80,476.20' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='76.32' y='472.61' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>12.4%<\/text>\n   <polygon points='453.28,397.60 496.47,397.60 496.38,397.60 496.73,397.59 497.07,397.52 497.39,397.40 497.70,397.22 497.96,397.00 498.20,396.74 498.38,396.45 498.52,396.13 498.60,395.79 498.63,395.44 498.63,395.44 498.63,382.36 498.63,382.36 498.60,382.02 498.52,381.68 498.38,381.36 498.20,381.06 497.96,380.80 497.70,380.58 497.39,380.41 497.07,380.29 496.73,380.22 496.47,380.20 453.28,380.20 453.54,380.22 453.19,380.20 452.84,380.25 452.51,380.34 452.20,380.49 451.91,380.69 451.66,380.93 451.45,381.21 451.29,381.52 451.18,381.85 451.12,382.19 451.12,382.36 451.12,395.44 451.12,395.27 451.12,395.62 451.18,395.96 451.29,396.29 451.45,396.60 451.66,396.88 451.91,397.12 452.20,397.32 452.51,397.46 452.84,397.56 453.19,397.60' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='454.72' y='394' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>21.7%<\/text>\n   <polygon points='204.97,520.36 240.25,520.36 240.17,520.36 240.51,520.35 240.85,520.28 241.18,520.15 241.48,519.98 241.75,519.76 241.98,519.50 242.17,519.21 242.30,518.89 242.39,518.55 242.41,518.20 242.41,518.20 242.41,505.12 242.41,505.12 242.39,504.77 242.30,504.44 242.17,504.12 241.98,503.82 241.75,503.56 241.48,503.34 241.18,503.17 240.85,503.04 240.51,502.98 240.25,502.96 204.97,502.96 205.23,502.98 204.88,502.96 204.53,503.00 204.20,503.10 203.89,503.25 203.60,503.45 203.35,503.69 203.14,503.97 202.98,504.27 202.87,504.60 202.81,504.95 202.81,505.12 202.81,518.20 202.81,518.03 202.81,518.38 202.87,518.72 202.98,519.05 203.14,519.36 203.35,519.63 203.60,519.88 203.89,520.07 204.20,520.22 204.53,520.32 204.88,520.36' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='206.41' y='516.76' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>7.1%<\/text>\n   <polygon points='327.14,87.63 370.34,87.63 370.25,87.63 370.60,87.62 370.94,87.55 371.26,87.42 371.56,87.25 371.83,87.03 372.06,86.77 372.25,86.48 372.39,86.16 372.47,85.82 372.50,85.47 372.50,85.47 372.50,72.39 372.50,72.39 372.47,72.04 372.39,71.71 372.25,71.39 372.06,71.09 371.83,70.83 371.56,70.61 371.26,70.44 370.94,70.32 370.60,70.25 370.34,70.23 327.14,70.23 327.41,70.25 327.06,70.23 326.71,70.27 326.38,70.37 326.06,70.52 325.78,70.72 325.53,70.96 325.32,71.24 325.16,71.54 325.05,71.87 324.99,72.22 324.98,72.39 324.98,85.47 324.99,85.30 324.99,85.65 325.05,85.99 325.16,86.32 325.32,86.63 325.53,86.91 325.78,87.15 326.06,87.34 326.38,87.49 326.71,87.59 327.06,87.63' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='328.58' y='84.03' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>58.5%<\/text>\n   <polygon points='583.36,578.07 618.65,578.07 618.56,578.06 618.91,578.05 619.25,577.98 619.57,577.86 619.87,577.68 620.14,577.46 620.37,577.20 620.56,576.91 620.70,576.59 620.78,576.25 620.81,575.91 620.81,575.91 620.81,562.82 620.81,562.82 620.78,562.48 620.70,562.14 620.56,561.82 620.37,561.53 620.14,561.27 619.87,561.05 619.57,560.87 619.25,560.75 618.91,560.68 618.65,560.66 583.36,560.66 583.62,560.68 583.27,560.67 582.93,560.71 582.59,560.80 582.28,560.95 581.99,561.15 581.74,561.39 581.53,561.67 581.37,561.98 581.26,562.31 581.21,562.65 581.20,562.82 581.20,575.91 581.21,575.73 581.21,576.08 581.26,576.42 581.37,576.75 581.53,577.06 581.74,577.34 581.99,577.58 582.28,577.78 582.59,577.93 582.93,578.02 583.27,578.06' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='584.8' y='574.47' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>0.3%<\/text>\n  <\/g>\n  <g clip-path='url(#svg_c9597acf_6075_4885_8c35_dc4d92e802f8_c1)'>\n   <text x='32.91' y='576.81' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>0%<\/text>\n   <text x='24.9' y='408.43' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>20%<\/text>\n   <text x='24.9' y='240.04' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>40%<\/text>\n   <text x='24.9' y='71.65' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>60%<\/text>\n   <text transform='translate(51.92,651.02) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>Location match<\/text>\n   <text transform='translate(163.05,658.01) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>No location match<\/text>\n   <text transform='translate(282.02,661.36) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>No meaningful emp<\/text>\n   <text transform='translate(412.70,659.23) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>No MN emp record<\/text>\n   <text transform='translate(590.37,635.20) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>Unknown<\/text>\n   <rect x='203.85' y='700.12' width='365.46' height='14.4' fill='none' stroke='none'/>\n   <rect x='212.82' y='700.12' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='213.53' y='700.83' width='12.98' height='12.98' fill='#D7191C' fill-opacity='1' stroke='none'/>\n   <rect x='327.16' y='700.12' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='327.87' y='700.83' width='12.98' height='12.98' fill='#FDAE61' fill-opacity='1' stroke='none'/>\n   <rect x='452.72' y='700.12' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='453.43' y='700.83' width='12.98' height='12.98' fill='#ABD9E9' fill-opacity='1' stroke='none'/>\n   <text x='238.18' y='712.47' font-size='10.8pt' font-family='Arial'>hs.grad.year<\/text>\n   <text x='352.52' y='712.47' font-size='10.8pt' font-family='Arial'>hs.grad.year.2<\/text>\n   <text x='478.08' y='712.47' font-size='10.8pt' font-family='Arial'>hs.grad.year.7<\/text>\n   <text x='5.48' y='20.94' font-size='16.2pt' font-weight='bold' font-family='Arial'>Percent of individuals with employment in high school county at<\/text>\n   <text x='5.48' y='44.27' font-size='16.2pt' font-weight='bold' font-family='Arial'>time X<\/text>\n  <\/g>\n <\/g>\n<\/svg>","js":null,"uid":"svg_c9597acf_6075_4885_8c35_dc4d92e802f8","ratio":1,"settings":{"tooltip":{"css":".tooltip_SVGID_ { padding:5px;background:black;color:white;border-radius:2px;text-align:left; ; position:absolute;pointer-events:none;z-index:999;}","placement":"doc","opacity":0.9,"offx":10,"offy":10,"use_cursor_pos":true,"use_fill":false,"use_stroke":false,"delay_over":200,"delay_out":500},"hover":{"css":".hover_data_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_data_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_data_SVGID_ { fill:orange;stroke:black; }\nline.hover_data_SVGID_, polyline.hover_data_SVGID_ { fill:none;stroke:orange; }\nrect.hover_data_SVGID_, polygon.hover_data_SVGID_, path.hover_data_SVGID_ { fill:orange;stroke:none; }\nimage.hover_data_SVGID_ { stroke:orange; }","reactive":true,"nearest_distance":null},"hover_inv":{"css":""},"hover_key":{"css":".hover_key_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_key_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_key_SVGID_ { fill:orange;stroke:black; }\nline.hover_key_SVGID_, polyline.hover_key_SVGID_ { fill:none;stroke:orange; }\nrect.hover_key_SVGID_, polygon.hover_key_SVGID_, path.hover_key_SVGID_ { fill:orange;stroke:none; }\nimage.hover_key_SVGID_ { stroke:orange; }","reactive":true},"hover_theme":{"css":".hover_theme_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_theme_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_theme_SVGID_ { fill:orange;stroke:black; }\nline.hover_theme_SVGID_, polyline.hover_theme_SVGID_ { fill:none;stroke:orange; }\nrect.hover_theme_SVGID_, polygon.hover_theme_SVGID_, path.hover_theme_SVGID_ { fill:orange;stroke:none; }\nimage.hover_theme_SVGID_ { stroke:orange; }","reactive":true},"select":{"css":".select_data_SVGID_ { fill:red;stroke:gray; }","type":"none","only_shiny":true,"selected":[]},"select_inv":{"css":""},"select_key":{"css":".select_key_SVGID_ { fill:red;stroke:black;cursor:pointer; }\ntext.select_key_SVGID_ { stroke:none;fill:red; }\ncircle.select_key_SVGID_ { fill:red;stroke:black; }\nline.select_key_SVGID_, polyline.select_key_SVGID_ { fill:none;stroke:red; }\nrect.select_key_SVGID_, polygon.select_key_SVGID_, path.select_key_SVGID_ { fill:red;stroke:none; }\nimage.select_key_SVGID_ { stroke:red; }","type":"single","only_shiny":true,"selected":[]},"select_theme":{"css":".select_theme_SVGID_ { fill:red;stroke:black;cursor:pointer; }\ntext.select_theme_SVGID_ { stroke:none;fill:red; }\ncircle.select_theme_SVGID_ { fill:red;stroke:black; }\nline.select_theme_SVGID_, polyline.select_theme_SVGID_ { fill:none;stroke:red; }\nrect.select_theme_SVGID_, polygon.select_theme_SVGID_, path.select_theme_SVGID_ { fill:red;stroke:none; }\nimage.select_theme_SVGID_ { stroke:red; }","type":"single","only_shiny":true,"selected":[]},"zoom":{"min":1,"max":1,"duration":300},"toolbar":{"position":"topright","pngname":"diagram","tooltips":null,"hidden":[],"delay_over":200,"delay_out":500},"sizing":{"rescale":false,"width":1}}},"evals":[],"jsHooks":[]}</script>
+<div class="girafe html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-448a18756d94dd05c7c6" style="width:672px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-448a18756d94dd05c7c6">{"x":{"html":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' class='ggiraph-svg' role='img' id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26' viewBox='0 0 720 720'>\n <defs id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_defs'>\n  <clipPath id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_c1'>\n   <rect x='0' y='0' width='720' height='720'/>\n  <\/clipPath>\n  <clipPath id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_c2'>\n   <rect x='58.64' y='54.3' width='655.88' height='542'/>\n  <\/clipPath>\n <\/defs>\n <g id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_rootg' class='ggiraph-svg-rootg'>\n  <g clip-path='url(#svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_c1)'>\n   <rect x='0' y='0' width='720' height='720' fill='#FFFFFF' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.75' stroke-linejoin='round' stroke-linecap='round' class='ggiraph-svg-bg'/>\n   <rect x='0' y='0' width='720' height='720' fill='#FFFFFF' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='1.07' stroke-linejoin='round' stroke-linecap='round'/>\n  <\/g>\n  <g clip-path='url(#svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_c2)'>\n   <rect x='58.64' y='54.3' width='655.88' height='542' fill='#FFFFFF' fill-opacity='1' stroke='none'/>\n   <polyline points='58.64,571.66 714.52,571.66' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='58.64,403.27 714.52,403.27' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='58.64,234.89 714.52,234.89' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='58.64,66.50 714.52,66.50' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='134.32,596.30 134.32,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='260.45,596.30 260.45,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='386.58,596.30 386.58,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='512.71,596.30 512.71,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='638.84,596.30 638.84,54.30' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e1' x='115.4' y='425.97' width='37.84' height='145.69' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='1' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - Location match&amp;lt;br/&amp;gt;Number of individuals: 5,537&amp;lt;br/&amp;gt;Percent of total individuals: 17.3%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e2' x='493.79' y='361.8' width='37.84' height='209.87' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='2' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - No MN emp record&amp;lt;br/&amp;gt;Number of individuals: 7,976&amp;lt;br/&amp;gt;Percent of total individuals: 24.9%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e3' x='241.53' y='426.6' width='37.84' height='145.06' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='3' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - No location match&amp;lt;br/&amp;gt;Number of individuals: 5,513&amp;lt;br/&amp;gt;Percent of total individuals: 17.2%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e4' x='367.66' y='235.94' width='37.84' height='335.72' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='4' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - No meaningful emp&amp;lt;br/&amp;gt;Number of individuals: 12,759&amp;lt;br/&amp;gt;Percent of total individuals: 39.9%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e5' x='619.92' y='566.06' width='37.84' height='5.6' fill='#FDAE61' fill-opacity='1' stroke='none' data-id='5' title='Time x: hs.grad.year.2&amp;lt;br/&amp;gt;Does employment location match high school county? - Unknown&amp;lt;br/&amp;gt;Number of individuals: 213&amp;lt;br/&amp;gt;Percent of total individuals: 0.7%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e6' x='153.24' y='405.39' width='37.84' height='166.27' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='6' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - Location match&amp;lt;br/&amp;gt;Number of individuals: 3,304&amp;lt;br/&amp;gt;Percent of total individuals: 19.7%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e7' x='531.63' y='292.56' width='37.84' height='279.1' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='7' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - No MN emp record&amp;lt;br/&amp;gt;Number of individuals: 5,546&amp;lt;br/&amp;gt;Percent of total individuals: 33.2%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e8' x='279.37' y='266.79' width='37.84' height='304.87' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='8' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - No location match&amp;lt;br/&amp;gt;Number of individuals: 6,058&amp;lt;br/&amp;gt;Percent of total individuals: 36.2%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e9' x='405.5' y='489.28' width='37.84' height='82.38' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='9' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - No meaningful emp&amp;lt;br/&amp;gt;Number of individuals: 1,637&amp;lt;br/&amp;gt;Percent of total individuals: 9.8%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e10' x='657.76' y='562.35' width='37.84' height='9.31' fill='#ABD9E9' fill-opacity='1' stroke='none' data-id='10' title='Time x: hs.grad.year.7&amp;lt;br/&amp;gt;Does employment location match high school county? - Unknown&amp;lt;br/&amp;gt;Number of individuals: 185&amp;lt;br/&amp;gt;Percent of total individuals: 1.1%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e11' x='77.56' y='467.51' width='37.84' height='104.16' fill='#D7191C' fill-opacity='1' stroke='none' data-id='11' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - Location match&amp;lt;br/&amp;gt;Number of individuals: 4,720&amp;lt;br/&amp;gt;Percent of total individuals: 12.4%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e12' x='455.95' y='388.9' width='37.84' height='182.76' fill='#D7191C' fill-opacity='1' stroke='none' data-id='12' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - No MN emp record&amp;lt;br/&amp;gt;Number of individuals: 8,282&amp;lt;br/&amp;gt;Percent of total individuals: 21.7%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e13' x='203.69' y='511.66' width='37.84' height='60' fill='#D7191C' fill-opacity='1' stroke='none' data-id='13' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - No location match&amp;lt;br/&amp;gt;Number of individuals: 2,719&amp;lt;br/&amp;gt;Percent of total individuals: 7.1%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e14' x='329.82' y='78.93' width='37.84' height='492.73' fill='#D7191C' fill-opacity='1' stroke='none' data-id='14' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - No meaningful emp&amp;lt;br/&amp;gt;Number of individuals: 22,329&amp;lt;br/&amp;gt;Percent of total individuals: 58.5%'/>\n   <rect id='svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_e15' x='582.08' y='569.37' width='37.84' height='2.29' fill='#D7191C' fill-opacity='1' stroke='none' data-id='15' title='Time x: hs.grad.year&amp;lt;br/&amp;gt;Does employment location match high school county? - Unknown&amp;lt;br/&amp;gt;Number of individuals: 104&amp;lt;br/&amp;gt;Percent of total individuals: 0.3%'/>\n   <polygon points='112.72,434.67 155.92,434.67 155.83,434.67 156.18,434.66 156.52,434.59 156.84,434.46 157.14,434.29 157.41,434.07 157.64,433.81 157.83,433.52 157.96,433.20 158.05,432.86 158.08,432.51 158.08,432.51 158.08,419.43 158.08,419.43 158.05,419.08 157.96,418.75 157.83,418.43 157.64,418.13 157.41,417.87 157.14,417.65 156.84,417.48 156.52,417.35 156.18,417.28 155.92,417.27 112.72,417.27 112.98,417.28 112.64,417.27 112.29,417.31 111.96,417.41 111.64,417.56 111.36,417.76 111.11,418.00 110.90,418.27 110.74,418.58 110.63,418.91 110.57,419.26 110.56,419.43 110.56,432.51 110.57,432.34 110.57,432.69 110.63,433.03 110.74,433.36 110.90,433.67 111.11,433.94 111.36,434.18 111.64,434.38 111.96,434.53 112.29,434.63 112.64,434.67' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='114.16' y='431.07' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>17.3%<\/text>\n   <polygon points='491.11,370.50 534.31,370.50 534.22,370.49 534.57,370.48 534.91,370.41 535.23,370.29 535.53,370.11 535.80,369.89 536.03,369.63 536.22,369.34 536.36,369.02 536.44,368.68 536.47,368.34 536.47,368.34 536.47,355.25 536.47,355.25 536.44,354.91 536.36,354.57 536.22,354.25 536.03,353.96 535.80,353.70 535.53,353.48 535.23,353.30 534.91,353.18 534.57,353.11 534.31,353.09 491.11,353.09 491.38,353.11 491.03,353.10 490.68,353.14 490.35,353.23 490.03,353.38 489.75,353.58 489.50,353.82 489.29,354.10 489.13,354.41 489.02,354.74 488.96,355.08 488.95,355.25 488.95,368.34 488.96,368.16 488.96,368.51 489.02,368.85 489.13,369.18 489.29,369.49 489.50,369.77 489.75,370.01 490.03,370.21 490.35,370.36 490.68,370.45 491.03,370.49' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='492.55' y='366.9' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>24.9%<\/text>\n   <polygon points='238.85,435.30 282.05,435.30 281.96,435.30 282.31,435.29 282.65,435.22 282.97,435.09 283.27,434.92 283.54,434.70 283.77,434.44 283.96,434.15 284.09,433.83 284.18,433.49 284.21,433.14 284.21,433.14 284.21,420.06 284.21,420.06 284.18,419.71 284.09,419.38 283.96,419.06 283.77,418.76 283.54,418.50 283.27,418.28 282.97,418.11 282.65,417.99 282.31,417.92 282.05,417.90 238.85,417.90 239.11,417.92 238.77,417.90 238.42,417.94 238.09,418.04 237.77,418.19 237.49,418.39 237.24,418.63 237.03,418.91 236.87,419.21 236.76,419.54 236.70,419.89 236.69,420.06 236.69,433.14 236.70,432.97 236.70,433.32 236.76,433.66 236.87,433.99 237.03,434.30 237.24,434.58 237.49,434.82 237.77,435.01 238.09,435.16 238.42,435.26 238.77,435.30' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='240.29' y='431.7' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>17.2%<\/text>\n   <polygon points='364.98,244.65 408.18,244.65 408.09,244.64 408.44,244.63 408.78,244.56 409.10,244.44 409.40,244.26 409.67,244.04 409.90,243.78 410.09,243.49 410.23,243.17 410.31,242.83 410.34,242.49 410.34,242.49 410.34,229.40 410.34,229.40 410.31,229.06 410.23,228.72 410.09,228.40 409.90,228.11 409.67,227.85 409.40,227.63 409.10,227.45 408.78,227.33 408.44,227.26 408.18,227.24 364.98,227.24 365.24,227.26 364.90,227.24 364.55,227.29 364.22,227.38 363.90,227.53 363.62,227.73 363.37,227.97 363.16,228.25 363.00,228.56 362.89,228.89 362.83,229.23 362.82,229.40 362.82,242.49 362.83,242.31 362.83,242.66 362.89,243.00 363.00,243.33 363.16,243.64 363.37,243.92 363.62,244.16 363.90,244.36 364.22,244.51 364.55,244.60 364.90,244.64' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='366.42' y='241.05' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>39.9%<\/text>\n   <polygon points='621.20,574.76 656.49,574.76 656.40,574.76 656.75,574.74 657.09,574.67 657.41,574.55 657.71,574.37 657.98,574.15 658.21,573.89 658.40,573.60 658.53,573.28 658.62,572.94 658.65,572.60 658.65,572.60 658.65,559.51 658.65,559.51 658.62,559.17 658.53,558.83 658.40,558.51 658.21,558.22 657.98,557.96 657.71,557.74 657.41,557.56 657.09,557.44 656.75,557.37 656.49,557.35 621.20,557.35 621.46,557.37 621.11,557.36 620.77,557.40 620.43,557.50 620.12,557.64 619.83,557.84 619.58,558.08 619.37,558.36 619.21,558.67 619.10,559.00 619.05,559.34 619.04,559.51 619.04,572.60 619.05,572.42 619.05,572.77 619.10,573.11 619.21,573.44 619.37,573.75 619.58,574.03 619.83,574.27 620.12,574.47 620.43,574.62 620.77,574.71 621.11,574.76' fill='#FDAE61' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='622.64' y='571.16' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>0.7%<\/text>\n   <polygon points='150.56,414.09 193.75,414.09 193.67,414.09 194.01,414.07 194.36,414.00 194.68,413.88 194.98,413.71 195.25,413.49 195.48,413.23 195.67,412.93 195.80,412.61 195.89,412.27 195.91,411.93 195.91,411.93 195.91,398.85 195.91,398.85 195.89,398.50 195.80,398.16 195.67,397.84 195.48,397.55 195.25,397.29 194.98,397.07 194.68,396.89 194.36,396.77 194.01,396.70 193.75,396.69 150.56,396.69 150.82,396.70 150.47,396.69 150.13,396.73 149.80,396.83 149.48,396.98 149.20,397.17 148.94,397.41 148.74,397.69 148.57,398.00 148.46,398.33 148.41,398.67 148.40,398.85 148.40,411.93 148.41,411.75 148.41,412.10 148.46,412.45 148.57,412.77 148.74,413.08 148.94,413.36 149.20,413.60 149.48,413.80 149.80,413.95 150.13,414.04 150.47,414.09' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='152' y='410.49' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>19.7%<\/text>\n   <polygon points='528.95,301.26 572.15,301.26 572.06,301.26 572.41,301.24 572.75,301.17 573.07,301.05 573.37,300.88 573.64,300.66 573.87,300.40 574.06,300.10 574.20,299.78 574.28,299.45 574.31,299.10 574.31,299.10 574.31,286.02 574.31,286.02 574.28,285.67 574.20,285.33 574.06,285.01 573.87,284.72 573.64,284.46 573.37,284.24 573.07,284.07 572.75,283.94 572.41,283.87 572.15,283.86 528.95,283.86 529.21,283.87 528.87,283.86 528.52,283.90 528.19,284.00 527.87,284.15 527.59,284.34 527.34,284.59 527.13,284.86 526.97,285.17 526.86,285.50 526.80,285.84 526.79,286.02 526.79,299.10 526.80,298.93 526.80,299.27 526.86,299.62 526.97,299.95 527.13,300.25 527.34,300.53 527.59,300.77 527.87,300.97 528.19,301.12 528.52,301.22 528.87,301.26' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='530.39' y='297.66' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>33.2%<\/text>\n   <polygon points='276.69,275.49 319.89,275.49 319.80,275.49 320.15,275.48 320.49,275.41 320.81,275.29 321.11,275.11 321.38,274.89 321.61,274.63 321.80,274.34 321.93,274.02 322.02,273.68 322.05,273.33 322.05,273.33 322.05,260.25 322.05,260.25 322.02,259.90 321.93,259.57 321.80,259.25 321.61,258.95 321.38,258.69 321.11,258.47 320.81,258.30 320.49,258.18 320.15,258.11 319.89,258.09 276.69,258.09 276.95,258.11 276.61,258.09 276.26,258.13 275.93,258.23 275.61,258.38 275.33,258.58 275.08,258.82 274.87,259.10 274.71,259.40 274.60,259.73 274.54,260.08 274.53,260.25 274.53,273.33 274.54,273.16 274.54,273.51 274.60,273.85 274.71,274.18 274.87,274.49 275.08,274.77 275.33,275.01 275.61,275.20 275.93,275.35 276.26,275.45 276.61,275.49' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='278.13' y='271.89' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>36.2%<\/text>\n   <polygon points='406.78,497.98 442.06,497.98 441.98,497.98 442.32,497.96 442.66,497.89 442.99,497.77 443.29,497.60 443.56,497.38 443.79,497.12 443.98,496.82 444.11,496.50 444.20,496.17 444.22,495.82 444.22,495.82 444.22,482.74 444.22,482.74 444.20,482.39 444.11,482.05 443.98,481.73 443.79,481.44 443.56,481.18 443.29,480.96 442.99,480.79 442.66,480.66 442.32,480.59 442.06,480.58 406.78,480.58 407.04,480.59 406.69,480.58 406.34,480.62 406.01,480.72 405.70,480.87 405.41,481.06 405.16,481.31 404.95,481.58 404.79,481.89 404.68,482.22 404.62,482.56 404.62,482.74 404.62,495.82 404.62,495.65 404.62,495.99 404.68,496.34 404.79,496.67 404.95,496.97 405.16,497.25 405.41,497.49 405.70,497.69 406.01,497.84 406.34,497.94 406.69,497.98' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='408.22' y='494.38' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>9.8%<\/text>\n   <polygon points='659.04,571.05 694.32,571.05 694.24,571.05 694.59,571.04 694.93,570.97 695.25,570.84 695.55,570.67 695.82,570.45 696.05,570.19 696.24,569.90 696.37,569.58 696.46,569.24 696.48,568.89 696.48,568.89 696.48,555.81 696.48,555.81 696.46,555.46 696.37,555.13 696.24,554.81 696.05,554.51 695.82,554.25 695.55,554.03 695.25,553.86 694.93,553.73 694.59,553.66 694.32,553.65 659.04,553.65 659.30,553.66 658.95,553.65 658.61,553.69 658.27,553.79 657.96,553.94 657.67,554.14 657.42,554.38 657.21,554.65 657.05,554.96 656.94,555.29 656.88,555.64 656.88,555.81 656.88,568.89 656.88,568.72 656.88,569.07 656.94,569.41 657.05,569.74 657.21,570.05 657.42,570.32 657.67,570.56 657.96,570.76 658.27,570.91 658.61,571.01 658.95,571.05' fill='#ABD9E9' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='660.48' y='567.45' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>1.1%<\/text>\n   <polygon points='74.88,476.21 118.08,476.21 117.99,476.20 118.34,476.19 118.68,476.12 119.00,476.00 119.30,475.82 119.57,475.60 119.80,475.34 119.99,475.05 120.12,474.73 120.21,474.39 120.24,474.05 120.24,474.05 120.24,460.96 120.24,460.96 120.21,460.62 120.12,460.28 119.99,459.96 119.80,459.67 119.57,459.41 119.30,459.19 119.00,459.01 118.68,458.89 118.34,458.82 118.08,458.80 74.88,458.80 75.14,458.82 74.80,458.81 74.45,458.85 74.12,458.94 73.80,459.09 73.52,459.29 73.27,459.53 73.06,459.81 72.90,460.12 72.79,460.45 72.73,460.79 72.72,460.96 72.72,474.05 72.73,473.87 72.73,474.22 72.79,474.56 72.90,474.89 73.06,475.20 73.27,475.48 73.52,475.72 73.80,475.92 74.12,476.07 74.45,476.16 74.80,476.20' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='76.32' y='472.61' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>12.4%<\/text>\n   <polygon points='453.28,397.60 496.47,397.60 496.38,397.60 496.73,397.59 497.07,397.52 497.39,397.40 497.70,397.22 497.96,397.00 498.20,396.74 498.38,396.45 498.52,396.13 498.60,395.79 498.63,395.44 498.63,395.44 498.63,382.36 498.63,382.36 498.60,382.02 498.52,381.68 498.38,381.36 498.20,381.06 497.96,380.80 497.70,380.58 497.39,380.41 497.07,380.29 496.73,380.22 496.47,380.20 453.28,380.20 453.54,380.22 453.19,380.20 452.84,380.25 452.51,380.34 452.20,380.49 451.91,380.69 451.66,380.93 451.45,381.21 451.29,381.52 451.18,381.85 451.12,382.19 451.12,382.36 451.12,395.44 451.12,395.27 451.12,395.62 451.18,395.96 451.29,396.29 451.45,396.60 451.66,396.88 451.91,397.12 452.20,397.32 452.51,397.46 452.84,397.56 453.19,397.60' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='454.72' y='394' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>21.7%<\/text>\n   <polygon points='204.97,520.36 240.25,520.36 240.17,520.36 240.51,520.35 240.85,520.28 241.18,520.15 241.48,519.98 241.75,519.76 241.98,519.50 242.17,519.21 242.30,518.89 242.39,518.55 242.41,518.20 242.41,518.20 242.41,505.12 242.41,505.12 242.39,504.77 242.30,504.44 242.17,504.12 241.98,503.82 241.75,503.56 241.48,503.34 241.18,503.17 240.85,503.04 240.51,502.98 240.25,502.96 204.97,502.96 205.23,502.98 204.88,502.96 204.53,503.00 204.20,503.10 203.89,503.25 203.60,503.45 203.35,503.69 203.14,503.97 202.98,504.27 202.87,504.60 202.81,504.95 202.81,505.12 202.81,518.20 202.81,518.03 202.81,518.38 202.87,518.72 202.98,519.05 203.14,519.36 203.35,519.63 203.60,519.88 203.89,520.07 204.20,520.22 204.53,520.32 204.88,520.36' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='206.41' y='516.76' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>7.1%<\/text>\n   <polygon points='327.14,87.63 370.34,87.63 370.25,87.63 370.60,87.62 370.94,87.55 371.26,87.42 371.56,87.25 371.83,87.03 372.06,86.77 372.25,86.48 372.39,86.16 372.47,85.82 372.50,85.47 372.50,85.47 372.50,72.39 372.50,72.39 372.47,72.04 372.39,71.71 372.25,71.39 372.06,71.09 371.83,70.83 371.56,70.61 371.26,70.44 370.94,70.32 370.60,70.25 370.34,70.23 327.14,70.23 327.41,70.25 327.06,70.23 326.71,70.27 326.38,70.37 326.06,70.52 325.78,70.72 325.53,70.96 325.32,71.24 325.16,71.54 325.05,71.87 324.99,72.22 324.98,72.39 324.98,85.47 324.99,85.30 324.99,85.65 325.05,85.99 325.16,86.32 325.32,86.63 325.53,86.91 325.78,87.15 326.06,87.34 326.38,87.49 326.71,87.59 327.06,87.63' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='328.58' y='84.03' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>58.5%<\/text>\n   <polygon points='583.36,578.07 618.65,578.07 618.56,578.06 618.91,578.05 619.25,577.98 619.57,577.86 619.87,577.68 620.14,577.46 620.37,577.20 620.56,576.91 620.70,576.59 620.78,576.25 620.81,575.91 620.81,575.91 620.81,562.82 620.81,562.82 620.78,562.48 620.70,562.14 620.56,561.82 620.37,561.53 620.14,561.27 619.87,561.05 619.57,560.87 619.25,560.75 618.91,560.68 618.65,560.66 583.36,560.66 583.62,560.68 583.27,560.67 582.93,560.71 582.59,560.80 582.28,560.95 581.99,561.15 581.74,561.39 581.53,561.67 581.37,561.98 581.26,562.31 581.21,562.65 581.20,562.82 581.20,575.91 581.21,575.73 581.21,576.08 581.26,576.42 581.37,576.75 581.53,577.06 581.74,577.34 581.99,577.58 582.28,577.78 582.59,577.93 582.93,578.02 583.27,578.06' fill='#D7191C' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='584.8' y='574.47' font-size='10.67pt' font-family='Helvetica' fill='#FFFFFF' fill-opacity='1'>0.3%<\/text>\n  <\/g>\n  <g clip-path='url(#svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26_c1)'>\n   <text x='32.91' y='576.81' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>0%<\/text>\n   <text x='24.9' y='408.43' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>20%<\/text>\n   <text x='24.9' y='240.04' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>40%<\/text>\n   <text x='24.9' y='71.65' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>60%<\/text>\n   <text transform='translate(51.92,651.02) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>Location match<\/text>\n   <text transform='translate(163.05,658.01) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>No location match<\/text>\n   <text transform='translate(282.02,661.36) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>No meaningful emp<\/text>\n   <text transform='translate(412.70,659.23) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>No MN emp record<\/text>\n   <text transform='translate(590.37,635.20) rotate(-25.00)' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>Unknown<\/text>\n   <rect x='203.85' y='700.12' width='365.46' height='14.4' fill='none' stroke='none'/>\n   <rect x='212.82' y='700.12' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='213.53' y='700.83' width='12.98' height='12.98' fill='#D7191C' fill-opacity='1' stroke='none'/>\n   <rect x='327.16' y='700.12' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='327.87' y='700.83' width='12.98' height='12.98' fill='#FDAE61' fill-opacity='1' stroke='none'/>\n   <rect x='452.72' y='700.12' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='453.43' y='700.83' width='12.98' height='12.98' fill='#ABD9E9' fill-opacity='1' stroke='none'/>\n   <text x='238.18' y='712.47' font-size='10.8pt' font-family='Arial'>hs.grad.year<\/text>\n   <text x='352.52' y='712.47' font-size='10.8pt' font-family='Arial'>hs.grad.year.2<\/text>\n   <text x='478.08' y='712.47' font-size='10.8pt' font-family='Arial'>hs.grad.year.7<\/text>\n   <text x='5.48' y='20.94' font-size='16.2pt' font-weight='bold' font-family='Arial'>Percent of individuals with employment in high school county at<\/text>\n   <text x='5.48' y='44.27' font-size='16.2pt' font-weight='bold' font-family='Arial'>time X<\/text>\n  <\/g>\n <\/g>\n<\/svg>","js":null,"uid":"svg_9efba28e_0dd1_4d79_9da7_1d34b1170a26","ratio":1,"settings":{"tooltip":{"css":".tooltip_SVGID_ { padding:5px;background:black;color:white;border-radius:2px;text-align:left; ; position:absolute;pointer-events:none;z-index:999;}","placement":"doc","opacity":0.9,"offx":10,"offy":10,"use_cursor_pos":true,"use_fill":false,"use_stroke":false,"delay_over":200,"delay_out":500},"hover":{"css":".hover_data_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_data_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_data_SVGID_ { fill:orange;stroke:black; }\nline.hover_data_SVGID_, polyline.hover_data_SVGID_ { fill:none;stroke:orange; }\nrect.hover_data_SVGID_, polygon.hover_data_SVGID_, path.hover_data_SVGID_ { fill:orange;stroke:none; }\nimage.hover_data_SVGID_ { stroke:orange; }","reactive":true,"nearest_distance":null},"hover_inv":{"css":""},"hover_key":{"css":".hover_key_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_key_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_key_SVGID_ { fill:orange;stroke:black; }\nline.hover_key_SVGID_, polyline.hover_key_SVGID_ { fill:none;stroke:orange; }\nrect.hover_key_SVGID_, polygon.hover_key_SVGID_, path.hover_key_SVGID_ { fill:orange;stroke:none; }\nimage.hover_key_SVGID_ { stroke:orange; }","reactive":true},"hover_theme":{"css":".hover_theme_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_theme_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_theme_SVGID_ { fill:orange;stroke:black; }\nline.hover_theme_SVGID_, polyline.hover_theme_SVGID_ { fill:none;stroke:orange; }\nrect.hover_theme_SVGID_, polygon.hover_theme_SVGID_, path.hover_theme_SVGID_ { fill:orange;stroke:none; }\nimage.hover_theme_SVGID_ { stroke:orange; }","reactive":true},"select":{"css":".select_data_SVGID_ { fill:red;stroke:gray; }","type":"none","only_shiny":true,"selected":[]},"select_inv":{"css":""},"select_key":{"css":".select_key_SVGID_ { fill:red;stroke:black;cursor:pointer; }\ntext.select_key_SVGID_ { stroke:none;fill:red; }\ncircle.select_key_SVGID_ { fill:red;stroke:black; }\nline.select_key_SVGID_, polyline.select_key_SVGID_ { fill:none;stroke:red; }\nrect.select_key_SVGID_, polygon.select_key_SVGID_, path.select_key_SVGID_ { fill:red;stroke:none; }\nimage.select_key_SVGID_ { stroke:red; }","type":"single","only_shiny":true,"selected":[]},"select_theme":{"css":".select_theme_SVGID_ { fill:red;stroke:black;cursor:pointer; }\ntext.select_theme_SVGID_ { stroke:none;fill:red; }\ncircle.select_theme_SVGID_ { fill:red;stroke:black; }\nline.select_theme_SVGID_, polyline.select_theme_SVGID_ { fill:none;stroke:red; }\nrect.select_theme_SVGID_, polygon.select_theme_SVGID_, path.select_theme_SVGID_ { fill:red;stroke:none; }\nimage.select_theme_SVGID_ { stroke:red; }","type":"single","only_shiny":true,"selected":[]},"zoom":{"min":1,"max":1,"duration":300},"toolbar":{"position":"topright","pngname":"diagram","tooltips":null,"hidden":[],"delay_over":200,"delay_out":500},"sizing":{"rescale":false,"width":1}}},"evals":[],"jsHooks":[]}</script>
 <p><br></p>
 <p>Okay, so let’s see if we can determine what factors play a role in an
 individuals that have meaningful employment in the county at each time
-X.</p>
+X. We will start with whether the individuals have meaningful employment
+in the same county as their high school for each time of graduation + x
+years.</p>
+<p><br></p>
+</div>
+<div id="section-steps-in-analysis" class="section level1">
+<h1>Steps in analysis</h1>
+<p>Our dependent variable - the individual has meaningful employment in
+same location X as their high school - has 4 different outcomes.</p>
+<ol style="list-style-type: decimal">
+<li>Location match: the individual has
+<ul>
+<li>a MN employment record at time X</li>
+<li>has meaningful employment at time X</li>
+<li>is employed in the same location X as their high school.</li>
+</ul></li>
+<li>No location match: the individual has
+<ul>
+<li>a MN employment record at time X</li>
+<li>has meaningful employment at time X</li>
+<li>does NOT have employment in the same location X as their high
+school.</li>
+</ul></li>
+<li>No meaningful emp: the individual has
+<ul>
+<li>a MN employment record at time X</li>
+<li>the employment is not meaningful at time X.</li>
+</ul></li>
+<li>No MN emp record: the individual has
+<ul>
+<li>NO MN employment record at time X.</li>
+</ul></li>
+</ol>
+<p>For each time X we will analyze whether the independent variables are
+good at predicting whether an individual has a MN employment record and
+whether an individual has meaningful employment. Then, we can check to
+see if the same variables can predict whether an individual has
+meaningful employment in the same location X as their high school.</p>
+<p><br></p>
+</div>
+<div id="section-time-x---grad-year" class="section level1">
+<h1>Time X - grad year</h1>
+<p>We will start by examining whether an individual has a MN employment
+record, has meaningful employment, and whether the meaningful employment
+is in the same location X as their high school, starting with county,
+then EDR, then the research region, and ending with MN.</p>
+<div id="section-mn-emp-record" class="section level2">
+<h2>MN Emp record</h2>
+<pre><code>## 
+## Call:
+## glm(formula = mn.emp.record ~ ., family = binomial, data = mn.emp.record.grad.year.dep.var)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                  -1.992e-01  2.159e-01  -0.923
+## GenderM                                       3.506e-01  2.733e-02  12.826
+## LimitedEnglishProficiencyIndicatorY           3.245e-01  8.871e-02   3.658
+## HomelessIndicatorY                           -6.480e-01  2.373e-01  -2.731
+## economic.status1                             -1.795e-01  2.988e-02  -6.007
+## pseo.participant1                             4.160e-02  3.364e-02   1.237
+## SpecialEdStatus1                              1.203e-01  3.949e-02   3.045
+## non.english.home1                             4.033e-01  5.224e-02   7.720
+## Dem_DescTown/rural mix                       -3.664e-01  3.890e-02  -9.419
+## Dem_DescUrban/town/rural mix                 -7.054e-02  5.367e-02  -1.314
+## edrEDR 6W- Upper Minnesota Valley             4.252e-01  4.117e-02  10.328
+## edrEDR 8 - Southwest                          4.224e-01  3.800e-02  11.117
+## took.ACTYes                                  -2.653e-01  3.477e-02  -7.630
+## ap.exam1                                      1.106e-01  4.113e-02   2.689
+## total.cte.courses.taken                      -1.855e-02  3.697e-03  -5.018
+## cte.achievementCTE Participant               -1.841e-02  3.464e-02  -0.531
+## cte.achievementNo CTE                         2.453e-01  4.093e-02   5.993
+## avg.cte.intensity                             1.572e-02  8.848e-03   1.777
+## MCA.M                                        -2.021e-02  1.683e-02  -1.201
+## MCA.R                                        -1.746e-01  1.597e-02 -10.939
+## MCA.S                                        -3.179e-03  1.468e-02  -0.216
+## sat.taken1                                    4.877e-01  1.512e-01   3.225
+## attended.psYes                               -4.807e-01  3.727e-02 -12.898
+## ps.grad1                                     -1.373e-01  4.844e-02  -2.833
+## highest.cred.levelBachelor degree             2.721e-01  4.963e-02   5.483
+## highest.cred.levelLess than Associate Degree -1.332e-01  5.781e-02  -2.304
+## highest.cred.levelMaster degree or higher     1.038e-01  2.674e-01   0.388
+## avg.unemp.rate                                6.412e-02  1.322e-02   4.850
+## wages.3year.avg                              -1.423e-05  4.640e-06  -3.067
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                  0.356226    
+## GenderM                                       &lt; 2e-16 ***
+## LimitedEnglishProficiencyIndicatorY          0.000254 ***
+## HomelessIndicatorY                           0.006313 ** 
+## economic.status1                             1.89e-09 ***
+## pseo.participant1                            0.216269    
+## SpecialEdStatus1                             0.002325 ** 
+## non.english.home1                            1.17e-14 ***
+## Dem_DescTown/rural mix                        &lt; 2e-16 ***
+## Dem_DescUrban/town/rural mix                 0.188748    
+## edrEDR 6W- Upper Minnesota Valley             &lt; 2e-16 ***
+## edrEDR 8 - Southwest                          &lt; 2e-16 ***
+## took.ACTYes                                  2.36e-14 ***
+## ap.exam1                                     0.007169 ** 
+## total.cte.courses.taken                      5.22e-07 ***
+## cte.achievementCTE Participant               0.595196    
+## cte.achievementNo CTE                        2.06e-09 ***
+## avg.cte.intensity                            0.075561 .  
+## MCA.M                                        0.229736    
+## MCA.R                                         &lt; 2e-16 ***
+## MCA.S                                        0.828616    
+## sat.taken1                                   0.001261 ** 
+## attended.psYes                                &lt; 2e-16 ***
+## ps.grad1                                     0.004604 ** 
+## highest.cred.levelBachelor degree            4.18e-08 ***
+## highest.cred.levelLess than Associate Degree 0.021204 *  
+## highest.cred.levelMaster degree or higher    0.697825    
+## avg.unemp.rate                               1.23e-06 ***
+## wages.3year.avg                              0.002159 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 39135  on 37467  degrees of freedom
+## Residual deviance: 37211  on 37439  degrees of freedom
+##   (582 observations deleted due to missingness)
+## AIC: 37269
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.04916951</code></pre>
+<p><br></p>
+<p>The model above provides the prediction results on whether an
+individual has a MN employment record or not. The model only has a 5%
+predictive power. Let’s eliminate the insignificant variables and see if
+the model prediction improves.</p>
+<p><br></p>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Predictor
+</th>
+<th style="text-align:center;">
+B
+</th>
+<th style="text-align:center;">
+SE
+</th>
+<th style="text-align:center;">
+t
+</th>
+<th style="text-align:center;">
+p
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Intercept
+</td>
+<td style="text-align:center;">
+-0.17
+</td>
+<td style="text-align:center;">
+0.20
+</td>
+<td style="text-align:center;">
+-0.890
+</td>
+<td style="text-align:center;">
+0.374
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gender - male
+</td>
+<td style="text-align:center;">
+0.34
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+12.724
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Limited english proficiency
+</td>
+<td style="text-align:center;">
+0.32
+</td>
+<td style="text-align:center;">
+0.09
+</td>
+<td style="text-align:center;">
+3.694
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Homeless
+</td>
+<td style="text-align:center;">
+-0.74
+</td>
+<td style="text-align:center;">
+0.24
+</td>
+<td style="text-align:center;">
+-3.123
+</td>
+<td style="text-align:center;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Free or reduced lunch
+</td>
+<td style="text-align:center;">
+-0.19
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+-6.472
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Special Ed Status
+</td>
+<td style="text-align:center;">
+0.12
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+3.160
+</td>
+<td style="text-align:center;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Non-english speaker at home
+</td>
+<td style="text-align:center;">
+0.43
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+8.470
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.38
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+-10.094
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Urban/town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.07
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+-1.371
+</td>
+<td style="text-align:center;">
+0.170
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 6W high school
+</td>
+<td style="text-align:center;">
+0.42
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+10.477
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 8 high school
+</td>
+<td style="text-align:center;">
+0.41
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+11.257
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Took ACT
+</td>
+<td style="text-align:center;">
+-0.26
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+-7.876
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Took AP exam
+</td>
+<td style="text-align:center;">
+0.11
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+2.664
+</td>
+<td style="text-align:center;">
+0.008
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total CTE courses taken
+</td>
+<td style="text-align:center;">
+-0.02
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+-4.785
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CTE participant
+</td>
+<td style="text-align:center;">
+-0.02
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+-0.662
+</td>
+<td style="text-align:center;">
+0.508
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No CTE taken
+</td>
+<td style="text-align:center;">
+0.23
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+5.789
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MCA - reading score
+</td>
+<td style="text-align:center;">
+-0.18
+</td>
+<td style="text-align:center;">
+0.01
+</td>
+<td style="text-align:center;">
+-13.786
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SAT taken
+</td>
+<td style="text-align:center;">
+0.47
+</td>
+<td style="text-align:center;">
+0.15
+</td>
+<td style="text-align:center;">
+3.111
+</td>
+<td style="text-align:center;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Attended post-secondary
+</td>
+<td style="text-align:center;">
+-0.48
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+-12.964
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Graduated from post-secondary
+</td>
+<td style="text-align:center;">
+-0.15
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+-3.072
+</td>
+<td style="text-align:center;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earned Bachelor’s
+</td>
+<td style="text-align:center;">
+0.27
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+5.469
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Attended college, no degree
+</td>
+<td style="text-align:center;">
+-0.14
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+-2.501
+</td>
+<td style="text-align:center;">
+0.012
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earned Masters
+</td>
+<td style="text-align:center;">
+0.11
+</td>
+<td style="text-align:center;">
+0.27
+</td>
+<td style="text-align:center;">
+0.403
+</td>
+<td style="text-align:center;">
+0.687
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg unemployment rate during high school
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+0.01
+</td>
+<td style="text-align:center;">
+5.007
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg wages of high school county
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+-3.602
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+</tbody>
+</table>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.04956467</code></pre>
+<p><br></p>
+<p>The final model only has a 5% predictive power. This isn’t good and
+indicates that there are a lot of other elements that play a role into
+whether an individual has a MN employment record.</p>
+<p><br></p>
+</div>
+<div id="section-meaningful-emp" class="section level2">
+<h2>Meaningful emp</h2>
+<p>Next, let’s check to see if the model can explain much of whether an
+individual has meaningful employment or not. We will filter out all
+individuals that do not have a MN employment record first. The dependent
+variable will then be a binomial of;</p>
+<ol style="list-style-type: decimal">
+<li>Meaningful emp
+<ul>
+<li>the individual had a MN employment record and,</li>
+<li>had meaningful employment the year of graduating high school.</li>
+</ul></li>
+<li>No meaningful emp
+<ul>
+<li>the individual had a MN employment record and,</li>
+<li>did NOT have meaningful employment the year of graduating high
+school.</li>
+</ul></li>
+</ol>
+<p><br></p>
+<pre><code>##  [1] &quot;meaningful.emp&quot;                     &quot;Gender&quot;                            
+##  [3] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
+##  [5] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
+##  [7] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;                  
+##  [9] &quot;Dem_Desc&quot;                           &quot;edr&quot;                               
+## [11] &quot;took.ACT&quot;                           &quot;ap.exam&quot;                           
+## [13] &quot;total.cte.courses.taken&quot;            &quot;cte.achievement&quot;                   
+## [15] &quot;avg.cte.intensity&quot;                  &quot;MCA.M&quot;                             
+## [17] &quot;MCA.R&quot;                              &quot;MCA.S&quot;                             
+## [19] &quot;sat.taken&quot;                          &quot;attended.ps&quot;                       
+## [21] &quot;ps.grad&quot;                            &quot;highest.cred.level&quot;                
+## [23] &quot;avg.unemp.rate&quot;                     &quot;wages.3year.avg&quot;</code></pre>
+<pre><code>## # A tibble: 6 × 24
+##   meaningful.emp Gender LimitedEnglishProfic…¹ HomelessIndicator economic.status
+##   &lt;fct&gt;          &lt;fct&gt;  &lt;fct&gt;                  &lt;fct&gt;             &lt;fct&gt;          
+## 1 No meaningful… M      N                      N                 0              
+## 2 No meaningful… F      N                      N                 0              
+## 3 Meaningful emp M      N                      N                 1              
+## 4 No meaningful… F      N                      N                 0              
+## 5 No meaningful… F      N                      N                 0              
+## 6 No meaningful… F      N                      N                 0              
+## # ℹ abbreviated name: ¹​LimitedEnglishProficiencyIndicator
+## # ℹ 19 more variables: pseo.participant &lt;fct&gt;, SpecialEdStatus &lt;fct&gt;,
+## #   non.english.home &lt;fct&gt;, Dem_Desc &lt;fct&gt;, edr &lt;fct&gt;, took.ACT &lt;fct&gt;,
+## #   ap.exam &lt;fct&gt;, total.cte.courses.taken &lt;dbl&gt;, cte.achievement &lt;fct&gt;,
+## #   avg.cte.intensity &lt;dbl&gt;, MCA.M &lt;dbl&gt;, MCA.R &lt;dbl&gt;, MCA.S &lt;dbl&gt;,
+## #   sat.taken &lt;fct&gt;, attended.ps &lt;fct&gt;, ps.grad &lt;fct&gt;,
+## #   highest.cred.level &lt;fct&gt;, avg.unemp.rate &lt;dbl&gt;, wages.3year.avg &lt;dbl&gt;</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+x
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Meaningful emp
+</td>
+<td style="text-align:right;">
+7439
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No meaningful emp
+</td>
+<td style="text-align:right;">
+22329
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>There are a total of 29,768 individuals that had a MN employment
+record the year they graduated from high school. The table above shows
+that 25% of the individuals with a MN employment record in the dataset
+had meaningful employment at the time of their graduation.</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = meaningful.emp ~ ., family = binomial, data = meaningful.emp.grad.year)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                  -6.631e-01  2.445e-01  -2.713
+## GenderM                                      -1.288e-01  3.018e-02  -4.268
+## LimitedEnglishProficiencyIndicatorY          -1.475e-01  1.103e-01  -1.338
+## HomelessIndicatorY                            1.925e-01  1.955e-01   0.985
+## economic.status1                             -2.965e-01  3.165e-02  -9.368
+## pseo.participant1                             2.448e-01  3.749e-02   6.531
+## SpecialEdStatus1                              3.151e-01  4.499e-02   7.003
+## non.english.home1                            -2.547e-01  5.724e-02  -4.449
+## Dem_DescTown/rural mix                       -2.588e-01  4.641e-02  -5.576
+## Dem_DescUrban/town/rural mix                 -1.627e-01  6.392e-02  -2.545
+## edrEDR 6W- Upper Minnesota Valley             3.229e-01  4.380e-02   7.372
+## edrEDR 8 - Southwest                          3.330e-01  3.893e-02   8.555
+## took.ACTYes                                   4.042e-01  3.535e-02  11.434
+## ap.exam1                                      3.409e-01  5.034e-02   6.772
+## total.cte.courses.taken                      -2.099e-02  3.712e-03  -5.655
+## cte.achievementCTE Participant                1.212e-01  3.709e-02   3.267
+## cte.achievementNo CTE                         1.693e-01  4.694e-02   3.607
+## avg.cte.intensity                             2.022e-02  9.925e-03   2.037
+## MCA.M                                        -1.424e-03  1.856e-02  -0.077
+## MCA.R                                         6.340e-02  1.793e-02   3.536
+## MCA.S                                         2.517e-04  1.649e-02   0.015
+## sat.taken1                                    9.461e-01  3.189e-01   2.967
+## attended.psYes                                4.573e-01  3.872e-02  11.811
+## ps.grad1                                     -8.025e-02  4.630e-02  -1.733
+## highest.cred.levelBachelor degree             9.659e-01  5.693e-02  16.968
+## highest.cred.levelLess than Associate Degree  9.193e-02  5.483e-02   1.677
+## highest.cred.levelMaster degree or higher     1.868e+00  5.914e-01   3.159
+## avg.unemp.rate                                4.831e-02  1.489e-02   3.245
+## wages.3year.avg                               1.858e-05  5.307e-06   3.500
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                  0.006672 ** 
+## GenderM                                      1.97e-05 ***
+## LimitedEnglishProficiencyIndicatorY          0.180967    
+## HomelessIndicatorY                           0.324576    
+## economic.status1                              &lt; 2e-16 ***
+## pseo.participant1                            6.53e-11 ***
+## SpecialEdStatus1                             2.51e-12 ***
+## non.english.home1                            8.63e-06 ***
+## Dem_DescTown/rural mix                       2.46e-08 ***
+## Dem_DescUrban/town/rural mix                 0.010922 *  
+## edrEDR 6W- Upper Minnesota Valley            1.68e-13 ***
+## edrEDR 8 - Southwest                          &lt; 2e-16 ***
+## took.ACTYes                                   &lt; 2e-16 ***
+## ap.exam1                                     1.27e-11 ***
+## total.cte.courses.taken                      1.56e-08 ***
+## cte.achievementCTE Participant               0.001087 ** 
+## cte.achievementNo CTE                        0.000310 ***
+## avg.cte.intensity                            0.041609 *  
+## MCA.M                                        0.938820    
+## MCA.R                                        0.000407 ***
+## MCA.S                                        0.987822    
+## sat.taken1                                   0.003011 ** 
+## attended.psYes                                &lt; 2e-16 ***
+## ps.grad1                                     0.083044 .  
+## highest.cred.levelBachelor degree             &lt; 2e-16 ***
+## highest.cred.levelLess than Associate Degree 0.093612 .  
+## highest.cred.levelMaster degree or higher    0.001584 ** 
+## avg.unemp.rate                               0.001176 ** 
+## wages.3year.avg                              0.000465 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 32991  on 29361  degrees of freedom
+## Residual deviance: 29930  on 29333  degrees of freedom
+##   (406 observations deleted due to missingness)
+## AIC: 29988
+## 
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.09277888</code></pre>
+<p><br></p>
+<p>The model above explains 9.3% of whether an individual has meaningful
+employment or not the year they graduate high school among all
+individuals that had a MN employment record. We will see if the model
+improves by eliminating variables that are not significant.</p>
+<pre><code>## 
+## Call:
+## glm(formula = meaningful.emp ~ ., family = binomial, data = meaningful.emp.grad.year.2)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                  -7.468e-01  2.206e-01  -3.386
+## GenderM                                      -1.291e-01  2.959e-02  -4.364
+## economic.status1                             -2.912e-01  3.151e-02  -9.241
+## pseo.participant1                             2.464e-01  3.604e-02   6.836
+## SpecialEdStatus1                              3.192e-01  4.469e-02   7.143
+## non.english.home1                            -2.850e-01  5.251e-02  -5.427
+## Dem_DescTown/rural mix                       -2.565e-01  4.593e-02  -5.584
+## Dem_DescUrban/town/rural mix                 -1.613e-01  6.271e-02  -2.573
+## edrEDR 6W- Upper Minnesota Valley             3.216e-01  4.352e-02   7.389
+## edrEDR 8 - Southwest                          3.302e-01  3.826e-02   8.631
+## took.ACTYes                                   4.068e-01  3.495e-02  11.639
+## ap.exam1                                      3.416e-01  4.973e-02   6.869
+## total.cte.courses.taken                      -2.099e-02  3.682e-03  -5.700
+## cte.achievementCTE Participant                1.211e-01  3.678e-02   3.292
+## cte.achievementNo CTE                         1.682e-01  4.657e-02   3.612
+## avg.cte.intensity                             2.022e-02  9.909e-03   2.041
+## MCA.R                                         6.576e-02  1.550e-02   4.243
+## sat.taken1                                    9.505e-01  3.189e-01   2.981
+## attended.psYes                                4.329e-01  3.617e-02  11.969
+## highest.cred.levelBachelor degree             9.648e-01  5.671e-02  17.011
+## highest.cred.levelLess than Associate Degree  1.490e-01  4.439e-02   3.357
+## highest.cred.levelMaster degree or higher     1.867e+00  5.914e-01   3.157
+## avg.unemp.rate                                4.775e-02  1.452e-02   3.289
+## wages.3year.avg                               1.908e-05  4.769e-06   4.001
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                  0.000710 ***
+## GenderM                                      1.28e-05 ***
+## economic.status1                              &lt; 2e-16 ***
+## pseo.participant1                            8.16e-12 ***
+## SpecialEdStatus1                             9.15e-13 ***
+## non.english.home1                            5.73e-08 ***
+## Dem_DescTown/rural mix                       2.34e-08 ***
+## Dem_DescUrban/town/rural mix                 0.010090 *  
+## edrEDR 6W- Upper Minnesota Valley            1.48e-13 ***
+## edrEDR 8 - Southwest                          &lt; 2e-16 ***
+## took.ACTYes                                   &lt; 2e-16 ***
+## ap.exam1                                     6.44e-12 ***
+## total.cte.courses.taken                      1.20e-08 ***
+## cte.achievementCTE Participant               0.000993 ***
+## cte.achievementNo CTE                        0.000304 ***
+## avg.cte.intensity                            0.041293 *  
+## MCA.R                                        2.21e-05 ***
+## sat.taken1                                   0.002876 ** 
+## attended.psYes                                &lt; 2e-16 ***
+## highest.cred.levelBachelor degree             &lt; 2e-16 ***
+## highest.cred.levelLess than Associate Degree 0.000788 ***
+## highest.cred.levelMaster degree or higher    0.001592 ** 
+## avg.unemp.rate                               0.001004 ** 
+## wages.3year.avg                              6.32e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 32991  on 29361  degrees of freedom
+## Residual deviance: 29936  on 29338  degrees of freedom
+##   (406 observations deleted due to missingness)
+## AIC: 29984
+## 
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##  McFadden 
+## 0.0926008</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Predictor
+</th>
+<th style="text-align:center;">
+B
+</th>
+<th style="text-align:center;">
+SE
+</th>
+<th style="text-align:center;">
+t
+</th>
+<th style="text-align:center;">
+p
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Intercept
+</td>
+<td style="text-align:center;">
+-0.75
+</td>
+<td style="text-align:center;">
+0.22
+</td>
+<td style="text-align:center;">
+-3.386
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gender - male
+</td>
+<td style="text-align:center;">
+-0.13
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+-4.364
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Free or reduced lunch
+</td>
+<td style="text-align:center;">
+-0.29
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+-9.241
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PSEO participant
+</td>
+<td style="text-align:center;">
+0.25
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+6.836
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Special Ed Status
+</td>
+<td style="text-align:center;">
+0.32
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+7.143
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Non-english speaker at home
+</td>
+<td style="text-align:center;">
+-0.28
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+-5.427
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.26
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+-5.584
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Urban/town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.16
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+-2.573
+</td>
+<td style="text-align:center;">
+0.010
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 6W high school
+</td>
+<td style="text-align:center;">
+0.32
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+7.389
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 8 high school
+</td>
+<td style="text-align:center;">
+0.33
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+8.631
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Took ACT
+</td>
+<td style="text-align:center;">
+0.41
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+11.639
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Took AP exam
+</td>
+<td style="text-align:center;">
+0.34
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+6.869
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total CTE courses taken
+</td>
+<td style="text-align:center;">
+-0.02
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+-5.700
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CTE participant
+</td>
+<td style="text-align:center;">
+0.12
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+3.292
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No CTE taken
+</td>
+<td style="text-align:center;">
+0.17
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+3.612
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg CTE intensity of high school
+</td>
+<td style="text-align:center;">
+0.02
+</td>
+<td style="text-align:center;">
+0.01
+</td>
+<td style="text-align:center;">
+2.041
+</td>
+<td style="text-align:center;">
+0.041
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MCA - reading score
+</td>
+<td style="text-align:center;">
+0.07
+</td>
+<td style="text-align:center;">
+0.02
+</td>
+<td style="text-align:center;">
+4.243
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SAT taken
+</td>
+<td style="text-align:center;">
+0.95
+</td>
+<td style="text-align:center;">
+0.32
+</td>
+<td style="text-align:center;">
+2.981
+</td>
+<td style="text-align:center;">
+0.003
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Attended post-secondary
+</td>
+<td style="text-align:center;">
+0.43
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+11.969
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earned Bachelor’s
+</td>
+<td style="text-align:center;">
+0.96
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+17.011
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Attended college, no degree
+</td>
+<td style="text-align:center;">
+0.15
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+3.357
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earned Masters
+</td>
+<td style="text-align:center;">
+1.87
+</td>
+<td style="text-align:center;">
+0.59
+</td>
+<td style="text-align:center;">
+3.157
+</td>
+<td style="text-align:center;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg unemployment rate during high school
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+0.01
+</td>
+<td style="text-align:center;">
+3.289
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg wages of high school county
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+4.001
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>The model doesn’t improve when eliminating insignificant variables.
+The final model explains 9.3% of whether an individual with a MN
+employment record has meaningful employment the year of their high
+school graduation.</p>
+<p><br></p>
+</div>
+<div id="section-location-match" class="section level2">
+<h2>Location match</h2>
+<div id="section-county" class="section level3">
+<h3>County</h3>
+<p>Okay, now we can see how the model performs in predicting whether an
+individual has meaningful employment in the same county as the high
+school from which they graduated. The dataset used in the model will
+have individuals that meet the following criteria at the time of
+graduation;</p>
+<ul>
+<li>has MN employment record</li>
+<li>has meaningful employment.</li>
+</ul>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+x
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Location match
+</td>
+<td style="text-align:right;">
+4720
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No location match
+</td>
+<td style="text-align:right;">
+2719
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>After filtering for individuals that have a MN employment record and
+had meaningful employment, there are a total of 7,439 individuals in the
+dataset. The table above shows that 63% of those individuals had
+meaninful employment in the same county as their high school.</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = hs.grad.year.county.match ~ ., family = binomial, 
+##     data = county.match.grad.year)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                  -1.691e+00  4.279e-01  -3.953
+## GenderM                                      -1.755e-02  5.324e-02  -0.330
+## LimitedEnglishProficiencyIndicatorY           1.555e-01  1.710e-01   0.909
+## HomelessIndicatorY                            8.090e-02  3.180e-01   0.254
+## economic.status1                              2.321e-01  5.396e-02   4.301
+## pseo.participant1                             1.398e-02  6.760e-02   0.207
+## SpecialEdStatus1                              1.054e-01  7.367e-02   1.431
+## non.english.home1                            -3.256e-01  9.546e-02  -3.410
+## Dem_DescTown/rural mix                       -3.018e-01  8.088e-02  -3.731
+## Dem_DescUrban/town/rural mix                 -2.233e-01  1.127e-01  -1.981
+## edrEDR 6W- Upper Minnesota Valley             5.587e-01  7.381e-02   7.570
+## edrEDR 8 - Southwest                          3.179e-02  6.685e-02   0.476
+## took.ACTYes                                   2.067e-02  5.833e-02   0.354
+## ap.exam1                                     -3.014e-01  9.965e-02  -3.024
+## total.cte.courses.taken                      -5.105e-03  6.315e-03  -0.808
+## cte.achievementCTE Participant               -5.216e-02  6.465e-02  -0.807
+## cte.achievementNo CTE                         1.248e-01  8.174e-02   1.526
+## avg.cte.intensity                            -3.416e-02  1.702e-02  -2.007
+## MCA.M                                         8.361e-02  3.260e-02   2.565
+## MCA.R                                        -1.723e-02  3.064e-02  -0.562
+## MCA.S                                        -2.423e-03  2.900e-02  -0.084
+## sat.taken1                                    8.382e-01  6.206e-01   1.351
+## attended.psYes                               -1.306e-01  6.349e-02  -2.058
+## ps.grad1                                     -1.051e-01  8.195e-02  -1.282
+## highest.cred.levelBachelor degree            -1.562e-01  1.110e-01  -1.407
+## highest.cred.levelLess than Associate Degree  2.258e-02  9.807e-02   0.230
+## highest.cred.levelMaster degree or higher    -1.194e+01  1.844e+02  -0.065
+## avg.unemp.rate                                7.936e-02  2.592e-02   3.061
+## wages.3year.avg                               2.405e-05  9.327e-06   2.579
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                  7.72e-05 ***
+## GenderM                                      0.741629    
+## LimitedEnglishProficiencyIndicatorY          0.363343    
+## HomelessIndicatorY                           0.799152    
+## economic.status1                             1.70e-05 ***
+## pseo.participant1                            0.836164    
+## SpecialEdStatus1                             0.152457    
+## non.english.home1                            0.000649 ***
+## Dem_DescTown/rural mix                       0.000191 ***
+## Dem_DescUrban/town/rural mix                 0.047558 *  
+## edrEDR 6W- Upper Minnesota Valley            3.72e-14 ***
+## edrEDR 8 - Southwest                         0.634423    
+## took.ACTYes                                  0.723043    
+## ap.exam1                                     0.002494 ** 
+## total.cte.courses.taken                      0.418875    
+## cte.achievementCTE Participant               0.419791    
+## cte.achievementNo CTE                        0.126943    
+## avg.cte.intensity                            0.044766 *  
+## MCA.M                                        0.010329 *  
+## MCA.R                                        0.573952    
+## MCA.S                                        0.933396    
+## sat.taken1                                   0.176822    
+## attended.psYes                               0.039614 *  
+## ps.grad1                                     0.199758    
+## highest.cred.levelBachelor degree            0.159315    
+## highest.cred.levelLess than Associate Degree 0.817906    
+## highest.cred.levelMaster degree or higher    0.948380    
+## avg.unemp.rate                               0.002204 ** 
+## wages.3year.avg                              0.009909 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 9603.0  on 7325  degrees of freedom
+## Residual deviance: 9387.4  on 7297  degrees of freedom
+##   (113 observations deleted due to missingness)
+## AIC: 9445.4
+## 
+## Number of Fisher Scoring iterations: 11</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.02244681</code></pre>
+<p>The analysis above shows that the model only has a 2% predictive
+power. In addition, there are very few variables that are significant.
+Let’s try eliminating the insignificant variables and see if the model
+improves.</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = hs.grad.year.county.match ~ ., family = binomial, 
+##     data = county.match.grad.year.2)
+## 
+## Coefficients:
+##                                     Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)                       -1.735e+00  3.724e-01  -4.659 3.18e-06 ***
+## economic.status1                   2.587e-01  5.283e-02   4.896 9.77e-07 ***
+## non.english.home1                 -2.904e-01  8.476e-02  -3.426 0.000612 ***
+## Dem_DescTown/rural mix            -3.024e-01  7.932e-02  -3.812 0.000138 ***
+## Dem_DescUrban/town/rural mix      -2.333e-01  1.093e-01  -2.134 0.032842 *  
+## edrEDR 6W- Upper Minnesota Valley  5.456e-01  7.321e-02   7.453 9.12e-14 ***
+## edrEDR 8 - Southwest               2.057e-02  6.542e-02   0.314 0.753214    
+## ap.exam1                          -3.076e-01  9.780e-02  -3.145 0.001658 ** 
+## avg.cte.intensity                 -4.509e-02  1.552e-02  -2.904 0.003679 ** 
+## MCA.M                              5.514e-02  2.581e-02   2.137 0.032628 *  
+## attended.psYes                    -2.011e-01  5.426e-02  -3.706 0.000211 ***
+## avg.unemp.rate                     7.118e-02  2.446e-02   2.910 0.003619 ** 
+## wages.3year.avg                    2.688e-05  7.907e-06   3.400 0.000674 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 9603.0  on 7325  degrees of freedom
+## Residual deviance: 9411.5  on 7313  degrees of freedom
+##   (113 observations deleted due to missingness)
+## AIC: 9437.5
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.01994124</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Predictor
+</th>
+<th style="text-align:center;">
+B
+</th>
+<th style="text-align:center;">
+SE
+</th>
+<th style="text-align:center;">
+t
+</th>
+<th style="text-align:center;">
+p
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Intercept
+</td>
+<td style="text-align:center;">
+-1.74
+</td>
+<td style="text-align:center;">
+0.37
+</td>
+<td style="text-align:center;">
+-4.659
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Free or reduced lunch
+</td>
+<td style="text-align:center;">
+0.26
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+4.896
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Non-english speaker at home
+</td>
+<td style="text-align:center;">
+-0.29
+</td>
+<td style="text-align:center;">
+0.08
+</td>
+<td style="text-align:center;">
+-3.426
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.30
+</td>
+<td style="text-align:center;">
+0.08
+</td>
+<td style="text-align:center;">
+-3.812
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Urban/town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.23
+</td>
+<td style="text-align:center;">
+0.11
+</td>
+<td style="text-align:center;">
+-2.134
+</td>
+<td style="text-align:center;">
+0.033
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 6W high school
+</td>
+<td style="text-align:center;">
+0.55
+</td>
+<td style="text-align:center;">
+0.07
+</td>
+<td style="text-align:center;">
+7.453
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 8 high school
+</td>
+<td style="text-align:center;">
+0.02
+</td>
+<td style="text-align:center;">
+0.07
+</td>
+<td style="text-align:center;">
+0.314
+</td>
+<td style="text-align:center;">
+0.753
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Took AP exam
+</td>
+<td style="text-align:center;">
+-0.31
+</td>
+<td style="text-align:center;">
+0.10
+</td>
+<td style="text-align:center;">
+-3.145
+</td>
+<td style="text-align:center;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg CTE intensity of high school
+</td>
+<td style="text-align:center;">
+-0.05
+</td>
+<td style="text-align:center;">
+0.02
+</td>
+<td style="text-align:center;">
+-2.904
+</td>
+<td style="text-align:center;">
+0.004
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MCA - Math score
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+2.137
+</td>
+<td style="text-align:center;">
+0.033
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Attended post-secondary
+</td>
+<td style="text-align:center;">
+-0.20
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+-3.706
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg unemployment rate during high school
+</td>
+<td style="text-align:center;">
+0.07
+</td>
+<td style="text-align:center;">
+0.02
+</td>
+<td style="text-align:center;">
+2.910
+</td>
+<td style="text-align:center;">
+0.004
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg wages of high school county
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+3.400
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>The model doesn’t improve when eliminating the insignficant
+variables. It still only has a 2% predictive power.</p>
+<p><br></p>
+</div>
+<div id="section-edr" class="section level3">
+<h3>EDR</h3>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+x
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Location match
+</td>
+<td style="text-align:right;">
+5655
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No location match
+</td>
+<td style="text-align:right;">
+1788
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>After filtering for individuals that have a MN employment record and
+had meaningful employment, there are a total of 7,443 individuals in the
+dataset. The table above shows that 76% of those individuals had
+meaningful employment in the same edr as their high school.</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = hs.grad.year.edr.match ~ ., family = binomial, 
+##     data = edr.match.grad.year)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                  -3.457e+00  5.082e-01  -6.802
+## GenderM                                       3.345e-02  6.071e-02   0.551
+## LimitedEnglishProficiencyIndicatorY           7.433e-02  1.991e-01   0.373
+## HomelessIndicatorY                            1.103e-01  3.538e-01   0.312
+## economic.status1                              1.372e-01  6.169e-02   2.225
+## pseo.participant1                            -2.393e-02  7.688e-02  -0.311
+## SpecialEdStatus1                              1.007e-01  8.439e-02   1.193
+## non.english.home1                            -1.510e-01  1.099e-01  -1.374
+## Dem_DescTown/rural mix                        3.424e-01  9.933e-02   3.447
+## Dem_DescUrban/town/rural mix                  4.732e-01  1.344e-01   3.520
+## edrEDR 6W- Upper Minnesota Valley             6.466e-01  7.917e-02   8.168
+## edrEDR 8 - Southwest                         -5.166e-01  7.841e-02  -6.589
+## took.ACTYes                                   1.024e-02  6.650e-02   0.154
+## ap.exam1                                     -2.011e-01  1.131e-01  -1.778
+## total.cte.courses.taken                      -9.516e-03  7.314e-03  -1.301
+## cte.achievementCTE Participant               -4.797e-02  7.386e-02  -0.649
+## cte.achievementNo CTE                         6.210e-02  9.302e-02   0.668
+## avg.cte.intensity                            -5.239e-02  1.983e-02  -2.642
+## MCA.M                                         1.308e-01  3.724e-02   3.512
+## MCA.R                                         1.773e-02  3.501e-02   0.506
+## MCA.S                                        -6.217e-02  3.309e-02  -1.879
+## sat.taken1                                    7.282e-01  6.538e-01   1.114
+## attended.psYes                               -3.157e-02  7.190e-02  -0.439
+## ps.grad1                                     -1.190e-01  9.510e-02  -1.251
+## highest.cred.levelBachelor degree            -2.725e-01  1.290e-01  -2.113
+## highest.cred.levelLess than Associate Degree -8.488e-02  1.127e-01  -0.753
+## highest.cred.levelMaster degree or higher    -1.150e+01  1.837e+02  -0.063
+## avg.unemp.rate                                8.566e-02  2.945e-02   2.908
+## wages.3year.avg                               4.463e-05  1.115e-05   4.002
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                  1.03e-11 ***
+## GenderM                                      0.581700    
+## LimitedEnglishProficiencyIndicatorY          0.708855    
+## HomelessIndicatorY                           0.755172    
+## economic.status1                             0.026100 *  
+## pseo.participant1                            0.755656    
+## SpecialEdStatus1                             0.232935    
+## non.english.home1                            0.169554    
+## Dem_DescTown/rural mix                       0.000566 ***
+## Dem_DescUrban/town/rural mix                 0.000431 ***
+## edrEDR 6W- Upper Minnesota Valley            3.15e-16 ***
+## edrEDR 8 - Southwest                         4.42e-11 ***
+## took.ACTYes                                  0.877572    
+## ap.exam1                                     0.075374 .  
+## total.cte.courses.taken                      0.193205    
+## cte.achievementCTE Participant               0.516023    
+## cte.achievementNo CTE                        0.504421    
+## avg.cte.intensity                            0.008248 ** 
+## MCA.M                                        0.000445 ***
+## MCA.R                                        0.612621    
+## MCA.S                                        0.060245 .  
+## sat.taken1                                   0.265396    
+## attended.psYes                               0.660630    
+## ps.grad1                                     0.210837    
+## highest.cred.levelBachelor degree            0.034607 *  
+## highest.cred.levelLess than Associate Degree 0.451529    
+## highest.cred.levelMaster degree or higher    0.950078    
+## avg.unemp.rate                               0.003637 ** 
+## wages.3year.avg                              6.29e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 8032.0  on 7329  degrees of freedom
+## Residual deviance: 7695.1  on 7301  degrees of freedom
+##   (113 observations deleted due to missingness)
+## AIC: 7753.1
+## 
+## Number of Fisher Scoring iterations: 11</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.04194021</code></pre>
+<p>The analysis above shows that the model only has a 4% predictive
+power. In addition, there are very few variables that are significant.
+Let’s try eliminating the insignificant variables and see if the model
+improves.</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = hs.grad.year.edr.match ~ ., family = binomial, 
+##     data = edr.match.grad.year.2)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                  -3.156e+00  4.434e-01  -7.117
+## economic.status1                              1.352e-01  5.827e-02   2.320
+## Dem_DescTown/rural mix                        3.458e-01  9.727e-02   3.555
+## Dem_DescUrban/town/rural mix                  5.319e-01  1.296e-01   4.105
+## edrEDR 6W- Upper Minnesota Valley             6.366e-01  7.797e-02   8.164
+## edrEDR 8 - Southwest                         -5.542e-01  7.694e-02  -7.203
+## avg.cte.intensity                            -7.066e-02  1.805e-02  -3.914
+## MCA.M                                         9.147e-02  2.860e-02   3.199
+## highest.cred.levelBachelor degree            -2.642e-01  1.272e-01  -2.078
+## highest.cred.levelLess than Associate Degree  3.687e-02  8.524e-02   0.433
+## highest.cred.levelMaster degree or higher    -1.137e+01  1.838e+02  -0.062
+## avg.unemp.rate                                6.813e-02  2.776e-02   2.454
+## wages.3year.avg                               3.292e-05  9.466e-06   3.478
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                  1.10e-12 ***
+## economic.status1                             0.020321 *  
+## Dem_DescTown/rural mix                       0.000378 ***
+## Dem_DescUrban/town/rural mix                 4.03e-05 ***
+## edrEDR 6W- Upper Minnesota Valley            3.23e-16 ***
+## edrEDR 8 - Southwest                         5.89e-13 ***
+## avg.cte.intensity                            9.08e-05 ***
+## MCA.M                                        0.001381 ** 
+## highest.cred.levelBachelor degree            0.037707 *  
+## highest.cred.levelLess than Associate Degree 0.665363    
+## highest.cred.levelMaster degree or higher    0.950668    
+## avg.unemp.rate                               0.014138 *  
+## wages.3year.avg                              0.000505 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 8032.0  on 7329  degrees of freedom
+## Residual deviance: 7714.2  on 7317  degrees of freedom
+##   (113 observations deleted due to missingness)
+## AIC: 7740.2
+## 
+## Number of Fisher Scoring iterations: 11</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.03955558</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Predictor
+</th>
+<th style="text-align:center;">
+B
+</th>
+<th style="text-align:center;">
+SE
+</th>
+<th style="text-align:center;">
+t
+</th>
+<th style="text-align:center;">
+p
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Intercept
+</td>
+<td style="text-align:center;">
+-3.16
+</td>
+<td style="text-align:center;">
+0.44
+</td>
+<td style="text-align:center;">
+-7.117
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Free or reduced lunch
+</td>
+<td style="text-align:center;">
+0.14
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+2.320
+</td>
+<td style="text-align:center;">
+0.020
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Town/rural mix high school
+</td>
+<td style="text-align:center;">
+0.35
+</td>
+<td style="text-align:center;">
+0.10
+</td>
+<td style="text-align:center;">
+3.555
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Urban/town/rural mix high school
+</td>
+<td style="text-align:center;">
+0.53
+</td>
+<td style="text-align:center;">
+0.13
+</td>
+<td style="text-align:center;">
+4.105
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 6W high school
+</td>
+<td style="text-align:center;">
+0.64
+</td>
+<td style="text-align:center;">
+0.08
+</td>
+<td style="text-align:center;">
+8.164
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 8 high school
+</td>
+<td style="text-align:center;">
+-0.55
+</td>
+<td style="text-align:center;">
+0.08
+</td>
+<td style="text-align:center;">
+-7.203
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg CTE intensity of high school
+</td>
+<td style="text-align:center;">
+-0.07
+</td>
+<td style="text-align:center;">
+0.02
+</td>
+<td style="text-align:center;">
+-3.914
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MCA - Math score
+</td>
+<td style="text-align:center;">
+0.09
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+3.199
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earned bachelors degree
+</td>
+<td style="text-align:center;">
+-0.26
+</td>
+<td style="text-align:center;">
+0.13
+</td>
+<td style="text-align:center;">
+-2.078
+</td>
+<td style="text-align:center;">
+0.038
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Less than associate degree
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+0.09
+</td>
+<td style="text-align:center;">
+0.433
+</td>
+<td style="text-align:center;">
+0.665
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Master degree or high
+</td>
+<td style="text-align:center;">
+-11.37
+</td>
+<td style="text-align:center;">
+183.78
+</td>
+<td style="text-align:center;">
+-0.062
+</td>
+<td style="text-align:center;">
+0.951
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg unemployment rate during high school
+</td>
+<td style="text-align:center;">
+0.07
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+2.454
+</td>
+<td style="text-align:center;">
+0.014
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg wages of high school county
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+3.478
+</td>
+<td style="text-align:center;">
+0.001
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>The model did not improve.</p>
+<p><br></p>
+</div>
+<div id="section-research-region" class="section level3">
+<h3>Research region</h3>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+x
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Location match
+</td>
+<td style="text-align:right;">
+6168
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No location match
+</td>
+<td style="text-align:right;">
+1276
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>After filtering for individuals that have a MN employment record and
+had meaningful employment, there are a total of 7,444 individuals in the
+dataset. The table above shows that 83% of those individuals had
+meaningful employment in the same edr as their high school.</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = hs.grad.year.region.match ~ ., family = binomial, 
+##     data = region.match.grad.year)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                  -1.683e+00  5.550e-01  -3.032
+## GenderM                                       1.477e-02  6.796e-02   0.217
+## LimitedEnglishProficiencyIndicatorY           2.515e-01  2.121e-01   1.186
+## HomelessIndicatorY                           -2.767e-02  4.233e-01  -0.065
+## economic.status1                              1.583e-01  6.935e-02   2.282
+## pseo.participant1                             2.817e-02  8.511e-02   0.331
+## SpecialEdStatus1                              4.851e-02  9.680e-02   0.501
+## non.english.home1                            -4.705e-02  1.211e-01  -0.389
+## Dem_DescTown/rural mix                        2.353e-01  1.123e-01   2.094
+## Dem_DescUrban/town/rural mix                  7.845e-01  1.445e-01   5.430
+## edrEDR 6W- Upper Minnesota Valley            -2.531e-01  9.507e-02  -2.663
+## edrEDR 8 - Southwest                         -6.534e-01  8.673e-02  -7.534
+## took.ACTYes                                   6.418e-02  7.475e-02   0.859
+## ap.exam1                                     -2.291e-01  1.243e-01  -1.843
+## total.cte.courses.taken                      -7.987e-04  8.040e-03  -0.099
+## cte.achievementCTE Participant               -5.407e-02  8.321e-02  -0.650
+## cte.achievementNo CTE                         1.563e-01  1.029e-01   1.518
+## avg.cte.intensity                             1.342e-02  2.260e-02   0.594
+## MCA.M                                         1.779e-01  4.150e-02   4.287
+## MCA.R                                        -4.045e-02  3.906e-02  -1.036
+## MCA.S                                        -3.560e-02  3.663e-02  -0.972
+## sat.taken1                                    1.072e+00  6.414e-01   1.672
+## attended.psYes                                4.439e-03  8.088e-02   0.055
+## ps.grad1                                     -1.100e-01  1.066e-01  -1.032
+## highest.cred.levelBachelor degree            -2.362e-02  1.395e-01  -0.169
+## highest.cred.levelLess than Associate Degree  2.200e-02  1.271e-01   0.173
+## highest.cred.levelMaster degree or higher    -1.114e+01  1.852e+02  -0.060
+## avg.unemp.rate                                1.924e-02  3.154e-02   0.610
+## wages.3year.avg                              -8.812e-06  1.226e-05  -0.719
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                   0.00243 ** 
+## GenderM                                       0.82797    
+## LimitedEnglishProficiencyIndicatorY           0.23577    
+## HomelessIndicatorY                            0.94788    
+## economic.status1                              0.02248 *  
+## pseo.participant1                             0.74069    
+## SpecialEdStatus1                              0.61628    
+## non.english.home1                             0.69759    
+## Dem_DescTown/rural mix                        0.03622 *  
+## Dem_DescUrban/town/rural mix                 5.63e-08 ***
+## edrEDR 6W- Upper Minnesota Valley             0.00775 ** 
+## edrEDR 8 - Southwest                         4.93e-14 ***
+## took.ACTYes                                   0.39055    
+## ap.exam1                                      0.06535 .  
+## total.cte.courses.taken                       0.92087    
+## cte.achievementCTE Participant                0.51580    
+## cte.achievementNo CTE                         0.12899    
+## avg.cte.intensity                             0.55257    
+## MCA.M                                        1.81e-05 ***
+## MCA.R                                         0.30032    
+## MCA.S                                         0.33101    
+## sat.taken1                                    0.09458 .  
+## attended.psYes                                0.95623    
+## ps.grad1                                      0.30213    
+## highest.cred.levelBachelor degree             0.86550    
+## highest.cred.levelLess than Associate Degree  0.86261    
+## highest.cred.levelMaster degree or higher     0.95201    
+## avg.unemp.rate                                0.54191    
+## wages.3year.avg                               0.47222    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 6711.8  on 7330  degrees of freedom
+## Residual deviance: 6504.8  on 7302  degrees of freedom
+##   (113 observations deleted due to missingness)
+## AIC: 6562.8
+## 
+## Number of Fisher Scoring iterations: 11</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.03084096</code></pre>
+<p>The analysis above shows that the model only has a 3% predictive
+power. In addition, there are very few variables that are significant.
+Let’s try eliminating the insignificant variables and see if the model
+improves.</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = hs.grad.year.region.match ~ ., family = binomial, 
+##     data = region.match.grad.year.2)
+## 
+## Coefficients:
+##                                   Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)                       -1.86939    0.13160 -14.205  &lt; 2e-16 ***
+## economic.status1                   0.17771    0.06392   2.780  0.00543 ** 
+## Dem_DescTown/rural mix             0.22711    0.10843   2.094  0.03622 *  
+## Dem_DescUrban/town/rural mix       0.69423    0.12805   5.421 5.91e-08 ***
+## edrEDR 6W- Upper Minnesota Valley -0.27550    0.09093  -3.030  0.00245 ** 
+## edrEDR 8 - Southwest              -0.67887    0.07423  -9.145  &lt; 2e-16 ***
+## MCA.M                              0.11291    0.03015   3.745  0.00018 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 6820.5  on 7443  degrees of freedom
+## Residual deviance: 6637.9  on 7437  degrees of freedom
+## AIC: 6651.9
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.02677499</code></pre>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Predictor
+</th>
+<th style="text-align:center;">
+B
+</th>
+<th style="text-align:center;">
+SE
+</th>
+<th style="text-align:center;">
+t
+</th>
+<th style="text-align:center;">
+p
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Intercept
+</td>
+<td style="text-align:center;">
+-1.87
+</td>
+<td style="text-align:center;">
+0.13
+</td>
+<td style="text-align:center;">
+-14.205
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Free or reduced lunch
+</td>
+<td style="text-align:center;">
+0.18
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+2.780
+</td>
+<td style="text-align:center;">
+0.005
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Town/rural mix high school
+</td>
+<td style="text-align:center;">
+0.23
+</td>
+<td style="text-align:center;">
+0.11
+</td>
+<td style="text-align:center;">
+2.094
+</td>
+<td style="text-align:center;">
+0.036
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Urban/town/rural mix high school
+</td>
+<td style="text-align:center;">
+0.69
+</td>
+<td style="text-align:center;">
+0.13
+</td>
+<td style="text-align:center;">
+5.421
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+region 6W high school
+</td>
+<td style="text-align:center;">
+-0.28
+</td>
+<td style="text-align:center;">
+0.09
+</td>
+<td style="text-align:center;">
+-3.030
+</td>
+<td style="text-align:center;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+region 8 high school
+</td>
+<td style="text-align:center;">
+-0.68
+</td>
+<td style="text-align:center;">
+0.07
+</td>
+<td style="text-align:center;">
+-9.145
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MCA - Math score
+</td>
+<td style="text-align:center;">
+0.11
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+3.745
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+<p>The model did improve, but still is only 3% predictive power.</p>
+<p><br></p>
+</div>
+</div>
+</div>
+<div id="section-time-x---grad-year-2" class="section level1">
+<h1>Time X - grad year +2</h1>
+<div id="section-mn-emp-record-1" class="section level2">
+<h2>MN Emp record</h2>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = mn.emp.record ~ ., family = binomial, data = mn.emp.record.grad.year.2.dep.var)
+## 
+## Coefficients:
+##                                                Estimate Std. Error z value
+## (Intercept)                                   9.907e-01  2.294e-01   4.318
+## GenderM                                       2.428e-01  2.843e-02   8.541
+## LimitedEnglishProficiencyIndicatorY           4.465e-02  1.039e-01   0.430
+## HomelessIndicatorY                           -6.712e-01  2.699e-01  -2.487
+## economic.status1                             -1.893e-01  3.118e-02  -6.071
+## pseo.participant1                             2.858e-02  3.477e-02   0.822
+## SpecialEdStatus1                             -8.888e-02  4.371e-02  -2.034
+## non.english.home1                             3.703e-01  5.652e-02   6.552
+## Dem_DescTown/rural mix                       -3.901e-01  4.065e-02  -9.597
+## Dem_DescUrban/town/rural mix                 -7.620e-03  5.613e-02  -0.136
+## edrEDR 6W- Upper Minnesota Valley             4.718e-01  4.378e-02  10.776
+## edrEDR 8 - Southwest                          5.235e-01  4.098e-02  12.775
+## took.ACTYes                                  -1.444e-01  3.690e-02  -3.914
+## ap.exam1                                      8.844e-02  4.150e-02   2.131
+## total.cte.courses.taken                      -2.883e-02  4.154e-03  -6.941
+## cte.achievementCTE Participant                1.728e-02  3.620e-02   0.477
+## cte.achievementNo CTE                         2.884e-01  4.329e-02   6.661
+## avg.cte.intensity                             1.376e-02  9.216e-03   1.493
+## MCA.M                                        -4.264e-03  1.734e-02  -0.246
+## MCA.R                                        -1.428e-01  1.646e-02  -8.677
+## MCA.S                                        -5.546e-03  1.477e-02  -0.375
+## sat.taken1                                    5.976e-01  1.550e-01   3.857
+## attended.psYes                               -5.529e-01  4.064e-02 -13.606
+## ps.grad1                                     -2.881e-01  5.163e-02  -5.580
+## highest.cred.levelBachelor degree             4.561e-01  4.982e-02   9.156
+## highest.cred.levelLess than Associate Degree -1.282e-01  6.024e-02  -2.129
+## highest.cred.levelMaster degree or higher     2.728e-01  2.430e-01   1.123
+## avg.unemp.rate                               -2.861e-02  1.372e-02  -2.085
+## wages.3year.avg                              -3.092e-05  5.265e-06  -5.873
+##                                              Pr(&gt;|z|)    
+## (Intercept)                                  1.57e-05 ***
+## GenderM                                       &lt; 2e-16 ***
+## LimitedEnglishProficiencyIndicatorY          0.667470    
+## HomelessIndicatorY                           0.012895 *  
+## economic.status1                             1.27e-09 ***
+## pseo.participant1                            0.411105    
+## SpecialEdStatus1                             0.041988 *  
+## non.english.home1                            5.69e-11 ***
+## Dem_DescTown/rural mix                        &lt; 2e-16 ***
+## Dem_DescUrban/town/rural mix                 0.892011    
+## edrEDR 6W- Upper Minnesota Valley             &lt; 2e-16 ***
+## edrEDR 8 - Southwest                          &lt; 2e-16 ***
+## took.ACTYes                                  9.06e-05 ***
+## ap.exam1                                     0.033088 *  
+## total.cte.courses.taken                      3.90e-12 ***
+## cte.achievementCTE Participant               0.633030    
+## cte.achievementNo CTE                        2.72e-11 ***
+## avg.cte.intensity                            0.135440    
+## MCA.M                                        0.805736    
+## MCA.R                                         &lt; 2e-16 ***
+## MCA.S                                        0.707364    
+## sat.taken1                                   0.000115 ***
+## attended.psYes                                &lt; 2e-16 ***
+## ps.grad1                                     2.40e-08 ***
+## highest.cred.levelBachelor degree             &lt; 2e-16 ***
+## highest.cred.levelLess than Associate Degree 0.033293 *  
+## highest.cred.levelMaster degree or higher    0.261590    
+## avg.unemp.rate                               0.037033 *  
+## wages.3year.avg                              4.27e-09 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 35201  on 31294  degrees of freedom
+## Residual deviance: 33519  on 31266  degrees of freedom
+##   (490 observations deleted due to missingness)
+## AIC: 33577
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.04780387</code></pre>
+<p><br></p>
+<p>The model above provides the prediction results on whether an
+individual has a MN employment record or not. The model only has a 5%
+predictive power. Let’s eliminate the insignificant variables and see if
+the model prediction improves.</p>
+<p><br></p>
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Predictor
+</th>
+<th style="text-align:center;">
+B
+</th>
+<th style="text-align:center;">
+SE
+</th>
+<th style="text-align:center;">
+t
+</th>
+<th style="text-align:center;">
+p
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Intercept
+</td>
+<td style="text-align:center;">
+1.07
+</td>
+<td style="text-align:center;">
+0.20
+</td>
+<td style="text-align:center;">
+5.223
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gender - male
+</td>
+<td style="text-align:center;">
+0.24
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+8.648
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Homeless
+</td>
+<td style="text-align:center;">
+-0.68
+</td>
+<td style="text-align:center;">
+0.26
+</td>
+<td style="text-align:center;">
+-2.605
+</td>
+<td style="text-align:center;">
+0.009
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Free or reduced lunch
+</td>
+<td style="text-align:center;">
+-0.20
+</td>
+<td style="text-align:center;">
+0.03
+</td>
+<td style="text-align:center;">
+-6.643
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Special Ed Status
+</td>
+<td style="text-align:center;">
+-0.08
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+-1.866
+</td>
+<td style="text-align:center;">
+0.062
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Non-english speaker at home
+</td>
+<td style="text-align:center;">
+0.40
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+8.025
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.41
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+-10.485
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Urban/town/rural mix high school
+</td>
+<td style="text-align:center;">
+-0.02
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+-0.344
+</td>
+<td style="text-align:center;">
+0.731
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 6W high school
+</td>
+<td style="text-align:center;">
+0.45
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+10.377
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+EDR 8 high school
+</td>
+<td style="text-align:center;">
+0.51
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+13.187
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Took ACT
+</td>
+<td style="text-align:center;">
+-0.13
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+-3.601
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Took AP exam
+</td>
+<td style="text-align:center;">
+0.10
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+2.348
+</td>
+<td style="text-align:center;">
+0.019
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Total CTE courses taken
+</td>
+<td style="text-align:center;">
+-0.03
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+-6.762
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CTE participant
+</td>
+<td style="text-align:center;">
+0.02
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+0.547
+</td>
+<td style="text-align:center;">
+0.584
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+No CTE taken
+</td>
+<td style="text-align:center;">
+0.28
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+6.557
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MCA - reading score
+</td>
+<td style="text-align:center;">
+-0.15
+</td>
+<td style="text-align:center;">
+0.01
+</td>
+<td style="text-align:center;">
+-10.989
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SAT taken
+</td>
+<td style="text-align:center;">
+0.60
+</td>
+<td style="text-align:center;">
+0.15
+</td>
+<td style="text-align:center;">
+3.926
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Attended post-secondary
+</td>
+<td style="text-align:center;">
+-0.55
+</td>
+<td style="text-align:center;">
+0.04
+</td>
+<td style="text-align:center;">
+-13.767
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Graduated from post-secondary
+</td>
+<td style="text-align:center;">
+-0.29
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+-5.682
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earned Bachelor’s
+</td>
+<td style="text-align:center;">
+0.46
+</td>
+<td style="text-align:center;">
+0.05
+</td>
+<td style="text-align:center;">
+9.273
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Attended college, no degree
+</td>
+<td style="text-align:center;">
+-0.14
+</td>
+<td style="text-align:center;">
+0.06
+</td>
+<td style="text-align:center;">
+-2.267
+</td>
+<td style="text-align:center;">
+0.023
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earned Masters
+</td>
+<td style="text-align:center;">
+0.29
+</td>
+<td style="text-align:center;">
+0.24
+</td>
+<td style="text-align:center;">
+1.191
+</td>
+<td style="text-align:center;">
+0.233
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg unemployment rate during high school
+</td>
+<td style="text-align:center;">
+-0.03
+</td>
+<td style="text-align:center;">
+0.01
+</td>
+<td style="text-align:center;">
+-2.352
+</td>
+<td style="text-align:center;">
+0.019
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Avg wages of high school county
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+0.00
+</td>
+<td style="text-align:center;">
+-6.931
+</td>
+<td style="text-align:center;">
+0.000
+</td>
+</tr>
+</tbody>
+</table>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.04956467</code></pre>
+<p><br></p>
+<p>The final model only has a 5% predictive power. This isn’t good and
+indicates that there are a lot of other elements that play a role into
+whether an individual has a MN employment record.</p>
+<p><br></p>
+</div>
+<div id="section-meaningful-emp-1" class="section level2">
+<h2>Meaningful emp</h2>
+</div>
+<div id="section-location-match-1" class="section level2">
+<h2>Location match</h2>
+<div id="section-county-1" class="section level3">
+<h3>County</h3>
+</div>
+<div id="section-edr-1" class="section level3">
+<h3>EDR</h3>
+</div>
+<div id="section-research-region-1" class="section level3">
+<h3>Research region</h3>
+</div>
+<div id="section-minnesota" class="section level3">
+<h3>Minnesota</h3>
+</div>
+</div>
+</div>
+<div id="section-time-x---grad-year-7" class="section level1">
+<h1>Time X - grad year +7</h1>
+<div id="section-mn-emp-record-2" class="section level2">
+<h2>MN Emp record</h2>
+</div>
+<div id="section-meaningful-emp-2" class="section level2">
+<h2>Meaningful emp</h2>
+</div>
+<div id="section-location-match-2" class="section level2">
+<h2>Location match</h2>
+<div id="section-county-2" class="section level3">
+<h3>County</h3>
+</div>
+<div id="section-edr-2" class="section level3">
+<h3>EDR</h3>
+</div>
+<div id="section-research-region-2" class="section level3">
+<h3>Research region</h3>
+</div>
+<div id="section-minnesota-1" class="section level3">
+<h3>Minnesota</h3>
+</div>
+</div>
 </div>
 
 

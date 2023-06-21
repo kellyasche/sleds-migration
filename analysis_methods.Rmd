@@ -38,7 +38,10 @@ library(systemfonts)
 reset_font_cache()
 library(ggtext)
 library(gmodels)
-
+library(leaps)
+library(bestglm)
+library(fastDummies)
+library(car)
 
 ```
 
@@ -127,15 +130,29 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
   ms_simplify(keep = .01, keep_shapes = TRUE) %>%
   rename(countyfp = FIPS_CODE)
 
-
 ```
 
 ```{r master original}
 master.original <- read_csv("Data/SLEDS/Masters/Master-13.csv") %>%
-  mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions))
+  mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions),
+         ps.attended.in.same.ruca = ifelse(is.na(ps.attended.in.same.ruca), "Never attended ps", ps.attended.in.same.ruca),
+         ps.attended.in.same.edr = ifelse(is.na(ps.attended.in.same.edr), "Never attended ps", ps.attended.in.same.edr),
+         ps.attended.in.same.pr = ifelse(is.na(ps.attended.in.same.pr), "Never attended ps", ps.attended.in.same.pr),
+         ps.attended.in.MN = ifelse(is.na(ps.attended.in.MN), "Never attended ps", ps.attended.in.MN),
+         ps.grad = ifelse(ps.grad == "Y", 1, 0),
+         ps.grad.InstitutionSector = ifelse(attended.ps == "No", "Never attended ps", ps.grad.InstitutionSector),
+         ps.grad.InstitutionSector = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.InstitutionSector),
+         ps.grad.in.same.ruca = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.same.ruca),
+         ps.grad.in.same.ruca = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.same.ruca),
+         ps.grad.in.same.edr = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.same.edr),
+         ps.grad.in.same.edr = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.same.edr),
+         ps.grad.in.same.pr = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.same.pr),
+         ps.grad.in.same.pr = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.same.pr),
+         ps.grad.in.MN = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.MN),
+         ps.grad.in.MN = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.MN),
+         took.ACT = ifelse(is.na(ACTCompositeScore), "No", "Yes"))
 
-names(master.original)
-
+write_csv(master.original, "Data/SLEDS/Masters/Master.csv")
 ```
 
 <br>
@@ -148,16 +165,26 @@ Here is a list of all the variables that will be included in the model and a des
 
 * **Individual Characteristics**
     + **hs.grad.year:** year the individual graduated high school 
-    + **Gender:** male of female (M or F)
-    + **LimitedEnglishProficiencyIndicator:** a yes or no (Y or N) on whether the individual was identified as having limited english proficency at any point between 10th and 12th grade.
-    + **HomelessIndicator:** a yes or no (Y or N) indicator on whether the individual was ever identified as homeless at any point between 10th and 12th grade.
-    + **economic.status:** an indicator where 1 equals whether the individual was eligible for free or reduced lunch (codes 1,2,4,5) at any point between 10th and 12th grade. Otherwise the individual is coded as 0.
-    + **pseo.participant:** an indicator where 1 means the individual participated in a PSEO course sometime between 10th and 12th grade, otherwise 0.
-    + **SpecialEdStatus:** an indicator where 1 means the individual required special education services at some point between 10th and 12th grade, otherwise 0.
-    + **non.english.home:** an indicator where 1 means that English is not the primary langauge spoken at home, otherwise 0.
+    + **Gender:** 
+      + M = male
+      + F = female
+    + **LimitedEnglishProficiencyIndicator:** 
+      + Y = identified as having limited english proficiency at some point between 10th and 12th grade, otherwise N.
+    + **HomelessIndicator:** 
+      + Y = the individual was  identified as homeless at any point between 10th and 12th grade, otherwise N.
+    + **economic.status:** 
+      + 1 = the individual was eligible for free or reduced lunch (codes 1,2,4,5) at any point between 10th and 12th grade, otherwise 0.
+    + **pseo.participant:** 
+      + 1 = the individual participated in a PSEO course sometime between 10th and 12th grade, otherwise 0.
+    + **SpecialEdStatus:** 
+      + 1 = the individual required special education services at some point between 10th and 12th grade, otherwise 0.
+    + **non.english.home:**   
+      + 1 = the individual was identifed as having English as not the primary langauge spoken at home between 10th and 12th grad, otherwise 0.
     + **n.years.attended:** the number of years the individual attended the high school and is identified in the dataset. Max is 6 years.
     + **ACTCompositeScore:** the composite ACT score of the individual. If the ACT was not taken, the individual is NA.
-    + **ap.exam:** an indicator where 1 means the individual took an AP exam at some point, otherwise 0.
+    + **ap.exam:**
+      + 1 = the individual took an AP exam at some point, 
+      + 0 = the individual did not take an AP exam.
     + **total.cte.courses.taken:** the total number of CTE courses the individual has taken in their career since 10th grade.
     + **cte.0 through cte.26:** the number of CTE courses taken in each CTE career cluster, where;
       + 0 = NULL - no career field or career name
@@ -180,15 +207,21 @@ Here is a list of all the variables that will be included in the model and a des
       + 24 = Work Experience/Career Exploration (age 14-15 on IEP)
       + 25 = Diversified Occupations
       + 26 = Administrative Only
-    + **cte.achievement:** three indicators with "CTE concentrator or completor" being one, "CTE participant" meaning they took a CTE course but was not a concentrator or completor, and"No CTE" meaning they didn't take a CTE course.
-    + **english.learner:** the individual was identified as an "english learner" at least one time between 10th and 12th grade.
+    + **cte.achievement:** three indicators with 
+      + "CTE concentrator or completor" being one, 
+      + "CTE participant" meaning they took a CTE course but was not a concentrator or completor, and, 
+      + "No CTE" meaning they didn't take a CTE course.
+    + **english.learner:** 
+      + 1 = the individual was identified as an "english learner" at least one time between 10th and 12th grade, otherwise 0.
     + **MCA.M & MCA.R & MCA.S:** this is the Minnesota Comprehensive Assessment tests for reading, math and science. Each individual is given 1 of 4 grades for each subject;
       + 1 = Does not meet standards
       + 2 = Partially meets standards
       + 3 = Meets standards
       + 4 = Exceeds standards
-    + **sat.taken:** this is an identifier with 1 meaning the took the SAT and 0 meaning they did not take the SAT.
-    + **attended.ps:** this is an identifier where Yes means they attended a post-secondary education institution and No means they did not attend a post-secondary institution.
+    + **sat.taken:** 
+      + 1 = individual took the SAT at some point between 10th and 12th grade, otherwise 0.
+    + **attended.ps:** 
+      + Yes = the individual lattended a post-secondary education institution, otherwise No.
     + **first.InstitutionSector:** this identifies the institution sector of their first post-secondary school. There are 10 different sectors.
       + 1 - Public, 4-year or above
       + 2 - Private not-for-profit, 4-year or above
@@ -199,26 +232,92 @@ Here is a list of all the variables that will be included in the model and a des
       + 7 - Public, less-than 2-year
       + 8 - Private not-for-profit, less-than 2-year
       + 9 - Private for-profit, less-than 2-year
+      + 10 - multiple sectors (if attended multiple institutions)
       + 99 - Sector unknown (not active)
       + NA - did not attend post-secondary
-    + **ps.sector.(1-9):** this is an identifier on whether they attended the particular post-secondary institution sector. A column is provided for each sector: 1 through 9. In each column 1 means "yes", and 0 means "no" for that given sector.
-    + **ps.attended.in.same.ruca(edr & pr & MN):** this is an identifier on whether the PersonID ever attended a post-secondary institution in the same RUCA category, EDR, research region as their high school, or attended in Minnesota.
-    + **ps.grad:** whether the individual gradated from a post-secondary institution. Y means yes.
-    + **ps.grad.InstitutionSector:** the institution sector of the post-secondary school from which they last graduated.
+    + **ps.sector.(1-10):** each number represents "1 through 10" institution sector types.
+      + 1 = the individual attended the particular post-secondary institution sector, otherwise 0.
+    + **ps.attended.in.same.ruca/edr:** two columns which identify whether the PersonID ever attended a post-secondary institution in the same RUCA category or economic development region as their high school.
+      + "Outside ruca/edr" = individual never attended a post-secondary institution within the RUCA category or economic development region as their high school.
+      + "In same ruca/edr" = individual attended a post-secondary institution(s) only within the same RUCA category or economic development region as their high school. 
+      + "Inside and outside same ruca/edr" = individual attended post-secondary institutions within and outside the same RUCA category or EDR as their high school.
+      + "Never attended ps" = individual never attended a post-secondary institution.
+    + **ps.attended.in.same.pr:** one column which identifies whether the individual attended a post-secondary institution within the three economic development regions being rearched (EDR 6W, EDF 6E, and EDR 8).
+      + "In same PR" = individual attended a post-secondary institution(s) in one of the three EDRs only. 
+      + "Outside PR" = individual never attended a post-secondary institution(s) in one the three EDRs.
+      + "Inside and outside same PR" = individual attended post-secondary institutions within and outside one of the three EDRs.
+      "Never attended ps" = individual never attended a post-secondary institution.
+    + **ps.attended.in.MN:** one column which identifies whether the individual attended a post-secondary institution within Minnesota.
+      + "In MN" = individual attended a post-secondary institution(s) in Minnesota only.
+      + "Outside MN" = individual never attended a post-secondary institution(s) in Minnesota.
+      + "Inside and outside MN" = individual attended a post-secondary institution(s) inside and outside Minnesota.
+      + "Never attended ps" = never attended post-secondary institution
+    + **ps.grad:**
+      + 1 = the individual gradated from a post-secondary institution otherwise 0.
+    + **ps.grad.InstitutionSector:** the institution sector of the post-secondary school from which an individual has graduated.
+      + 1-10 = the codes of the institution sector provided above.
+      + "Never attended ps" = the individual never attended a post-secondary institution
+      + "Did not graduate" = the individual attended a post-secondary institution but did not graduate.
     + **highest.cred.level:** an identifier of the highest credential earned by the PersonID. The categories are;
       + Less than associate degree
       + Associate degree
       + Bachelors degree
       + Higher than bachelors degree.
-    + **ps.grad.in.same.ruca-pr:** did the student graduate from an institution located in the same RUCA category or EDR as their high school. "PR" is whether they graduated from an institution within the research area (three EDRs) and "MN" is whether they graduated from an institution in Minnesota.
+    + **ps.grad.in.same.ruca/edr:** did the student graduate from an institution located in the same RUCA category or EDR as their high school. 
+      + "Outside ruca/edr" = individual never graduated from a post-secondary institution within the RUCA category or economic development region as their high school.
+      + "In same ruca/edr" = individual graduated from a post-secondary institution(s) only within the same RUCA category or economic development region as their high school. 
+      + "Inside and outside same ruca/edr" = individual graduates from a post-secondary institutions within and outside the same RUCA category or EDR as their high school.
+      + "Never attended ps" = individual never attended a post-secondary institution."PR" is whether they graduated from an institution within the research area (three EDRs) and "MN" is whether they graduated from an institution in Minnesota.
+      + "Did not grad" = individual attended a post-secondary institution but never graduated.
+    + **ps.grad.in.same.pr:** one column indentifying whether the individual graduated from a post-secondary institution in one of the three economic development regions being research.
+      + "In same PR" = individual graduated from a post-secondary institution(s) in one of the three EDRs only. 
+      + "Outside PR" = individual never graduated from a post-secondary institution(s) in one the three EDRs.
+      + "Inside and outside same PR" = individual graduated from a post-secondary institutions within and outside one of the three EDRs.
+      + "Never attended ps" = individual never attended a post-secondary institution.
+      + "Did not grad" = individual attended a post secondary institution but did not graduate.
+    + **ps.grad.in.MN:** one column indentifying whether the individual graduated from a post-secondary institution located in Minnesota.
+      + "In MN" = individual graduated from a post-secondary institution(s) in Minnesota. 
+      + "Outside MN" = individual never graduated from a post-secondary institution(s) in Minnesota.
+      + "Inside and outside MN" = individual graduated from a post-secondary institutions within and outside Minnesota.
+      + "Never attended ps" = individual never attended a post-secondary institution.
+      + "Did not grad" = individual attended a post secondary institution but did not graduate.
     + **mn.emp.record.hs.grad.year(.2 & .7):** did the individual have a MN employment record the year of graduating high school, two years after graduating, and seven years after graduating.
+      + "MN emp record" = the individual had a MN employment record at that time frame.
+      + "No MN emp record" = the individual did not have a MN employment record at that time frame.
     + **meaningful.emp.hs.grad.year(.2 & .7):** did the individual work 1,000 hours or more for one employer the year of graduation, two years after graduation, and seven years after graduation.
+      + "Meaningful emp" = individual had meaningful employment in Minnesota at the time frame.
+      + "No meaninful emp" = individual did not have meaningful employment in Minnesota at the time frame.
+      + "No MN emp record" = the individual did not have a MN employment record at that time frame.
+      + "After 2019" = the timeframe for the individual (2 and/or 7 years after graduating) would be after 2019 for which there is no data.
     + **hs.grad.year.(2 & 7).county.match:** did the individual have meaningful employment for an employer located in the same county as their high school - the year of graduation, two years after graduation, and seven years after graduation.
+      + "Location match" = the individual had meaningful employment in Minnesota and was in the same county as their high school at that time frame.
+      + "No location match" = the individual had meaningful employment in Minnesota but NOT in the same county as their high school at that time frame.
+      + "No meaningful emp" = the individual did not have meaningful employment at that time frame.
+      + "No MN emp record" = the individual did not have a MN employment record at that time frame.
+      + "After 2019" = the time frame for the individual (2 and/or 7 years after graduating) would be after 2019 for which there is no data.
     + **hs.grad.year.(2 & 7).edr.match:** did the individual have meaningful employment for an employer located in the same EDR as their high school - the year of graduation, two years after graduation, and seven years after graduation.
+      + "Location match" = the individual had meaningful employment in Minnesota and was in the same EDR as their high school at that time frame.
+      + "No location match" = the individual had meaningful employment in Minnesota but NOT in the same EDR as their high school at that time frame.
+      + "No meaningful emp" = the individual did not have meaningful employment at that time frame.
+      + "No MN emp record" = the individual did not have a MN employment record at that time frame.
+      + "After 2019" = the time frame for the individual (2 and/or 7 years after graduating) would be after 2019 for which there is no data.
     + **hs.grad.year.(2 & 7).region.match:** did the individual have meaningful employment in one of the three EDRs - the year of graduation, two years after graduation, and seven years after graduation.
+      + "Location match" = the individual had meaningful employment in Minnesota and was in one of the three research economic development regions at that time frame.
+      + "No location match" = the individual had meaningful employment in Minnesota but NOT in one of the three EDRs at that time frame.
+      + "No meaningful emp" = the individual did not have meaningful employment at that time frame.
+      + "No MN emp record" = the individual did not have a MN employment record at that time frame.
+      + "After 2019" = the time frame for the individual (2 and/or 7 years after graduating) would be after 2019 for which there is no data.
     + **hs.grad.year.state.match:** did the individual have meaningful employment for an employer located in Minnesota the year of graduation, two years after graduation and seven years after graduation.
+      + "Location match" = the individual had meaningful employment in Minnesota.
+      + "No meaningful emp" = the individual did not have meaningful employment at that time frame.
+      + "No MN emp record" = the individual did not have a MN employment record at that time frame.
+      + "After 2019" = the time frame for the individual (2 and/or 7 years after graduating) would be after 2019 for which there is no data.
     + **ind.match.hs.grad.year(.2 and .7):** did the individual have meaningful employment in an industry that matches a CTE course they took - the year of graduation, two years after graduation and seven years after graduation.
-    
+      + "Ind match" = the individual had meaningful employment in Minnesota was working in an industry that corresponds to a career cluster of one of their CTE courses.
+      + "No ind match" = the individual took a CTE course, had meaningful employment in Minnesota, but was not in an industry corresponding to one of their CTE career clusters.
+      + "No meaningful emp" = the individual had a MN employment record but was not meaningful at that time frame.
+      + "No MN emp record" = the individual did not have a MN employment record at that time frame.
+      + "After 2019" = the timeframe would have been after 2019 for which there is no data.
     
 * **High School Characteristics**
     + **K12OrganizationID:** Identification code for each high school in research region.
@@ -229,3 +328,217 @@ Here is a list of all the variables that will be included in the model and a des
     + **avg.unemp.rate:** the three year average unemployment rate during an individuals Sophmore, Junior and Senior years.
     + **wages.3year.avg:** the average county median household income of an individuals SOphomore, Junior and Senior years.
     
+    
+<br>
+
+# Method steps
+
+There are a number of dependent variables for which we want to measure independent variables. These are;
+
+* hs.grad.year.county.match (2 & 7)
+* hs.grad.year.edr.match (2 & 7)
+* hs.grad.year.region.match (2 & 7)
+* hs.grad.year.state.match (2 & 7)
+* ind.match.hs.grad.year (2 & 7)
+
+A few secondary ones include;
+
+* meaningful.emp.hs.grad.year (2 & 7)
+
+Let's now test out our dataset so we know that it will work. With the high number of independent variables, using best subsert selection mthods will not work. There isn't enough computing power. So we will play around with stepwise methods.
+
+We will test out just a few variables first before adding all of them. Let's us hs.grad.year.2.county.match_Location match as the dependent variable.
+
+* Dependent variable = hs.grad.year.2.county.match
+    + Location match: The individual had meaningful employment in the same county as their high school two years after graduation.
+    + No location match: The individual had meaningful employment in Minnesota but NOT in the same county as their high school.
+    + No meaningful emp: The individual had a MN employment record but employment was not meaningful.
+    + Unknown: the individual had a MN employment record but was a "Statewide" position so it is unknow location.
+    + No MN emp record: The individual did not have a MN employment record.
+
+    
+```{r hs.grad.year.2.county.match recode}
+hs.grad.year.2.county.match.recode <- master.original %>%
+  select(PersonID, hs.grad.year.2.county.match) %>%
+  filter(hs.grad.year.2.county.match != "After 2019") %>%
+  dummy_cols(select_columns = "hs.grad.year.2.county.match") %>%
+  select(PersonID, 'hs.grad.year.2.county.match_Location match') %>%
+  mutate(`hs.grad.year.2.county.match_Location match` = as.factor(`hs.grad.year.2.county.match_Location match`))
+
+names(hs.grad.year.2.county.match.recode)
+```
+
+<br>
+
+We did filter out all of the "After 2019" individuals so we are left with `r comma(nrow(hs.grad.year.2.county.match.recode))` individuals. 
+
+The independent variables we will use to test our methods will be;
+
+* LimitedEnglishProficienyIndicator
+    + Y = Yes
+    + N = No
+* HomelessIndicator
+    + Y = Yes
+    + N = No
+* economic.status
+    + 1 = Free or reduced lunch
+    + 0 = No free or reduced lunch
+* pseo.participant
+    + 1 = Yes
+    + 0 = No
+* SpecialEdStatus
+    + 1 = Yes
+    + 0 = No
+* non.english.home
+    + 1 = Yes
+    + 0 = No
+* Dem_Desc
+    + Entirely rural
+    + Town/rural mix
+    + Urban/town/rural mix
+* edr
+    + EDR 6E
+    + EDR 6W
+    + EDR 8
+* ACTCompositeScore
+    + Values
+
+<br>
+
+```{r independent variables test}
+test.ind.variables <- master.original %>%
+  select(PersonID, LimitedEnglishProficiencyIndicator, HomelessIndicator, economic.status, pseo.participant, SpecialEdStatus, non.english.home, Dem_Desc, edr, ACTCompositeScore) %>%
+  mutate_at(c(2:9), as.factor) %>%
+  mutate(took.ACT = ifelse(is.na(ACTCompositeScore), "N", "Y"),
+         took.ACT = as.factor(took.ACT))
+
+
+names(test.ind.variables)
+```
+
+<br>
+
+The dataset with independent variables to test has `r comma(nrow(test.ind.variables))` individuals. Now we will join the independent and dependent variable datasets.
+
+<br>
+
+```{r join dependent and independent variables}
+master.test <- hs.grad.year.2.county.match.recode %>%
+  left_join(test.ind.variables, by = "PersonID") %>%
+  select(-PersonID) %>%
+  rename("hs.grad.year.2.county.match.location.match" = 1) 
+
+names(master.test)
+```
+
+<br>
+
+Okay, let's test the entire model and see what comes up as being significant.
+
+<br>
+
+```{r test entire model}
+test.model <- glm(hs.grad.year.2.county.match.location.match ~ LimitedEnglishProficiencyIndicator + HomelessIndicator + economic.status + pseo.participant + SpecialEdStatus + non.english.home + Dem_Desc + edr + took.ACT,  data = master.test, family = binomial)
+
+summary(test.model)
+```
+
+<br>
+
+When running the entire model, we see the following coming up as statistically significant;
+
+* LimitedEnglishProficency1 = Less likely 
+* economic.status1 = more likely to have meaningful employment in the county two years after graduation if the the student was eligible for free and/or reduced lunch
+* SpecialEdStatus = more likely to have meaningful employment in the county two years after graduation if the student was indetified as needing special education.
+* pseo.participant1 = the student was less likely to have meaningful employment in the county two years after graduation if they participated in PSEO.
+* Dem_DescTown/rural mix = more likely to have meaningful employment in the county if they graduated from a high school located in a town/rural mix county.
+* Dem_DescUrban/town/rural mix = more likely to have meaningful employment in the county if they graduated from a high school located in a urban/town/rural mix county.
+* edrEDR 6W- Upper Minnesota Valley = less likely to have meaninhful employment in the county if they graduated from a high school located in EDR 6W.
+* edrEDR 8 - Southwest = Less likely to have meaningful employment in the county if they graduated from a high school located in EDR 8.
+* took.ACT = Likliness decreases if individual took the ACT.
+
+Let's check to see if there are is any serious multicollinearity in the datset.
+
+<br>
+
+```{r vif test}
+collinearity <- vif(test.model)
+
+collinearity
+```
+
+<br>
+
+Many of the independent variables are close to 1, indicating minor collinearity. The largest one is non.english.home variable with 1.36, but that isn't really high enough to warrant it being removed from the model. 
+
+Okay, let's see what the steps do for us. We will start with backward stepwise.
+
+
+<br>
+
+```{r test backward}
+step(test.model, direction = "backward")
+```
+
+<br>
+
+Through the process, it only removes one varaible, HomeLessIndicator. The final model is;
+
+hs.grad.year.2.county.match_location.match = -1.3386 - (.3785 * LimitedEnglishProficiencyY) + (.1819 * economic.status1) - (.4467 * pseo.participant1) - (.1316 * SpecialEdStatus1) + (.1125 * non.english.home1) + (.4863 * Dem_DescTown/rural mix) + (.2778 * Dem_DescUrban/town/rural mix) - (.5580 * EDR 6W) - (.2789 * EDR 8) - (.5647 * took.ACTY) 
+
+Let's compare this model to stepping forward.
+
+<br>
+
+```{r test forward}
+step(test.model, direction = "forward")
+
+```
+
+
+<br>
+
+Moving forward doesn't end up eliminated any variables. Unlike stepping backwards, this model includes the HomelessIndicator variable. Here is what the model would look like;
+
+hs.grad.year.2.county.match_location.match = -1.3382 - (.3779 * LimitedEnglishProficiencyY) + - (.2585 * HomelessIndicatorY) + (.1843 * economic.status1) - (.4466 * pseo.participant1) - (.1312 * SpecialEdStatus1) + (.1114 * non.english.home1) + (.4868 * Dem_DescTown/rural mix) + (.2779 * Dem_DescUrban/town/rural mix) - (.5588 * EDR 6W) - (.2796 * EDR 8) - (.5653 * took.ACTY) 
+
+Despite the inclusion of the HomelessIndicator variable, the coefficients are very similar to the backward step model.
+
+# Rethinking independent variables
+
+Okay, including all of the variables that I want might be a bit too taxing. So let's get a bit more particular about what to include.
+
+* Demographics
+    + hs.grad.year
+    + Gender
+    + LimitedEnglishProficiencyIndicator
+    + HomelessIndicator
+    + economic.status
+    + pseo.participant
+    + SpecialEdStatus
+    + Dem_Desc
+    + edr
+* Education characteristics
+    + ACTCompositeScore
+    + ap.examp
+    + total.cte.courses.taken
+    + cte.1 - 26
+    + cte.achievement
+    + avg.cte.intensity
+    + english.learner
+    + MCA.M - MCA.S
+    + attended.ps
+    + highest.cred.level
+    + ps.grad.InstitutionSector
+    + took.ACT
+* Geographic characteristics
+    + avg.unemp.rate
+    + wages.3year.avg
+
+We will also try using LASSO regression which shrinks the estimators towards 0. 
+
+```{r test lasso}
+
+
+```
+
