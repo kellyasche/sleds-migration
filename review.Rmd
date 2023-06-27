@@ -1482,7 +1482,7 @@ grad.year.7.meaningful.emp.summary
 
 <br>
 
-The summary below shows that the model fit is 2.2% with 17 of the variables being significant at p-value < .05. 
+The summary below shows that the model fit is 2.2% with 7 of the variables being significant at p-value < .05. 
 
 <br>
 
@@ -1524,39 +1524,24 @@ pR2(grad.year.7.meaningful.emp.logit)['McFadden']
 
 Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
 
-```{r grad year 2 meaningful emp model 1 vif}
-vif(grad.year.2.meaningful.emp.logit) 
+```{r grad year 7 meaningful emp model 1 vif}
+vif(grad.year.7.meaningful.emp.logit) 
 
 ```
 
 ##### Discussion
 
-The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment two years after graduating;
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment seven years after graduating;
 
-* Male: .22
-* Eligible for free or reduced lunch: .22
-* Graduated from a town/rural mix high school: .17
-* Non-english speaker at home: .16
-* Graduated from a urban/town/rural mix high school: .16
-* Graduated from post-secondary: .10
-* Increasing MCA - science score: .04
-* Increasing CTE courses: .02
+* Graduated from post-secondary: .51
+* Male: .27
 
+The analysis also indicates that the following variables help predict that an individual does has a MN employment record but NOT meaningful employment seven years after graduating high school;
 
-The analysis also indicates that the following variables help predict that an individual does has a MN employment record but NOT meaningful employment two years after graduating high school;
-
-* Earned master or higher: -1.99
-* Earned bachelors: -1.37
-* Took SAT: -.49
-* Took AP exam: -.43
-* Took ACT: -.40
-* Attended post-secondary: -.31
-* Eligible for special education: -.23
-* Took zero CTE courses: -.22
-* Graduated from EDR 6W: -.20 compared to EDR 6E
-* PSEO participant: -.19
-* Graduated from EDR 8: -.15 compared to EDR 6E
-* CTE participant: -.11
+* Earned master or higher: -1.2
+* Homeless: -1.01
+* Eligible for special education: -.50
+* Earned bachelors: -.33
 * Average CTE intensity: -.05
 
 <br>
@@ -1565,7 +1550,307 @@ The analysis also indicates that the following variables help predict that an in
 
 #### County
 
+The table below shows that there are 9,362 that had meaningful employment seven years after graduating high school. Of those, 35% worked in the same county as their high school.
+
+<br>
+
+```{r grad year 7 location match county summary}
+grad.year.7.loc.match.county.summary <- master.original %>%
+  filter(hs.grad.year.7.county.match != "Unknown") %>%
+  filter(hs.grad.year.7.county.match != "No MN emp record") %>%
+  filter(hs.grad.year.7.county.match != "No meaningful emp") %>%
+  filter(hs.grad.year.7.county.match != "After 2019") %>%
+  select(hs.grad.year.7.county.match) %>%
+  mutate(location.match = hs.grad.year.7.county.match) %>%
+  group_by(location.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.7.loc.match.county.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 6.7% with 13 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year 7 location match county model 1}
+grad.year.7.loc.match.county.dep.var <- master.original %>%
+  select(hs.grad.year.7.county.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.7.county.match != "Unknown") %>%
+  filter(hs.grad.year.7.county.match != "After 2019") %>%
+  filter(hs.grad.year.7.county.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.county = ifelse(hs.grad.year.7.county.match %in% c("Location match"), 1, 0)) %>%
+  select(25, 2:24)  %>%
+  mutate_at(c(2:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.7.loc.match.county.logit <- glm(loc.match.county ~ ., family = binomial, data = grad.year.7.loc.match.county.dep.var)
+
+grad.year.7.loc.match.county.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.7.loc.match.county.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year 7 location match county model 1 vif}
+vif(grad.year.7.loc.match.county.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in the same county as their high school seven years after graduating;
+
+* Graduated from a town/rural mix high school: .23 compared to entirely rural
+* MCA - science increasing score: .19
+* Total CTE courses taken: .04
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in the same county as their high school seven years after graduating;
+
+* Earned master or higher: -1.58
+* Earned bachelors: -.63
+* Graduated from EDR 6W: -.58 compared to EDR 6E
+* Average unemployment rate increases: -.36
+* Non-english spoken at home: -.34
+* Graduated from EDR 8: -.17 compared to EDR 6E
+* Took AP exam: -.16
+* Took ACT: -.13
+* Eligible for free or reduced lunch: -.12
+* MCA - match score increases: -.12
+* MCA - reading score increases: -.11
+
+<br>
+
 #### EDR
+
+The table below shows that there are 9,362 that had meaningful employment seven years after graduating high school. Of those, 49% worked in the same edr as their high school.
+
+<br>
+
+```{r grad year 7 location match edr summary}
+grad.year.7.loc.match.edr.summary <- master.original %>%
+  filter(hs.grad.year.7.edr.match != "Unknown") %>%
+  filter(hs.grad.year.7.edr.match != "No MN emp record") %>%
+  filter(hs.grad.year.7.edr.match != "No meaningful emp") %>%
+  filter(hs.grad.year.7.edr.match != "After 2019") %>%
+  select(hs.grad.year.7.edr.match) %>%
+  mutate(location.match = hs.grad.year.7.edr.match) %>%
+  group_by(location.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.7.loc.match.edr.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 9.1% with 13 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year 7 location match edr model 1}
+grad.year.7.loc.match.edr.dep.var <- master.original %>%
+  select(hs.grad.year.7.edr.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.7.edr.match != "Unknown") %>%
+  filter(hs.grad.year.7.edr.match != "After 2019") %>%
+  filter(hs.grad.year.7.edr.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.edr = ifelse(hs.grad.year.7.edr.match %in% c("Location match"), 1, 0)) %>%
+  select(25, 2:24)  %>%
+  mutate_at(c(2:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.7.loc.match.edr.logit <- glm(loc.match.edr ~ ., family = binomial, data = grad.year.7.loc.match.edr.dep.var)
+
+grad.year.7.loc.match.edr.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school edr")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.7.loc.match.edr.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year 7 location match edr model 1 vif}
+vif(grad.year.7.loc.match.edr.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in the same edr as their high school seven years after graduating;
+
+* Graduated from an EDR 8 high school: .36 compared to EDR 6E
+* MCA - science increasing score: .13
+* Total CTE courses taken: .04
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in the same EDR as their high school seven years after graduating;
+
+* Earned master or higher: -1.72
+* Earned bachelors: -.68
+* Graduated from EDR 6W: -.56 compared to EDR 6E
+* Non-english spoken at home: -.50
+* Graduated from urban/town/rural mix school: -.37
+* Took ACT: -.28
+* Took AP exam: -.2
+* Graduated from town/rural mix high school: -.2
+* Average unemployment rate increases: -.20
+* Attended post-secondary: -.15
+* MCA - reading score increases: -.14
+* MCA - match score increases: -.14
+* Male: -.13
+
+<br>
 
 #### Region
 
+The table below shows that there are 9,362 that had meaningful employment seven years after graduating high school. Of those, 57% worked in one of the three EDRs.
+
+<br>
+
+```{r grad year 7 location match region summary}
+grad.year.7.loc.match.region.summary <- master.original %>%
+  filter(hs.grad.year.7.region.match != "Unknown") %>%
+  filter(hs.grad.year.7.region.match != "No MN emp record") %>%
+  filter(hs.grad.year.7.region.match != "No meaningful emp") %>%
+  filter(hs.grad.year.7.region.match != "After 2019") %>%
+  select(hs.grad.year.7.region.match) %>%
+  mutate(location.match = hs.grad.year.7.region.match) %>%
+  group_by(location.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.7.loc.match.region.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 9.4% with 14 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year 7 location match region model 1}
+grad.year.7.loc.match.region.dep.var <- master.original %>%
+  select(hs.grad.year.7.region.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.7.region.match != "Unknown") %>%
+  filter(hs.grad.year.7.region.match != "After 2019") %>%
+  filter(hs.grad.year.7.region.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.region = ifelse(hs.grad.year.7.region.match %in% c("Location match"), 1, 0)) %>%
+  select(25, 2:24)  %>%
+  mutate_at(c(2:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.7.loc.match.region.logit <- glm(loc.match.region ~ ., family = binomial, data = grad.year.7.loc.match.region.dep.var)
+
+grad.year.7.loc.match.region.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "region 6W high school", "region 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school region")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.7.loc.match.region.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year 7 location match region model 1 vif}
+vif(grad.year.7.loc.match.region.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in one of the three EDRs seven years after graduating;
+
+* Graduated from an EDR 8 high school: .51 compared to EDR 6E
+* Graduated from an EDR 6W high school: .18 compared to EDR 6E
+* MCA - science increasing score: .11
+* Total CTE courses taken: .02
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in one of the three EDRs seven years after graduating;
+
+* Earned master or higher: -1.40
+* Earned bachelors: -.62
+* Non-english spoken at home: -.62
+* Graduated from urban/town/rural mix school: -.59
+* Took ACT: -.33
+* Took AP exam: -.24
+* Male: -.17
+* Attended post-secondary: -.17
+* Zero CTE courses taken: -.16
+* MCA - match score increases: -.16
+* MCA - reading score increases: -.14
+* Average unemployment rate increases: -.13
+
+<br>
