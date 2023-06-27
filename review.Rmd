@@ -1,0 +1,863 @@
+---
+title: "Analysis - local employment"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(systemfonts)
+reset_font_cache()
+library(ggtext)
+library(gmodels)
+library(fastDummies)
+library(car)
+library(glmnet)
+library(glmnetUtils)
+library(pscl)
+
+```
+
+```{r join docs, include=FALSE}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+    select(5,6) %>%
+    unique() %>%
+    mutate(edr = str_replace(edr, "  ", " "),
+           planning.region = str_replace(planning.region, " Minnesota", ""),
+           planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+           edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"))
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+
+color.ruca <- c("Entirely rural" = "#009933", "Town/rural mix" = "#99CC33", "Urban/town/rural mix" = "#CC9966", "Entirely urban" = "#754C29", "Minnesota" = "black")
+
+color.pr <- c("Northwest" = 	"#4575b4", "Northeast" = "grey", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black")
+
+color.edr <- c("EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365", "Minnesota" = "black")
+
+color.pr.edr <- c ("Northwest" = "#4575b4","Northeast" = "#e0f3f8", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black", "EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365")
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+
+```
+
+```{r master dataset}
+master.original <- read_csv("Data/SLEDS/Masters/Master.csv")
+
+```
+
+<br>
+
+# Research question overview
+
+The primary question for which this project wants insight is the following;
+
+1. What are some of the factors that play a role in whether an individual decides to work in the same "area" as their high school at time X?
+    + Area here equals the following;
+      + Same County
+      + Same EDR
+      + Same research region (EDR 6W, EDR 6E, or EDR 8)
+      + In Minnesota.
+    + Time X here equals the following;
+      + The year of graduating high school.
+      + The year of graduating high school plus two years.
+      + The year of graduating high school plus 7 years.
+      
+The dataset being used contains individuals that have graduated from a high school between 2007 and 2019 located in one of the three EDRs being research - EDR 6W, EDR 6E, and EDR 8. There are `r comma(nrow(master.original))` individuals in the dataset. Each individual has the following independent variables that will be modeled.
+
+## The dependent variables
+
+To keep this simple, let's just use the response to whether the individual was working in the same county as their high school county from which they graduated. 
+
+When speaking with the guidance committee overseeing the formulation of this project, they did not want to equate "high school summer jobs" as the same as "working in the same county". To account for this difference, a decision was made that "meaningful employment" equals 1,000 hours worked at an employer in a given year. 
+
+So, when taking this into consideration there are multiple responses to this independent variable which are defined here;
+
+* **No MN emp record:** the individual does not have a MN employment record because they either did not work for an employer at all, or worked for an employer outside of Minnesota the year they graduated high school.
+* **No meaningful emp:** they year of high school graduation the individual
+    + has a MN employment record; but
+    + the amount of hours worked didn't qualify as meaningful.
+* **No location match:** the year of high school graduation the individual
+    + has a MN employment record; and
+    + the amount of hours worked qualified as meaningful; but,
+    + the meaningful employment was not located in the same county as the individual's high school.
+* **Location match:** the year of high school graduation the individual
+    + has a MN employment record; and
+    + the amount of hours worked qualified as meaningful; and,
+    + the meaningful employment was located in the same county as the individual's high school.
+    
+<br>
+
+## The independent variables
+
+The dataset has a lot of variables that can be used. The primary ones that I'm going to analyze are the following;
+
++ **Gender:** factor 
+  + M = male
+  + F = female
++ **LimitedEnglishProficiencyIndicator:** factor
+  + Y = identified as having limited english proficiency at some point between 10th and 12th grade, otherwise N.
++ **HomelessIndicator:** factor
+  + Y = the individual was  identified as homeless at any point between 10th and 12th grade, otherwise N.
++ **economic.status:** factor
+  + 1 = the individual was eligible for free or reduced lunch (codes 1,2,4,5) at any point between 10th and 12th grade, otherwise 0.
++ **pseo.participant:** factor
+  + 1 = the individual participated in a PSEO course sometime between 10th and 12th grade, otherwise 0.
++ **SpecialEdStatus:** factor
+  + 1 = the individual required special education services at some point between 10th and 12th grade, otherwise 0.
++ **non.english.home:**  factor 
+  + 1 = the individual was identified as having English as not the primary language spoken at home between 10th and 12th grad, otherwise 0.
++ **ACTCompositeScore:** the composite ACT score of the individual. If the ACT was not taken, the individual is NA.
++ **ap.exam:** factor
+  + 1 = the individual took an AP exam at some point, 
+  + 0 = the individual did not take an AP exam.
++ **total.cte.courses.taken:** the total number of CTE courses the individual has taken in their career since 10th grade.
++ **cte.achievement:** factor of three with 
+  + "CTE concentrator or completor" being one, 
+  + "CTE participant" meaning they took a CTE course but was not a concentrator or completor, and, 
+  + "No CTE" meaning they didn't take a CTE course.
++ **english.learner:** factor
+  + 1 = the individual was identified as an "english learner" at least one time between 10th and 12th grade, otherwise 0.
++ **MCA.M & MCA.R & MCA.S:** this is the Minnesota Comprehensive Assessment tests for reading, math and science. Each individual is given 1 of 4 grades for each subject;
+  + 1 = Does not meet standards
+  + 2 = Partially meets standards
+  + 3 = Meets standards
+  + 4 = Exceeds standards
++ **sat.taken:** factor
+  + 1 = individual took the SAT at some point between 10th and 12th grade, otherwise 0.
++ **attended.ps:** factor
+  + Yes = the individual attended a post-secondary education institution, otherwise No.
++ **ps.grad:** factor
+  + 1 = the individual gradated from a post-secondary institution otherwise 0.
++ **ps.grad.InstitutionSector:** factor - the institution sector of the post-secondary school from which an individual has graduated.
+  + 1-10 = the codes of the institution sector provided above.
+  + "Never attended ps" = the individual never attended a post-secondary institution
+  + "Did not graduate" = the individual attended a post-secondary institution but did not graduate.
++ **highest.cred.level:** factor  - an identifier of the highest credential earned by the PersonID. The categories are;
+  + Less than associate degree
+  + Associate degree
+  + Bachelors degree
+  + Higher than bachelors degree.
+* **Dem_Desc:** factor - the RUCA category of the high school from which the individual graduated.
+  + Entirely rural
+  + Town/rural mix
+  + Urban/town/rural mix
+* **edr:** factor - the economic development region of the  high school from which the individual graduated.
+  + EDR 6W- Upper Minnesota Valley
+  + EDR 6E- Southwest Central
+  + EDR 8 - Southwest
+* **avg.cte.intensity:** The purpose of the CTE intensity measure is to determine whether a strong presence of CTE programming and participation impacts migration patterns. The thinking is that there will be plenty of students that may not dive deep into CTE coursework, but just seeing it in your school and constantly being reminded of all the local opportunities and occupational needs in the local area might impact how a student views employment opportunities for themselves in the future.We needed to come up with a measure of what the CTE “intensity” was for each school by each year. To do this, Eric Shwankl, Education Consultant with the Southwest West Central Service Cooperative, came up with an ingenious way to measure “CTE intensity” using the z-score (also called standard score). The z-score calculates how far a value is (in terms of standard deviation) from the average in the population. In this case z-score is used to measure how far one schools CTE student participation % is from the mean of the percentage of all schools that year, and how far one schools CTE courses offered per student % is from the percentage of all schools for that year. This particular column takes the average z-score from all the school instances for each individual.
++ **avg.unemp.rate:** the three year average unemployment rate during an individuals Sophmore, Junior and Senior years.
++ **wages.3year.avg:** the average county median household income of an individuals Sophomore, Junior and Senior years.
+
+In total, there are 25 variables included in the primary model. 12 of which are binomial responses, 5 are multinomial, and the remaining 8 are numeric values.
+
+<br>
+
+# Methods
+
+## Discussion
+
+The primary issue is that we have a multinomial dependent variable - an individual can have one of four values. However, these values are also dependent on each other. For example, for someone to have meaningful employment, they also have to have a MN employment record. When running a multinomial logistic regression it assumes that each response is separate from each other. In the previous example, it would conduct analysis in which someone with meaningful employment doesn't have a MN employment record, which isn't true.
+
+Therefore, this dependent variable is three different dependent variables. We need to group each response into either a 1 or 0 depending on the dependent variable being used.
+
+* Model 1
+  + Dependent variable: binary - individual has a MN employment record or not at Time X
+    + No MN emp record = 0
+    + No meaningful emp = 1
+    + No location match = 1
+    + Location match = 1
+  + Independent variables
+    + Time X = grad year: All independent variables except anything related to post-secondary attendance. 
+    + Time X = grad year + 2 & grad year +7: All independent variables.
+    
+<br>
+
+* Model 2
+  + Dependent variable: binary - individual has meaningful employment at Time X
+    + No MN emp record = removed from dataset
+    + No meaningful emp = 0
+    + No location match = 1
+    + Location match = 1
+  + Independent variables
+    + Time X = grad year: All independent variables except anything related to post-secondary institution
+    + Time X = grad year +2 & grad year +7: All independent variables.
+
+<br>
+
+* Model 3
+  + Dependent variable: binary - individual has meaningful employment in the same location as their high school area X at Time X
+    + No MN emp record = removed from dataset
+    + No meaningful emp = removed from dataset
+    + No location match = 0
+    + Location match = 1
+  + Independent variables
+    Time X = grad year: All independent variables except anything related to post-secondary institution
+    Time X = grad year +2 & grad year +7: All independent variables
+    
+As you can see, I'm removing some of the individuals from the dataset as I step through each model. When analyzing the relationship between the independent variables with whether an individual has meaningful employment or not, I'm removing all individuals that didn't even have a MN employment record. So the model is being run with individuals that HAD a MN employment record. I'm not sure if this is the correct strategy or not. But we will give it a try.
+
+So, in the end this is just a very simple logistic regression for each dependent variable at each time X. The structure of the analysis will look like this;
+
+* Time X = grad year
+  + Model 1 - Has a MN employment record or not
+  + Model 2 - Has meaningful employment or not
+  + Model 3 - Has meaningful employment in the same region X as their high school
+    + Region X = County
+    + Region X = EDR
+    + Region X = Any of the EDRs (EDR 6W, EDR 6E, EDR 8)
+* Time X = grad year +2
+  + Model 1 - Has a MN employment record or not
+  + Model 2 - Has meaningful employment or not
+  + Model 3 - Has meaningful employment in the same region X as their high school
+    + Region X = County
+    + Region X = EDR
+    + Region X = Any of the EDRs (EDR 6W, EDR 6E, EDR 8)
+* Time X = grad year +7
+  + Model 1 - Has a MN employment record or not
+  + Model 2 - Has meaningful employment or not
+  + Model 3 - Has meaningful employment in the same region X as their high school
+    + Region X = County
+    + Region X = EDR
+    + Region X = Any of the EDRs (EDR 6W, EDR 6E, EDR 8)
+
+<br>
+
+# Analysis 
+
+The following analysis will include the following for each dependent variable;
+
+* Summary = the n individuals in the dataset, the number and percent of individuals for each category.
+* Logistic regression summary: the estimate, standard error, z-value, and p-value for each independent variable in the model
+* The model fit: essentially the predictive power of the model using McFadden equation.
+* Variance Inflation Factor: A check to see if there is any multi-collinearity issues among the independent variables in the model.
+
+```{r primary independent variables}
+independent.var.names.grad.year.2.7 <- c("Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "attended.ps", "ps.grad", "highest.cred.level", "avg.unemp.rate", "wages.3year.avg")
+
+independent.var.names.grad.year <- c("Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "avg.unemp.rate", "wages.3year.avg")
+
+
+cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25")
+```
+
+<br>
+
+## Time X = grad year
+
+The following analysis uses time X as the year the individual graduated high school. For example, if an individual graduated in 2009, then the "has MN employment record" dependent variable is a binary (1 or 0) on whether that individual had a MN employment record recorded in 2009.
+
+<br>
+
+### Model 1 - has MN employment record
+
+The table below shows that there are 38,154 individuals in the dataset to be modeled and nearly 78% of the individuals in the dataset had a Minnesota employment record the same year they graduated high school. 
+
+<br>
+
+```{r grad year mn emp record summary}
+grad.year.mn.emp.record.summary <- master.original %>%
+  filter(mn.emp.record.hs.grad.year != "Unknown") %>%
+  group_by(mn.emp.record.hs.grad.year) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.mn.emp.record.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 4.2% with 16 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year mn emp record model 1}
+grad.year.mn.emp.record.dep.var <- master.original %>%
+  select(hs.grad.year.county.match, `independent.var.names.grad.year`) %>%
+    filter(hs.grad.year.county.match != "Unknown") %>%
+  mutate(mn.emp.record = ifelse(hs.grad.year.county.match %in% c("Location match", "No location match", "No meaningful emp"), 1, 0)) %>%
+  select(22, 2:21) %>%
+  mutate_at(c(2:12, 14, 19), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.mn.emp.record.logit <- glm(mn.emp.record ~ ., family = binomial, data = grad.year.mn.emp.record.dep.var)
+
+grad.year.mn.emp.record.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 25)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.mn.emp.record.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year mn emp record model 1 vif}
+vif(grad.year.mn.emp.record.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record;
+
+* Homeless: .59
+* Graduated from a town/rural mix high school: .35
+* Took ACT: .32
+* increasing MCA - reading scores: .19
+* Qualified for free and reduced lunch: .16
+* Increasing number of CTE courses taken: .02
+
+
+The analysis also indicates that the following variables help predict that an individual does NOT have a MN employment record;
+
+* Took ACT: -.51
+* Graduated from EDR 6W: -.42 compared to EDR 6E
+* Non-english spoken at home: -.42
+* Graduated from EDR 8: -.41 compared to EDR 6E
+* is Male: -.36
+* Limited english proficiency: -.34
+* Took zero CTE courses: -.28
+* Considered needing special ed: -.17
+* Took AP exam: -.13
+* Higher avg unemployment: -.07
+
+One piece that's really interesting is how much the EDR location of the high school makes a difference. EDR 6W and EDR 8 are closer to South Dakota, which may indicate why the relationship might be so strong and predictive. If students go to South Dakota to work, than they don't have a MN employment record.
+
+<br>
+
+### Model 2 - has meaningful employment
+
+The table below shows that there are 29,768 individuals in the dataset to be modeled and nearly 75% of the individuals in the dataset did not have meaningful employment in Minnesota the same year they graduated high school.
+
+<br>
+
+```{r grad year meaningful emp summary}
+grad.year.meaningful.emp.summary <- master.original %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  filter(hs.grad.year.county.match != "No MN emp record") %>%
+  mutate(meaningful.emp = ifelse(hs.grad.year.county.match %in% c("Location match", "No location match"), "Meaningful emp", "No meaningful emp")) %>%
+  group_by(meaningful.emp) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.meaningful.emp.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 7.5% with 15 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year meaningful emp model 1}
+grad.year.meaningful.emp.dep.var <- master.original %>%
+  select(hs.grad.year.county.match, `independent.var.names.grad.year`) %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  filter(hs.grad.year.county.match %in% c("Location match", "No location match", "No meaningful emp")) %>%
+mutate(meaningful.emp = ifelse(hs.grad.year.county.match %in% c("Location match", "No location match"), 1, 0)) %>%
+  select(22, 2:21) %>%
+  mutate_at(c(2:12, 14, 19), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.meaningful.emp.logit <- glm(meaningful.emp ~ ., family = binomial, data = grad.year.meaningful.emp.dep.var)
+
+grad.year.meaningful.emp.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 25)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.meaningful.emp.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year meaningful emp model 1 vif}
+vif(grad.year.meaningful.emp.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment;
+
+* Eligible for free or reduced lunch: .39
+* Graduated from a town/rural mix high school: .27
+* Non-english speaker at home: .24
+* Male: .16
+* Graduated from a urban/town/rural mix high school: .13
+
+
+The analysis also indicates that the following variables help predict that an individual does has a MN employment record but NOT meaningful employment;
+
+* Took SAT: -.99
+* Took ACT: -.60
+* Took AP exam: -.47
+* Graduated from EDR 8: -.36 compared to EDR 6E
+* PSEO participant: -.33 
+* Graduated from EDR 6W: -.33 compared to EDR 6E
+* Eligible for special education: -.28
+* Took zero CTE courses: -.18
+* CTE participant: -.12
+* MCA - reading score increases: -.1
+* Non-english spoken at home: -.42
+* Average unemployment rate increases: -.06
+* MCA - match score increases: -.05
+* Average CTE intensity increases: -.03
+
+<br>
+
+### Model 3 - location match
+
+#### County
+
+The table below shows that there are 7,439 that had meaningful employment the same year they graduated high school. Of those, 63.4% worked in the same county as their high school.
+
+<br>
+
+```{r grad year location match county summary}
+grad.year.loc.match.county.summary <- master.original %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  filter(hs.grad.year.county.match != "No MN emp record") %>%
+  filter(hs.grad.year.county.match != "No meaningful emp") %>%
+  select(hs.grad.year.county.match) %>%
+  mutate(location.match = hs.grad.year.county.match) %>%
+  group_by(location.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.loc.match.county.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 2.0% with 9 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year location match county model 1}
+grad.year.loc.match.county.dep.var <- master.original %>%
+  select(hs.grad.year.county.match, `independent.var.names.grad.year`) %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  filter(hs.grad.year.county.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.county = ifelse(hs.grad.year.county.match %in% c("Location match"), 1, 0)) %>%
+  select(22, 2:21) %>%
+  mutate_at(c(2:12, 14, 19), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.loc.match.county.logit <- glm(loc.match.county ~ ., family = binomial, data = grad.year.loc.match.county.dep.var)
+
+grad.year.loc.match.county.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 25)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.loc.match.county.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year location match county model 1 vif}
+vif(grad.year.loc.match.county.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in the same county as their high school;
+
+* Took AP exam: .34 
+* Non-english speaker at home: .33
+* Eligible for free or reduced lunch: .39
+* Graduated from a town/rural mix high school: .29 compared to entirely rural
+* Graduated from a urban/town/rural mix high school: .22 compared to entirely rural
+* Average CTE intensity increases: .04
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in the same county as their high school
+
+* Graduated from EDR 6W: -.56 compared to EDR 6E
+* Eligible for free or reduced lunch: -.27
+* Average unemployment rate increases: -.07
+* MCA - match score increases: -.07
+
+<br>
+
+#### EDR
+
+The table below shows that there are 7,443 that had meaningful employment the same year they graduated high school. Of those, 76% worked in the same edr as their high school.
+
+<br>
+
+```{r grad year location match edr summary}
+grad.year.loc.match.edr.summary <- master.original %>%
+  filter(hs.grad.year.edr.match != "Unknown") %>%
+  filter(hs.grad.year.edr.match != "No MN emp record") %>%
+  filter(hs.grad.year.edr.match != "No meaningful emp") %>%
+  select(hs.grad.year.edr.match) %>%
+  mutate(location.match = hs.grad.year.edr.match) %>%
+  group_by(location.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.loc.match.edr.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 4.1% with 8 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year location match edr model 1}
+grad.year.loc.match.edr.dep.var <- master.original %>%
+  select(hs.grad.year.edr.match, `independent.var.names.grad.year`) %>%
+  filter(hs.grad.year.edr.match != "Unknown") %>%
+  filter(hs.grad.year.edr.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.edr = ifelse(hs.grad.year.edr.match %in% c("Location match"), 1, 0)) %>%
+  select(22, 2:21) %>%
+  mutate_at(c(2:12, 14, 19), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.loc.match.edr.logit <- glm(loc.match.edr ~ ., family = binomial, data = grad.year.loc.match.edr.dep.var)
+
+grad.year.loc.match.edr.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school edr")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 25)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.loc.match.edr.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year location match edr model 1 vif}
+vif(grad.year.loc.match.edr.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in the same edr as their high school;
+
+* Graduated from EDR 8 high school: .53 compared to EDR 6E
+* Took AP exam: .23
+* Average CTE intensity increases: .05
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in the same edr as their high school
+
+* Graduated from EDR 6W: -.64 compared to EDR 6E
+* Graduated from a urban/town/rural mix high school: -.47 compared to entirely rural
+* Graduated from a town/rural mix high school: -.36 compared to entirely rural
+* Eligible for free or reduced lunch: -.16
+* MCA - match score increases: -.12
+* Average unemployment rate increases: -.08
+
+<br>
+
+#### Region
+
+The table below shows that there are 7,444 that had meaningful employment the same year they graduated high school. Of those, 83% worked in one of the three edrs being researched.
+
+<br>
+
+```{r grad year location match region summary}
+grad.year.loc.match.region.summary <- master.original %>%
+  filter(hs.grad.year.region.match != "Unknown") %>%
+  filter(hs.grad.year.region.match != "No MN emp record") %>%
+  filter(hs.grad.year.region.match != "No meaningful emp") %>%
+  select(hs.grad.year.region.match) %>%
+  mutate(location.match = hs.grad.year.region.match) %>%
+  group_by(location.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.loc.match.region.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 3.0% with 4 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year location match region model 1}
+grad.year.loc.match.region.dep.var <- master.original %>%
+  select(hs.grad.year.region.match, `independent.var.names.grad.year`) %>%
+  filter(hs.grad.year.region.match != "Unknown") %>%
+  filter(hs.grad.year.region.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.region = ifelse(hs.grad.year.region.match %in% c("Location match"), 1, 0)) %>%
+  select(22, 2:21) %>%
+  mutate_at(c(2:12, 14, 19), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.loc.match.region.logit <- glm(loc.match.region ~ ., family = binomial, data = grad.year.loc.match.region.dep.var)
+
+grad.year.loc.match.region.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "region 6W high school", "region 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school region")
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 25)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.loc.match.region.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year location match region model 1 vif}
+vif(grad.year.loc.match.region.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in one of the three edrs;
+
+* Graduated from EDR 8 high school: .66 compared to EDR 6E
+* Graduated from EDR 6W high school: .25 compared to EDR 6E
+
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in the same edr as their high school
+
+* Graduated from a urban/town/rural mix high school: -.78 compared to entirely rural
+* Graduated from a town/rural mix high school: -.24 compared to entirely rural
+* Eligible for free or reduced lunch: -.17
+* MCA - match score increases: -.17
+
+<br>
+
+
+<br>
+
+## Time X = grad year +2
+
+### Model 1 - has MN employment record
+
+### Model 2 - has meaningful employment
+
+### Model 3 - location match
+
+#### County
+
+#### EDR
+
+#### Region
+
+<br>
+
+## Time X = grad year +7
+
+### Model 1 - has MN employment record
+
+### Model 2 - has meaningful employment
+
+### Model 3 - location match
+
+#### County
+
+#### EDR
+
+#### Region
+

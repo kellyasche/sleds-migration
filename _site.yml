@@ -41,6 +41,8 @@ navbar:
       menu:
         - text: "Analysis methods"
           href: analysis_methods.html
+        - text: "For Review"
+          href: review.html
         - text: "Local employment"
           href: analysis_local_employment.html
 output:

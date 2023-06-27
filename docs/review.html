@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Analysis - local employment</title>
+
+<script src="site_libs/header-attrs-2.22/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.28/datatables.js"></script>
+<link href="site_libs/dt-core-1.13.4/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.13.4/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.13.4/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="site_libs/font-awesome-6.4.0/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#section-TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#section-TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="section-TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">CTE impacts on migration trends in SW Minnesota</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Summary of results</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="fa fa-gear"></span>
+     
+    Data prep and summaries
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="k12enrollment.html">K12Enrollment</a>
+    </li>
+    <li>
+      <a href="k12orgs.html">K12Orgs</a>
+    </li>
+    <li>
+      <a href="act.html">ACT</a>
+    </li>
+    <li>
+      <a href="ap.html">AP</a>
+    </li>
+    <li>
+      <a href="cteenrollment.html">CTEEnrollment</a>
+    </li>
+    <li>
+      <a href="ctedemographics.html">CTEDemographics</a>
+    </li>
+    <li>
+      <a href="cteintensity.html">CTEIntensity</a>
+    </li>
+    <li>
+      <a href="assessments.html">Assessments</a>
+    </li>
+    <li>
+      <a href="sat.html">SAT</a>
+    </li>
+    <li>
+      <a href="nscenrollment.html">National Student Clearinghouse - enrollment</a>
+    </li>
+    <li>
+      <a href="nsccompletions.html">National Student Clearinghouse - completions</a>
+    </li>
+    <li>
+      <a href="employment.html">Employment</a>
+    </li>
+    <li>
+      <a href="unemployment.html">Unemployment</a>
+    </li>
+    <li>
+      <a href="avgwages.html">Average wages</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <span class="fa fa-gear"></span>
+     
+    Analysis
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="analysis_methods.html">Analysis methods</a>
+    </li>
+    <li>
+      <a href="review.html">For Review</a>
+    </li>
+    <li>
+      <a href="analysis_local_employment.html">Local employment</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="section-header">
+
+
+
+<h1 class="title toc-ignore">Analysis - local employment</h1>
+
+</div>
+
+
+<p><br></p>
+<div id="section-research-question-overview" class="section level1">
+<h1>Research question overview</h1>
+<p>The primary question for which this project wants insight is the
+following;</p>
+<ol style="list-style-type: decimal">
+<li>What are some of the factors that play a role in whether an
+individual decides to work in the same “area” as their high school at
+time X?
+<ul>
+<li>Area here equals the following;
+<ul>
+<li>Same County</li>
+<li>Same EDR</li>
+<li>Same research region (EDR 6W, EDR 6E, or EDR 8)</li>
+<li>In Minnesota.</li>
+</ul></li>
+<li>Time X here equals the following;
+<ul>
+<li>The year of graduating high school.</li>
+<li>The year of graduating high school plus two years.</li>
+<li>The year of graduating high school plus 7 years.</li>
+</ul></li>
+</ul></li>
+</ol>
+<p>The dataset being used contains individuals that have graduated from
+a high school between 2007 and 2019 located in one of the three EDRs
+being research - EDR 6W, EDR 6E, and EDR 8. There are 38,154 individuals
+in the dataset. Each individual has the following independent variables
+that will be modeled.</p>
+<div id="section-the-dependent-variables" class="section level2">
+<h2>The dependent variables</h2>
+<p>To keep this simple, let’s just use the response to whether the
+individual was working in the same county as their high school county
+from which they graduated.</p>
+<p>When speaking with the guidance committee overseeing the formulation
+of this project, they did not want to equate “high school summer jobs”
+as the same as “working in the same county”. To account for this
+difference, a decision was made that “meaningful employment” equals
+1,000 hours worked at an employer in a given year.</p>
+<p>So, when taking this into consideration there are multiple responses
+to this independent variable which are defined here;</p>
+<ul>
+<li><strong>No MN emp record:</strong> the individual does not have a MN
+employment record because they either did not work for an employer at
+all, or worked for an employer outside of Minnesota the year they
+graduated high school.</li>
+<li><strong>No meaningful emp:</strong> they year of high school
+graduation the individual
+<ul>
+<li>has a MN employment record; but</li>
+<li>the amount of hours worked didn’t qualify as meaningful.</li>
+</ul></li>
+<li><strong>No location match:</strong> the year of high school
+graduation the individual
+<ul>
+<li>has a MN employment record; and</li>
+<li>the amount of hours worked qualified as meaningful; but,</li>
+<li>the meaningful employment was not located in the same county as the
+individual’s high school.</li>
+</ul></li>
+<li><strong>Location match:</strong> the year of high school graduation
+the individual
+<ul>
+<li>has a MN employment record; and</li>
+<li>the amount of hours worked qualified as meaningful; and,</li>
+<li>the meaningful employment was located in the same county as the
+individual’s high school.</li>
+</ul></li>
+</ul>
+<p><br></p>
+</div>
+<div id="section-the-independent-variables" class="section level2">
+<h2>The independent variables</h2>
+<p>The dataset has a lot of variables that can be used. The primary ones
+that I’m going to analyze are the following;</p>
+<ul>
+<li><strong>Gender:</strong> factor
+<ul>
+<li>M = male</li>
+<li>F = female</li>
+</ul></li>
+<li><strong>LimitedEnglishProficiencyIndicator:</strong> factor
+<ul>
+<li>Y = identified as having limited english proficiency at some point
+between 10th and 12th grade, otherwise N.</li>
+</ul></li>
+<li><strong>HomelessIndicator:</strong> factor
+<ul>
+<li>Y = the individual was identified as homeless at any point between
+10th and 12th grade, otherwise N.</li>
+</ul></li>
+<li><strong>economic.status:</strong> factor
+<ul>
+<li>1 = the individual was eligible for free or reduced lunch (codes
+1,2,4,5) at any point between 10th and 12th grade, otherwise 0.</li>
+</ul></li>
+<li><strong>pseo.participant:</strong> factor
+<ul>
+<li>1 = the individual participated in a PSEO course sometime between
+10th and 12th grade, otherwise 0.</li>
+</ul></li>
+<li><strong>SpecialEdStatus:</strong> factor
+<ul>
+<li>1 = the individual required special education services at some point
+between 10th and 12th grade, otherwise 0.</li>
+</ul></li>
+<li><strong>non.english.home:</strong> factor
+<ul>
+<li>1 = the individual was identified as having English as not the
+primary language spoken at home between 10th and 12th grad, otherwise
+0.</li>
+</ul></li>
+<li><strong>ACTCompositeScore:</strong> the composite ACT score of the
+individual. If the ACT was not taken, the individual is NA.</li>
+<li><strong>ap.exam:</strong> factor
+<ul>
+<li>1 = the individual took an AP exam at some point,</li>
+<li>0 = the individual did not take an AP exam.</li>
+</ul></li>
+<li><strong>total.cte.courses.taken:</strong> the total number of CTE
+courses the individual has taken in their career since 10th grade.</li>
+<li><strong>cte.achievement:</strong> factor of three with
+<ul>
+<li>“CTE concentrator or completor” being one,</li>
+<li>“CTE participant” meaning they took a CTE course but was not a
+concentrator or completor, and,</li>
+<li>“No CTE” meaning they didn’t take a CTE course.</li>
+</ul></li>
+<li><strong>english.learner:</strong> factor
+<ul>
+<li>1 = the individual was identified as an “english learner” at least
+one time between 10th and 12th grade, otherwise 0.</li>
+</ul></li>
+<li><strong>MCA.M &amp; MCA.R &amp; MCA.S:</strong> this is the
+Minnesota Comprehensive Assessment tests for reading, math and science.
+Each individual is given 1 of 4 grades for each subject;
+<ul>
+<li>1 = Does not meet standards</li>
+<li>2 = Partially meets standards</li>
+<li>3 = Meets standards</li>
+<li>4 = Exceeds standards</li>
+</ul></li>
+<li><strong>sat.taken:</strong> factor
+<ul>
+<li>1 = individual took the SAT at some point between 10th and 12th
+grade, otherwise 0.</li>
+</ul></li>
+<li><strong>attended.ps:</strong> factor
+<ul>
+<li>Yes = the individual attended a post-secondary education
+institution, otherwise No.</li>
+</ul></li>
+<li><strong>ps.grad:</strong> factor
+<ul>
+<li>1 = the individual gradated from a post-secondary institution
+otherwise 0.</li>
+</ul></li>
+<li><strong>ps.grad.InstitutionSector:</strong> factor - the institution
+sector of the post-secondary school from which an individual has
+graduated.
+<ul>
+<li>1-10 = the codes of the institution sector provided above.</li>
+<li>“Never attended ps” = the individual never attended a post-secondary
+institution</li>
+<li>“Did not graduate” = the individual attended a post-secondary
+institution but did not graduate.</li>
+</ul></li>
+<li><strong>highest.cred.level:</strong> factor - an identifier of the
+highest credential earned by the PersonID. The categories are;
+<ul>
+<li>Less than associate degree</li>
+<li>Associate degree</li>
+<li>Bachelors degree</li>
+<li>Higher than bachelors degree.</li>
+</ul></li>
+<li><strong>Dem_Desc:</strong> factor - the RUCA category of the high
+school from which the individual graduated.
+<ul>
+<li>Entirely rural</li>
+<li>Town/rural mix</li>
+<li>Urban/town/rural mix</li>
+</ul></li>
+<li><strong>edr:</strong> factor - the economic development region of
+the high school from which the individual graduated.
+<ul>
+<li>EDR 6W- Upper Minnesota Valley</li>
+<li>EDR 6E- Southwest Central</li>
+<li>EDR 8 - Southwest</li>
+</ul></li>
+<li><strong>avg.cte.intensity:</strong> The purpose of the CTE intensity
+measure is to determine whether a strong presence of CTE programming and
+participation impacts migration patterns. The thinking is that there
+will be plenty of students that may not dive deep into CTE coursework,
+but just seeing it in your school and constantly being reminded of all
+the local opportunities and occupational needs in the local area might
+impact how a student views employment opportunities for themselves in
+the future.We needed to come up with a measure of what the CTE
+“intensity” was for each school by each year. To do this, Eric Shwankl,
+Education Consultant with the Southwest West Central Service
+Cooperative, came up with an ingenious way to measure “CTE intensity”
+using the z-score (also called standard score). The z-score calculates
+how far a value is (in terms of standard deviation) from the average in
+the population. In this case z-score is used to measure how far one
+schools CTE student participation % is from the mean of the percentage
+of all schools that year, and how far one schools CTE courses offered
+per student % is from the percentage of all schools for that year. This
+particular column takes the average z-score from all the school
+instances for each individual.</li>
+<li><strong>avg.unemp.rate:</strong> the three year average unemployment
+rate during an individuals Sophmore, Junior and Senior years.</li>
+<li><strong>wages.3year.avg:</strong> the average county median
+household income of an individuals Sophomore, Junior and Senior
+years.</li>
+</ul>
+<p>In total, there are 25 variables included in the primary model. 12 of
+which are binomial responses, 5 are multinomial, and the remaining 8 are
+numeric values.</p>
+<p><br></p>
+</div>
+</div>
+<div id="section-methods" class="section level1">
+<h1>Methods</h1>
+<div id="section-discussion" class="section level2">
+<h2>Discussion</h2>
+<p>The primary issue is that we have a multinomial dependent variable -
+an individual can have one of four values. However, these values are
+also dependent on each other. For example, for someone to have
+meaningful employment, they also have to have a MN employment record.
+When running a multinomial logistic regression it assumes that each
+response is separate from each other. In the previous example, it would
+conduct analysis in which someone with meaningful employment doesn’t
+have a MN employment record, which isn’t true.</p>
+<p>Therefore, this dependent variable is three different dependent
+variables. We need to group each response into either a 1 or 0 depending
+on the dependent variable being used.</p>
+<ul>
+<li>Model 1
+<ul>
+<li>Dependent variable: binary - individual has a MN employment record
+or not at Time X
+<ul>
+<li>No MN emp record = 0</li>
+<li>No meaningful emp = 1</li>
+<li>No location match = 1</li>
+<li>Location match = 1</li>
+</ul></li>
+<li>Independent variables
+<ul>
+<li>Time X = grad year: All independent variables except anything
+related to post-secondary attendance.</li>
+<li>Time X = grad year + 2 &amp; grad year +7: All independent
+variables.</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><br></p>
+<ul>
+<li>Model 2
+<ul>
+<li>Dependent variable: binary - individual has meaningful employment at
+Time X
+<ul>
+<li>No MN emp record = removed from dataset</li>
+<li>No meaningful emp = 0</li>
+<li>No location match = 1</li>
+<li>Location match = 1</li>
+</ul></li>
+<li>Independent variables
+<ul>
+<li>Time X = grad year: All independent variables except anything
+related to post-secondary institution</li>
+<li>Time X = grad year +2 &amp; grad year +7: All independent
+variables.</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><br></p>
+<ul>
+<li>Model 3
+<ul>
+<li>Dependent variable: binary - individual has meaningful employment in
+the same location as their high school area X at Time X
+<ul>
+<li>No MN emp record = removed from dataset</li>
+<li>No meaningful emp = removed from dataset</li>
+<li>No location match = 0</li>
+<li>Location match = 1</li>
+</ul></li>
+<li>Independent variables Time X = grad year: All independent variables
+except anything related to post-secondary institution Time X = grad year
++2 &amp; grad year +7: All independent variables</li>
+</ul></li>
+</ul>
+<p>As you can see, I’m removing some of the individuals from the dataset
+as I step through each model. When analyzing the relationship between
+the independent variables with whether an individual has meaningful
+employment or not, I’m removing all individuals that didn’t even have a
+MN employment record. So the model is being run with individuals that
+HAD a MN employment record. I’m not sure if this is the correct strategy
+or not. But we will give it a try.</p>
+<p>So, in the end this is just a very simple logistic regression for
+each dependent variable at each time X. The structure of the analysis
+will look like this;</p>
+<ul>
+<li>Time X = grad year
+<ul>
+<li>Model 1 - Has a MN employment record or not</li>
+<li>Model 2 - Has meaningful employment or not</li>
+<li>Model 3 - Has meaningful employment in the same region X as their
+high school
+<ul>
+<li>Region X = County</li>
+<li>Region X = EDR</li>
+<li>Region X = Any of the EDRs (EDR 6W, EDR 6E, EDR 8)</li>
+</ul></li>
+</ul></li>
+<li>Time X = grad year +2
+<ul>
+<li>Model 1 - Has a MN employment record or not</li>
+<li>Model 2 - Has meaningful employment or not</li>
+<li>Model 3 - Has meaningful employment in the same region X as their
+high school
+<ul>
+<li>Region X = County</li>
+<li>Region X = EDR</li>
+<li>Region X = Any of the EDRs (EDR 6W, EDR 6E, EDR 8)</li>
+</ul></li>
+</ul></li>
+<li>Time X = grad year +7
+<ul>
+<li>Model 1 - Has a MN employment record or not</li>
+<li>Model 2 - Has meaningful employment or not</li>
+<li>Model 3 - Has meaningful employment in the same region X as their
+high school
+<ul>
+<li>Region X = County</li>
+<li>Region X = EDR</li>
+<li>Region X = Any of the EDRs (EDR 6W, EDR 6E, EDR 8)</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><br></p>
+</div>
+</div>
+<div id="section-analysis" class="section level1">
+<h1>Analysis</h1>
+<p>The following analysis will include the following for each dependent
+variable;</p>
+<ul>
+<li>Summary = the n individuals in the dataset, the number and percent
+of individuals for each category.</li>
+<li>Logistic regression summary: the estimate, standard error, z-value,
+and p-value for each independent variable in the model</li>
+<li>The model fit: essentially the predictive power of the model using
+McFadden equation.</li>
+<li>Variance Inflation Factor: A check to see if there is any
+multi-collinearity issues among the independent variables in the
+model.</li>
+</ul>
+<p><br></p>
+<div id="section-time-x-grad-year" class="section level2">
+<h2>Time X = grad year</h2>
+<p>The following analysis uses time X as the year the individual
+graduated high school. For example, if an individual graduated in 2009,
+then the “has MN employment record” dependent variable is a binary (1 or
+0) on whether that individual had a MN employment record recorded in
+2009.</p>
+<p><br></p>
+<div id="section-model-1---has-mn-employment-record"
+class="section level3">
+<h3>Model 1 - has MN employment record</h3>
+<p>The table below shows that there are 38,154 individuals in the
+dataset to be modeled and nearly 78% of the individuals in the dataset
+had a Minnesota employment record the same year they graduated high
+school.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-bc12d7321d56320527ab" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-bc12d7321d56320527ab">{"x":{"filter":"none","vertical":false,"data":[["MN emp record","No MN emp record","Total"],[29872,8282,38154],[0.7829323268857787,0.2170676731142213,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>mn.emp.record.hs.grad.year<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+<p>The summary below shows that the model fit is 4.2% with 16 of the
+variables being significant at p-value &lt; .05.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-0e9255756321097e1292" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-0e9255756321097e1292">{"x":{"filter":"none","vertical":false,"data":[["Intercept","Gender - male","Limited english proficiency","Homeless","Free or reduced lunch","PSEO participant","Special Ed Status","Non-english speaker at home","Town/rural mix high school","Urban/town/rural mix high school","EDR 6W high school","EDR 8 high school","Took ACT","Took AP exam","Total CTE courses taken","CTE participant","No CTE taken","Average CTE intensity","MCA - math score","MCA - reading score","MCA - science score","Took SAT","Avg unemployment rate during high school","Avg wages of high school county"],[0.6268880348503449,-0.3597416329878841,-0.3399652382332732,0.5909554833582121,0.160759196839072,-0.03991372794967994,-0.1670754828314717,-0.4152365082496994,0.3471078585508525,0.04791087324368341,-0.4197549573600724,-0.4061114439888259,0.3201414999179145,-0.1306188367863018,0.01999410599883845,0.007650288743438779,-0.2823590545167257,-0.01505233741370888,0.01776855806959646,0.1877152656036948,0.01087070157323763,-0.5070550510814369,-0.06947255231309707,1.412883466812495e-05],[0.2061960821194786,0.0271705177052699,0.08785681760983288,0.2367572773283425,0.029354859720737,0.03320099683087742,0.03900546970026694,0.05188137857408364,0.03868790768679299,0.05338622783869274,0.04102828258590587,0.03781665069880084,0.03304300949933297,0.04071226482214883,0.003694190509092506,0.03450360864383105,0.04071197138995084,0.008818267935804019,0.01660653890486147,0.015771165063255,0.01463167940846606,0.1508095428396599,0.01312955412562306,4.568391666181116e-06],[3.040251921407023,-13.24014642967623,-3.869537361836157,2.496039361606006,5.476408280210848,-1.202184625750742,-4.283385999844231,-8.003575071868328,8.971998727895686,0.8974388186490119,-10.23086834017926,-10.73895854033693,9.688630205562152,-3.208341205209514,5.412310477661341,0.2217243078082091,-6.935528908983806,-1.706949428537233,1.069973591209594,11.90243490894974,0.7429565171410003,-3.362221259569336,-5.2913108585704,3.092737160151541],[0.002363803374113461,5.144842262601073e-40,0.0001090420710458828,0.01255886648116117,4.340455873686292e-08,0.2292920045579086,1.840704293844374e-05,1.208579426044417e-15,2.911817787496375e-19,0.3694848064516206,1.442203651254426e-24,6.679359112438043e-27,3.370182082961792e-22,0.001335030097487403,6.221669046027776e-08,0.8245285061665935,4.047041229187488e-12,0.08783145244310173,0.2846311960011478,1.149436615667089e-32,0.4575080066963781,0.0007731814299699635,1.214427436117336e-07,0.00198319699602124]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Predictor<\/th>\n      <th>B<\/th>\n      <th>SE<\/th>\n      <th>t<\/th>\n      <th>p<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 5, 3, \",\", \".\", true, null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2,3,4]}],"pageLength":25,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[4]; $(row).css({'background-color':isNaN(parseFloat(value)) ? '' : value <= 0.05 ? \"#99CC33\" : \"transparent\"});\n}"},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.04201547</code></pre>
+<p><br></p>
+<p>Looking at the values for the variance inflation factor test shows
+zero variables with a value above 5, the typical threshold. This
+indicates that there isn’t any collinearity among the independent
+variables.</p>
+<pre><code>##                                        GVIF Df GVIF^(1/(2*Df))
+## Gender                             1.104813  1        1.051101
+## LimitedEnglishProficiencyIndicator 1.372101  1        1.171367
+## HomelessIndicator                  1.006393  1        1.003192
+## economic.status                    1.250365  1        1.118197
+## pseo.participant                   1.441111  1        1.200463
+## SpecialEdStatus                    1.279626  1        1.131205
+## non.english.home                   1.589356  1        1.260697
+## Dem_Desc                           1.589992  2        1.122920
+## edr                                1.900996  2        1.174209
+## took.ACT                           1.572539  1        1.254009
+## ap.exam                            1.246822  1        1.116612
+## total.cte.courses.taken            1.918822  1        1.385216
+## cte.achievement                    1.716974  2        1.144698
+## avg.cte.intensity                  1.309857  1        1.144490
+## MCA.M                              2.356866  1        1.535209
+## MCA.R                              2.346466  1        1.531818
+## MCA.S                              2.181129  1        1.476865
+## sat.taken                          1.017776  1        1.008849
+## avg.unemp.rate                     1.859154  1        1.363508
+## wages.3year.avg                    2.361426  1        1.536693</code></pre>
+<div id="section-discussion-1" class="section level5">
+<h5>Discussion</h5>
+<p>The analysis indicates that the following variables help predict that
+an individual does have a MN employment record;</p>
+<ul>
+<li>Homeless: .59</li>
+<li>Graduated from a town/rural mix high school: .35</li>
+<li>Took ACT: .32</li>
+<li>increasing MCA - reading scores: .19</li>
+<li>Qualified for free and reduced lunch: .16</li>
+<li>Increasing number of CTE courses taken: .02</li>
+</ul>
+<p>The analysis also indicates that the following variables help predict
+that an individual does NOT have a MN employment record;</p>
+<ul>
+<li>Took ACT: -.51</li>
+<li>Graduated from EDR 6W: -.42 compared to EDR 6E</li>
+<li>Non-english spoken at home: -.42</li>
+<li>Graduated from EDR 8: -.41 compared to EDR 6E</li>
+<li>is Male: -.36</li>
+<li>Limited english proficiency: -.34</li>
+<li>Took zero CTE courses: -.28</li>
+<li>Considered needing special ed: -.17</li>
+<li>Took AP exam: -.13</li>
+<li>Higher avg unemployment: -.07</li>
+</ul>
+<p>One piece that’s really interesting is how much the EDR location of
+the high school makes a difference. EDR 6W and EDR 8 are closer to South
+Dakota, which may indicate why the relationship might be so strong and
+predictive. If students go to South Dakota to work, than they don’t have
+a MN employment record.</p>
+<p><br></p>
+</div>
+</div>
+<div id="section-model-2---has-meaningful-employment"
+class="section level3">
+<h3>Model 2 - has meaningful employment</h3>
+<p>The table below shows that there are 29,768 individuals in the
+dataset to be modeled and nearly 75% of the individuals in the dataset
+did not have meaningful employment in Minnesota the same year they
+graduated high school.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-7c45e760d2463f014c0b" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-7c45e760d2463f014c0b">{"x":{"filter":"none","vertical":false,"data":[["Meaningful emp","No meaningful emp","Total"],[7439,22329,29768],[0.249899220639613,0.750100779360387,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>meaningful.emp<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columeaningfulDefs":[{"className":"dt-center","targets":[1,2]}],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+<p>The summary below shows that the model fit is 7.5% with 15 of the
+variables being significant at p-value &lt; .05.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-da96d6a5ac48d4dc801e" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-da96d6a5ac48d4dc801e">{"x":{"filter":"none","vertical":false,"data":[["Intercept","Gender - male","Limited english proficiency","Homeless","Free or reduced lunch","PSEO participant","Special Ed Status","Non-english speaker at home","Town/rural mix high school","Urban/town/rural mix high school","EDR 6W high school","EDR 8 high school","Took ACT","Took AP exam","Total CTE courses taken","CTE participant","No CTE taken","Average CTE intensity","MCA - math score","MCA - reading score","MCA - science score","Took SAT","Avg unemployment rate during high school","Avg wages of high school county"],[0.03642749948127295,0.1553963106119339,0.09778065689837342,-0.1704644514652741,0.3870949230605445,-0.3264524608327244,-0.2755433252195233,0.2381800253541685,0.267194313482533,0.1307642992281568,-0.3255704598496684,-0.361682898745883,-0.5955045684903546,-0.4693261072091924,0.0258050348552338,-0.1237618607601154,-0.1824973371871381,-0.02610827445099148,-0.04625050116601764,-0.09649298995689788,0.01672315382685123,-0.9924280898639246,-0.0642060333037416,-7.011790996724504e-06],[0.2350775894058626,0.0298375333324721,0.1099971578863307,0.1945967415816497,0.03110032134950824,0.03682153867645161,0.04466038704575173,0.05698604754695029,0.04596021713530852,0.06330226972156706,0.04345361009912969,0.03862116182615728,0.03418884546782845,0.04949044743017829,0.003683065257091616,0.03677013904760732,0.04643506499071284,0.009808778601388641,0.0181867640187918,0.0176988754904171,0.0162448971769369,0.3169374980925695,0.01478377804357721,5.231714909382511e-06],[0.1549594734799696,5.208081676202656,0.8889380305572836,-0.8759882106954499,12.44665348342664,-8.86580171733833,-6.169747811125029,4.179620022917612,5.81359989435871,2.065712648271842,-7.492368507632673,-9.364889134456927,-17.41809529809136,-9.483165571928264,7.006401747986163,-3.365825203975365,-3.930162200131261,-2.661725329114402,-2.543085791305615,-5.451927723269377,1.029440423334493,-3.131305370417422,-4.343005767164896,-1.340247149964082],[0.8768532667841646,1.908029403064444e-07,0.3740363851225924,0.3810364428755595,1.458326666372969e-35,7.595553891035322e-19,6.839899801355251e-10,2.919965782205813e-05,6.114345647527813e-09,0.03885562028778104,6.764168406694117e-14,7.613017385096612e-21,6.014625464821399e-68,2.466836270511194e-21,2.445251332779182e-12,0.000763150510481677,8.488857730175972e-05,0.007774128779451112,0.01098782468987776,4.982670837343157e-08,0.3032727619680607,0.001740310973865718,1.405464431567777e-05,0.1801650072814859]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Predictor<\/th>\n      <th>B<\/th>\n      <th>SE<\/th>\n      <th>t<\/th>\n      <th>p<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 5, 3, \",\", \".\", true, null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2,3,4]}],"pageLength":25,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[4]; $(row).css({'background-color':isNaN(parseFloat(value)) ? '' : value <= 0.05 ? \"#99CC33\" : \"transparent\"});\n}"},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.07548429</code></pre>
+<p><br></p>
+<p>Looking at the values for the variance inflation factor test shows
+zero variables with a value above 5, the typical threshold. This
+indicates that there isn’t any collinearity among the independent
+variables.</p>
+<pre><code>##                                        GVIF Df GVIF^(1/(2*Df))
+## Gender                             1.115119  1        1.055992
+## LimitedEnglishProficiencyIndicator 1.291313  1        1.136359
+## HomelessIndicator                  1.010492  1        1.005232
+## economic.status                    1.208401  1        1.099273
+## pseo.participant                   1.369552  1        1.170278
+## SpecialEdStatus                    1.263455  1        1.124035
+## non.english.home                   1.455779  1        1.206557
+## Dem_Desc                           1.553703  2        1.116457
+## edr                                1.696259  2        1.141230
+## took.ACT                           1.404886  1        1.185279
+## ap.exam                            1.161174  1        1.077578
+## total.cte.courses.taken            1.819740  1        1.348977
+## cte.achievement                    1.576371  2        1.120507
+## avg.cte.intensity                  1.313489  1        1.146075
+## MCA.M                              1.973355  1        1.404762
+## MCA.R                              1.990780  1        1.410950
+## MCA.S                              2.018330  1        1.420679
+## sat.taken                          1.004489  1        1.002242
+## avg.unemp.rate                     1.897043  1        1.377332
+## wages.3year.avg                    2.547063  1        1.595952</code></pre>
+<div id="section-discussion-2" class="section level5">
+<h5>Discussion</h5>
+<p>The analysis indicates that the following variables help predict that
+an individual does have a MN employment record and meaningful
+employment;</p>
+<ul>
+<li>Eligible for free or reduced lunch: .39</li>
+<li>Graduated from a town/rural mix high school: .27</li>
+<li>Non-english speaker at home: .24</li>
+<li>Male: .16</li>
+<li>Graduated from a urban/town/rural mix high school: .13</li>
+</ul>
+<p>The analysis also indicates that the following variables help predict
+that an individual does has a MN employment record but NOT meaningful
+employment;</p>
+<ul>
+<li>Took SAT: -.99</li>
+<li>Took ACT: -.60</li>
+<li>Took AP exam: -.47</li>
+<li>Graduated from EDR 8: -.36 compared to EDR 6E</li>
+<li>PSEO participant: -.33</li>
+<li>Graduated from EDR 6W: -.33 compared to EDR 6E</li>
+<li>Eligible for special education: -.28</li>
+<li>Took zero CTE courses: -.18</li>
+<li>CTE participant: -.12</li>
+<li>MCA - reading score increases: -.1</li>
+<li>Non-english spoken at home: -.42</li>
+<li>Average unemployment rate increases: -.06</li>
+<li>MCA - match score increases: -.05</li>
+<li>Average CTE intensity increases: -.03</li>
+</ul>
+<p><br></p>
+</div>
+</div>
+<div id="section-model-3---location-match" class="section level3">
+<h3>Model 3 - location match</h3>
+<div id="section-county" class="section level4">
+<h4>County</h4>
+<p>The table below shows that there are 7,439 that had meaningful
+employment the same year they graduated high school. Of those, 63.4%
+worked in the same county as their high school.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-cae0a5287e73ae6f7e1a" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-cae0a5287e73ae6f7e1a">{"x":{"filter":"none","vertical":false,"data":[["Location match","No location match","Total"],[4720,2719,7439],[0.6344938835865036,0.3655061164134965,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>location.match<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columeaningfulDefs":[{"className":"dt-center","targets":[1,2]}],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+<p>The summary below shows that the model fit is 2.0% with 9 of the
+variables being significant at p-value &lt; .05.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-3b85e63a53d0a6a09705" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-3b85e63a53d0a6a09705">{"x":{"filter":"none","vertical":false,"data":[["Intercept","Gender - male","Limited english proficiency","Homeless","Free or reduced lunch","PSEO participant","Special Ed Status","Non-english speaker at home","Town/rural mix high school","Urban/town/rural mix high school","EDR 6W high school","EDR 8 high school","Took ACT","Took AP exam","Total CTE courses taken","CTE participant","No CTE taken","Average CTE intensity","MCA - math score","MCA - reading score","MCA - science score","Took SAT","Avg unemployment rate during high school","Avg wages of high school county"],[1.89310708512667,0.00212300828114886,-0.1325410726257289,-0.1029746821173443,-0.2669099744449996,0.0247051796088982,-0.120476727970347,0.3346039992211128,0.2854885266650335,0.223153206207644,-0.5579085811185206,-0.01642147859100185,0.03625286791777861,0.3352233035817605,0.004613164828751083,0.05260348518310993,-0.1164272137167885,0.03631219936354101,-0.07122310768364368,0.0284743638640112,-0.004118362958083818,-0.8681517812423791,-0.07324265179050919,-2.856197849083913e-05],[0.4131328171546616,0.05295545667288335,0.1706317388354975,0.317076962381487,0.0533340875030654,0.06687994981424329,0.07340501498208186,0.09526882933379732,0.08063984090256308,0.1125895639977577,0.07368161539405585,0.06659940221158041,0.05656701677500015,0.09893831995197594,0.006292617495518942,0.06455897991155392,0.08147797670370721,0.0169491065348388,0.0323545867541245,0.03046585834972221,0.02887831962964997,0.6200562046158581,0.02586211921300459,9.262671581380395e-06],[4.582320761068857,0.04009045364792367,-0.7767668168318265,-0.3247624215393223,-5.004491253921965,0.3693959053126679,-1.641260178201112,3.512208574000075,3.540291293604963,1.982006131688087,-7.571883137126891,-0.246570960784787,0.6408835039326416,3.388204931562168,0.7331074599776929,0.8148128309210729,-1.428940904364542,2.14242557794427,-2.201329543316275,0.9346319259135805,-0.1426108932548627,-1.400117884120236,-2.832043700180596,-3.083557291208916],[4.598438113662724e-06,0.9680210125699159,0.4372963576829467,0.745360887436029,5.600975478538162e-07,0.7118326495993141,0.1007434185751596,0.0004443990870751256,0.0003996856193977973,0.04747855438204673,3.678523158226778e-14,0.8052402806713755,0.5215983742440493,0.0007035167907062561,0.4634928905354539,0.415179455268173,0.1530212194015011,0.03215925146631021,0.02771270286211077,0.3499780200227411,0.8865974938507711,0.161478020399338,0.004625152707018011,0.002045417225816673]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Predictor<\/th>\n      <th>B<\/th>\n      <th>SE<\/th>\n      <th>t<\/th>\n      <th>p<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 5, 3, \",\", \".\", true, null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2,3,4]}],"pageLength":25,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[4]; $(row).css({'background-color':isNaN(parseFloat(value)) ? '' : value <= 0.05 ? \"#99CC33\" : \"transparent\"});\n}"},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.02006534</code></pre>
+<p><br></p>
+<p>Looking at the values for the variance inflation factor test shows
+zero variables with a value above 5, the typical threshold. This
+indicates that there isn’t any collinearity among the independent
+variables.</p>
+<pre><code>##                                        GVIF Df GVIF^(1/(2*Df))
+## Gender                             1.144606  1        1.069863
+## LimitedEnglishProficiencyIndicator 1.361775  1        1.166951
+## HomelessIndicator                  1.009477  1        1.004727
+## economic.status                    1.170622  1        1.081953
+## pseo.participant                   1.329994  1        1.153254
+## SpecialEdStatus                    1.235345  1        1.111461
+## non.english.home                   1.509229  1        1.228507
+## Dem_Desc                           1.586036  2        1.122221
+## edr                                1.630124  2        1.129939
+## took.ACT                           1.315580  1        1.146987
+## ap.exam                            1.122133  1        1.059308
+## total.cte.courses.taken            1.795079  1        1.339806
+## cte.achievement                    1.554005  2        1.116511
+## avg.cte.intensity                  1.284928  1        1.133547
+## MCA.M                              1.865178  1        1.365715
+## MCA.R                              1.935808  1        1.391333
+## MCA.S                              1.951894  1        1.397102
+## sat.taken                          1.006788  1        1.003388
+## avg.unemp.rate                     1.886350  1        1.373445
+## wages.3year.avg                    2.579058  1        1.605945</code></pre>
+<div id="section-discussion-3" class="section level5">
+<h5>Discussion</h5>
+<p>The analysis indicates that the following variables help predict that
+an individual does have a MN employment record and meaningful employment
+and is employed in the same county as their high school;</p>
+<ul>
+<li>Took AP exam: .34</li>
+<li>Non-english speaker at home: .33</li>
+<li>Eligible for free or reduced lunch: .39</li>
+<li>Graduated from a town/rural mix high school: .29 compared to
+entirely rural</li>
+<li>Graduated from a urban/town/rural mix high school: .22 compared to
+entirely rural</li>
+<li>Average CTE intensity increases: .04</li>
+</ul>
+<p>The analysis also indicates that the following variables help predict
+that an individual does have a MN employment record and meaningful
+employment but does NOT work in the same county as their high school</p>
+<ul>
+<li>Graduated from EDR 6W: -.56 compared to EDR 6E</li>
+<li>Eligible for free or reduced lunch: -.27</li>
+<li>Average unemployment rate increases: -.07</li>
+<li>MCA - match score increases: -.07</li>
+</ul>
+<p><br></p>
+</div>
+</div>
+<div id="section-edr" class="section level4">
+<h4>EDR</h4>
+<p>The table below shows that there are 7,443 that had meaningful
+employment the same year they graduated high school. Of those, 76%
+worked in the same edr as their high school.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-65bcfd0d0931f5a13678" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-65bcfd0d0931f5a13678">{"x":{"filter":"none","vertical":false,"data":[["Location match","No location match","Total"],[5655,1788,7443],[0.7597742845626764,0.2402257154373237,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>location.match<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columeaningfulDefs":[{"className":"dt-center","targets":[1,2]}],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+<p>The summary below shows that the model fit is 4.1% with 8 of the
+variables being significant at p-value &lt; .05.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-8d4f27b2db1c46775f64" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-8d4f27b2db1c46775f64">{"x":{"filter":"none","vertical":false,"data":[["Intercept","Gender - male","Limited english proficiency","Homeless","Free or reduced lunch","PSEO participant","Special Ed Status","Non-english speaker at home","Town/rural mix high school","Urban/town/rural mix high school","EDR 6W high school","EDR 8 high school","Took ACT","Took AP exam","Total CTE courses taken","CTE participant","No CTE taken","Average CTE intensity","MCA - math score","MCA - reading score","MCA - science score","Took SAT","Avg unemployment rate during high school","Avg wages of high school edr"],[3.666584081813238,-0.03833410596621106,-0.06197882009679265,-0.1198217619463781,-0.1611155653148137,0.04660483535238354,-0.1043623112326514,0.1560801875090375,-0.3558996935854078,-0.4729596810013112,-0.6437634547523284,0.5313128307280475,0.02594720050636198,0.2309404518291729,0.009396276984334383,0.05120443465182753,-0.04925042261512754,0.05262309589084585,-0.1204935563504461,-0.01123884092782926,0.05541859780961057,-0.7454431298582344,-0.08068688500443297,-4.791906498792871e-05],[0.491719372507371,0.06042991569596861,0.1987527512550951,0.3531934830877396,0.06100743690695384,0.07613441585641637,0.08419368068615164,0.1097464599768557,0.09907083982314327,0.1343196252849976,0.07906581014671817,0.07819885803777722,0.06464671622618108,0.1122782016970058,0.00729086582901121,0.07380018411058575,0.09280410206613543,0.01976186171309079,0.03700100931492258,0.03484548469086143,0.03296884311114896,0.6542274365869698,0.02942254677433857,1.108234737402e-05],[7.456659808045847,-0.6343564362901866,-0.3118388032638809,-0.3392524711918659,-2.640916804299463,0.6121388708133869,-1.239550407846905,1.422188811757145,-3.592375861764609,-3.521150985924744,-8.142121778778099,6.794380941872254,0.4013691958548963,2.05685919741028,1.288773817088431,0.6938252969003483,-0.5306923025884134,2.662861255424477,-3.256493770883456,-0.3225336375010091,1.680938503749616,-1.139425050326728,-2.742348771616384,-4.323909310067636],[8.87434432683207e-14,0.5258482330653778,0.7551630326859659,0.7344195441721344,0.008268202013179347,0.5404458817091167,0.2151417332064699,0.1549714458605498,0.0003276767633664937,0.000429677884511101,3.884102891530656e-16,1.087786054446558e-11,0.6881483253027518,0.03969977182094566,0.197476731097344,0.4877917762480989,0.5956320209562231,0.007747935315374755,0.001127974054611839,0.747048459084149,0.09277486008061446,0.2545259126212685,0.006100153219313675,1.53288331381712e-05]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Predictor<\/th>\n      <th>B<\/th>\n      <th>SE<\/th>\n      <th>t<\/th>\n      <th>p<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 5, 3, \",\", \".\", true, null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2,3,4]}],"pageLength":25,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[4]; $(row).css({'background-color':isNaN(parseFloat(value)) ? '' : value <= 0.05 ? \"#99CC33\" : \"transparent\"});\n}"},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.04058054</code></pre>
+<p><br></p>
+<p>Looking at the values for the variance inflation factor test shows
+zero variables with a value above 5, the typical threshold. This
+indicates that there isn’t any collinearity among the independent
+variables.</p>
+<pre><code>##                                        GVIF Df GVIF^(1/(2*Df))
+## Gender                             1.143342  1        1.069272
+## LimitedEnglishProficiencyIndicator 1.359051  1        1.165783
+## HomelessIndicator                  1.009925  1        1.004950
+## economic.status                    1.176383  1        1.084612
+## pseo.participant                   1.338908  1        1.157112
+## SpecialEdStatus                    1.230894  1        1.109457
+## non.english.home                   1.491531  1        1.221283
+## Dem_Desc                           1.748147  2        1.149859
+## edr                                1.636655  2        1.131069
+## took.ACT                           1.318506  1        1.148262
+## ap.exam                            1.125362  1        1.060831
+## total.cte.courses.taken            1.814915  1        1.347188
+## cte.achievement                    1.568244  2        1.119060
+## avg.cte.intensity                  1.281608  1        1.132081
+## MCA.M                              1.893019  1        1.375870
+## MCA.R                              1.951800  1        1.397069
+## MCA.S                              1.953181  1        1.397563
+## sat.taken                          1.007559  1        1.003773
+## avg.unemp.rate                     1.974711  1        1.405244
+## wages.3year.avg                    2.771423  1        1.664759</code></pre>
+<div id="section-discussion-4" class="section level5">
+<h5>Discussion</h5>
+<p>The analysis indicates that the following variables help predict that
+an individual does have a MN employment record and meaningful employment
+and is employed in the same edr as their high school;</p>
+<ul>
+<li>Graduated from EDR 8 high school: .53 compared to EDR 6E</li>
+<li>Took AP exam: .23</li>
+<li>Average CTE intensity increases: .05</li>
+</ul>
+<p>The analysis also indicates that the following variables help predict
+that an individual does have a MN employment record and meaningful
+employment but does NOT work in the same edr as their high school</p>
+<ul>
+<li>Graduated from EDR 6W: -.64 compared to EDR 6E</li>
+<li>Graduated from a urban/town/rural mix high school: -.47 compared to
+entirely rural</li>
+<li>Graduated from a town/rural mix high school: -.36 compared to
+entirely rural</li>
+<li>Eligible for free or reduced lunch: -.16</li>
+<li>MCA - match score increases: -.12</li>
+<li>Average unemployment rate increases: -.08</li>
+</ul>
+<p><br></p>
+</div>
+</div>
+<div id="section-region" class="section level4">
+<h4>Region</h4>
+<p>The table below shows that there are 7,444 that had meaningful
+employment the same year they graduated high school. Of those, 83%
+worked in one of the three edrs being researched.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-90feeb90bae68a5ff441" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-90feeb90bae68a5ff441">{"x":{"filter":"none","vertical":false,"data":[["Location match","No location match","Total"],[6168,1276,7444],[0.8285867813003761,0.1714132186996239,1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>location.match<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columeaningfulDefs":[{"className":"dt-center","targets":[1,2]}],"columnDefs":[{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-right","targets":[1,2]}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<p><br></p>
+<p>The summary below shows that the model fit is 3.0% with 4 of the
+variables being significant at p-value &lt; .05.</p>
+<p><br></p>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-106f90922ce80cddfd5b" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-106f90922ce80cddfd5b">{"x":{"filter":"none","vertical":false,"data":[["Intercept","Gender - male","Limited english proficiency","Homeless","Free or reduced lunch","PSEO participant","Special Ed Status","Non-english speaker at home","Town/rural mix high school","Urban/town/rural mix high school","region 6W high school","region 8 high school","Took ACT","Took AP exam","Total CTE courses taken","CTE participant","No CTE taken","Average CTE intensity","MCA - math score","MCA - reading score","MCA - science score","Took SAT","Avg unemployment rate during high school","Avg wages of high school region"],[1.757880255924975,-0.02050174933274075,-0.2393726365034617,0.01976991936389861,-0.173912957409189,-0.009385558355988062,-0.05181075601490435,0.04793928006628632,-0.2433290452984433,-0.7831538565746092,0.2532380647015545,0.6607563399075298,-0.04411000828826961,0.2390522914037142,0.0007549069685727342,0.05272739590235838,-0.1507526905898068,-0.01189741148484442,-0.1727192901533097,0.04434457532404135,0.03232483993954002,-1.091184876475725,-0.01600973178241949,6.350464403048918e-06],[0.5358059358766545,0.06764638538552457,0.2117988462347014,0.4232822182131536,0.0686273151884617,0.08437923618996464,0.09657819202494165,0.120972822485202,0.1121309849770432,0.1443958560124712,0.09503422820998196,0.08651667492811867,0.07255654181446144,0.1234971308323913,0.008014112356135047,0.08317323502301158,0.1027530598209735,0.02253587045693099,0.0412202558223804,0.03889181744973423,0.03652882442508602,0.6405875959708286,0.03150348994635818,1.217685730053671e-05],[3.280815194868705,-0.3030723550992253,-1.130188576373098,0.04670623643808019,-2.534165250842116,-0.1112306626580284,-0.5364643397085342,0.3962814050416199,-2.170042877517402,-5.42365880989666,2.66470375433591,7.637329340921981,-0.6079397830324642,1.935691054459822,0.09419720301211275,0.6339466763288727,-1.467135780213873,-0.5279321918175709,-4.190155706397444,1.140203215788374,0.8849132280682175,-1.703412434675703,-0.5081891501443072,0.5215191610046226],[0.001035075402540044,0.761834721393197,0.2583967723116692,0.9627473598134982,0.01127155629685183,0.9114334372090128,0.5916376751448846,0.6918974434127489,0.03000359788145892,5.839128928421619e-08,0.007705617044591835,2.217737019303766e-14,0.543227412728677,0.05290555073094629,0.9249525065695566,0.5261156224787826,0.1423391224732642,0.5975464003708264,2.787630967337313e-05,0.2542016480686177,0.3762034329779582,0.08849091229299207,0.6113206990984378,0.6020051611389053]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Predictor<\/th>\n      <th>B<\/th>\n      <th>SE<\/th>\n      <th>t<\/th>\n      <th>p<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":4,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 5, 3, \",\", \".\", true, null);\n  }"},{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"targets":3,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 2, 3, \",\", \".\", true, null);\n  }"},{"className":"dt-center","targets":[1,2,3,4]}],"pageLength":25,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[4]; $(row).css({'background-color':isNaN(parseFloat(value)) ? '' : value <= 0.05 ? \"#99CC33\" : \"transparent\"});\n}"},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.rowCallback"],"jsHooks":[]}</script>
+<pre><code>## fitting null model for pseudo-r2</code></pre>
+<pre><code>##   McFadden 
+## 0.03015715</code></pre>
+<p><br></p>
+<p>Looking at the values for the variance inflation factor test shows
+zero variables with a value above 5, the typical threshold. This
+indicates that there isn’t any collinearity among the independent
+variables.</p>
+<pre><code>##                                        GVIF Df GVIF^(1/(2*Df))
+## Gender                             1.142805  1        1.069020
+## LimitedEnglishProficiencyIndicator 1.390989  1        1.179402
+## HomelessIndicator                  1.008803  1        1.004392
+## economic.status                    1.187401  1        1.089679
+## pseo.participant                   1.347341  1        1.160750
+## SpecialEdStatus                    1.230544  1        1.109299
+## non.english.home                   1.533795  1        1.238465
+## Dem_Desc                           1.709157  2        1.143393
+## edr                                1.636893  2        1.131111
+## took.ACT                           1.320428  1        1.149099
+## ap.exam                            1.124325  1        1.060342
+## total.cte.courses.taken            1.802614  1        1.342615
+## cte.achievement                    1.578794  2        1.120937
+## avg.cte.intensity                  1.260174  1        1.122575
+## MCA.M                              1.908084  1        1.381334
+## MCA.R                              1.957041  1        1.398943
+## MCA.S                              1.958994  1        1.399641
+## sat.taken                          1.009596  1        1.004787
+## avg.unemp.rate                     1.882297  1        1.371968
+## wages.3year.avg                    2.750595  1        1.658492</code></pre>
+<div id="section-discussion-5" class="section level5">
+<h5>Discussion</h5>
+<p>The analysis indicates that the following variables help predict that
+an individual does have a MN employment record and meaningful employment
+and is employed in one of the three edrs;</p>
+<ul>
+<li>Graduated from EDR 8 high school: .66 compared to EDR 6E</li>
+<li>Graduated from EDR 6W high school: .25 compared to EDR 6E</li>
+</ul>
+<p>The analysis also indicates that the following variables help predict
+that an individual does have a MN employment record and meaningful
+employment but does NOT work in the same edr as their high school</p>
+<ul>
+<li>Graduated from a urban/town/rural mix high school: -.78 compared to
+entirely rural</li>
+<li>Graduated from a town/rural mix high school: -.24 compared to
+entirely rural</li>
+<li>Eligible for free or reduced lunch: -.17</li>
+<li>MCA - match score increases: -.17</li>
+</ul>
+<p><br></p>
+<p><br></p>
+</div>
+</div>
+</div>
+</div>
+<div id="section-time-x-grad-year-2" class="section level2">
+<h2>Time X = grad year +2</h2>
+<div id="section-model-1---has-mn-employment-record-1"
+class="section level3">
+<h3>Model 1 - has MN employment record</h3>
+</div>
+<div id="section-model-2---has-meaningful-employment-1"
+class="section level3">
+<h3>Model 2 - has meaningful employment</h3>
+</div>
+<div id="section-model-3---location-match-1" class="section level3">
+<h3>Model 3 - location match</h3>
+<div id="section-county-1" class="section level4">
+<h4>County</h4>
+</div>
+<div id="section-edr-1" class="section level4">
+<h4>EDR</h4>
+</div>
+<div id="section-region-1" class="section level4">
+<h4>Region</h4>
+<p><br></p>
+</div>
+</div>
+</div>
+<div id="section-time-x-grad-year-7" class="section level2">
+<h2>Time X = grad year +7</h2>
+<div id="section-model-1---has-mn-employment-record-2"
+class="section level3">
+<h3>Model 1 - has MN employment record</h3>
+</div>
+<div id="section-model-2---has-meaningful-employment-2"
+class="section level3">
+<h3>Model 2 - has meaningful employment</h3>
+</div>
+<div id="section-model-3---location-match-2" class="section level3">
+<h3>Model 3 - location match</h3>
+<div id="section-county-2" class="section level4">
+<h4>County</h4>
+</div>
+<div id="section-edr-2" class="section level4">
+<h4>EDR</h4>
+</div>
+<div id="section-region-2" class="section level4">
+<h4>Region</h4>
+</div>
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("section-TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#section-TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
