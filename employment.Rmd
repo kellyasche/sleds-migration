@@ -475,32 +475,43 @@ master.personid.grad.emp.location.match <- master.personid.meaningful.emp %>%
          hs.grad.year.7.county.match = ifelse(mn.emp.record.hs.grad.year.7 == "After 2019", "After 2019", hs.grad.year.7.county.match),
          hs.grad.year.edr.match = ifelse(mn.emp.record.hs.grad.year == "No MN emp record", "No MN emp record", hs.grad.year.edr.match),
          hs.grad.year.edr.match = ifelse(meaningful.emp.hs.grad.year == "No meaningful emp", "No meaningful emp", hs.grad.year.edr.match),
+         hs.grad.year.edr.match = ifelse(hs.grad.year.county.match == "Unknown", "Unknown", hs.grad.year.edr.match),
          hs.grad.year.2.edr.match = ifelse(mn.emp.record.hs.grad.year.2 == "No MN emp record", "No MN emp record", hs.grad.year.2.edr.match),
          hs.grad.year.2.edr.match = ifelse(meaningful.emp.hs.grad.year.2 == "No meaningful emp", "No meaningful emp", hs.grad.year.2.edr.match),
          hs.grad.year.2.edr.match = ifelse(mn.emp.record.hs.grad.year.2 == "After 2019", "After 2019", hs.grad.year.2.edr.match),
+         hs.grad.year.2.edr.match = ifelse(hs.grad.year.2.county.match == "Unknown", "Unknown", hs.grad.year.2.edr.match),
          hs.grad.year.7.edr.match = ifelse(mn.emp.record.hs.grad.year.7 == "No MN emp record", "No MN emp record", hs.grad.year.7.edr.match),
          hs.grad.year.7.edr.match = ifelse(meaningful.emp.hs.grad.year.7 == "No meaningful emp", "No meaningful emp", hs.grad.year.7.edr.match),
          hs.grad.year.7.edr.match = ifelse(mn.emp.record.hs.grad.year.7 == "After 2019", "After 2019", hs.grad.year.7.edr.match),
+         hs.grad.year.7.edr.match = ifelse(hs.grad.year.7.county.match == "Unknown", "Unknown", hs.grad.year.7.edr.match),
          hs.grad.year.state.match = ifelse(mn.emp.record.hs.grad.year == "No MN emp record", "No MN emp record", hs.grad.year.state.match),
          hs.grad.year.state.match = ifelse(meaningful.emp.hs.grad.year == "No meaningful emp", "No meaningful emp", hs.grad.year.state.match),
+         hs.grad.year.state.match = ifelse(hs.grad.year.county.match == "Unknown", "Unknown", hs.grad.year.state.match),
          hs.grad.year.2.state.match = ifelse(mn.emp.record.hs.grad.year.2 == "No MN emp record", "No MN emp record", hs.grad.year.2.state.match),
          hs.grad.year.2.state.match = ifelse(meaningful.emp.hs.grad.year.2 == "No meaningful emp", "No meaningful emp", hs.grad.year.2.state.match),
          hs.grad.year.2.state.match = ifelse(mn.emp.record.hs.grad.year.2 == "After 2019", "After 2019", hs.grad.year.2.state.match),
+         hs.grad.year.2.state.match = ifelse(hs.grad.year.2.county.match == "Unknown", "Unknown", hs.grad.year.2.state.match),
          hs.grad.year.7.state.match = ifelse(mn.emp.record.hs.grad.year.7 == "No MN emp record", "No MN emp record", hs.grad.year.7.state.match),
          hs.grad.year.7.state.match = ifelse(meaningful.emp.hs.grad.year.7 == "No meaningful emp", "No meaningful emp", hs.grad.year.7.state.match),
          hs.grad.year.7.state.match = ifelse(mn.emp.record.hs.grad.year.7 == "After 2019", "After 2019", hs.grad.year.7.state.match),
+         hs.grad.year.7.state.match = ifelse(hs.grad.year.7.county.match == "Unknown", "Unknown", hs.grad.year.7.state.match),
          hs.grad.year.region.match = ifelse(mn.emp.record.hs.grad.year == "No MN emp record", "No MN emp record", hs.grad.year.region.match),
          hs.grad.year.region.match = ifelse(meaningful.emp.hs.grad.year == "No meaningful emp", "No meaningful emp", hs.grad.year.region.match),
+         hs.grad.year.region.match = ifelse(hs.grad.year.county.match == "Unknown", "Unknown", hs.grad.year.region.match),
          hs.grad.year.2.region.match = ifelse(mn.emp.record.hs.grad.year.2 == "No MN emp record", "No MN emp record", hs.grad.year.2.region.match),
          hs.grad.year.2.region.match = ifelse(meaningful.emp.hs.grad.year.2 == "No meaningful emp", "No meaningful emp", hs.grad.year.2.region.match),
          hs.grad.year.2.region.match = ifelse(mn.emp.record.hs.grad.year.2 == "After 2019", "After 2019", hs.grad.year.2.region.match),
+         hs.grad.year.2.region.match = ifelse(hs.grad.year.2.county.match == "Unknown", "Unknown", hs.grad.year.2.region.match),
          hs.grad.year.7.region.match = ifelse(mn.emp.record.hs.grad.year.7 == "No MN emp record", "No MN emp record", hs.grad.year.7.region.match),
          hs.grad.year.7.region.match = ifelse(meaningful.emp.hs.grad.year.7 == "No meaningful emp", "No meaningful emp", hs.grad.year.7.region.match),
-         hs.grad.year.7.region.match = ifelse(mn.emp.record.hs.grad.year.7 == "After 2019", "After 2019", hs.grad.year.7.region.match))
+         hs.grad.year.7.region.match = ifelse(mn.emp.record.hs.grad.year.7 == "After 2019", "After 2019", hs.grad.year.7.region.match),
+         hs.grad.year.7.region.match = ifelse(hs.grad.year.7.county.match == "Unknown", "Unknown", hs.grad.year.7.region.match))
 
 names(master.personid.grad.emp.location.match)
 
 head(master.personid.grad.emp.location.match)
+
+  
 ```
 
 <br>

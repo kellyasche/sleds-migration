@@ -133,7 +133,7 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 ```
 
 ```{r master original}
-master.original <- read_csv("Data/SLEDS/Masters/Master-13.csv") %>%
+master.original <- read.csv("Data/SLEDS/Masters/Master-13.csv") %>%
   mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions),
          ps.attended.in.same.ruca = ifelse(is.na(ps.attended.in.same.ruca), "Never attended ps", ps.attended.in.same.ruca),
          ps.attended.in.same.edr = ifelse(is.na(ps.attended.in.same.edr), "Never attended ps", ps.attended.in.same.edr),
