@@ -327,9 +327,13 @@ The following analysis will include the following for each dependent variable;
 * Variance Inflation Factor: A check to see if there is any multi-collinearity issues among the independent variables in the model.
 
 ```{r primary independent variables}
+independent.var.names.grad.year <- c("Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "avg.unemp.rate", "wages.3year.avg")
+
 independent.var.names.grad.year.2.7 <- c("Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "attended.ps", "ps.grad", "highest.cred.level", "avg.unemp.rate", "wages.3year.avg")
 
-independent.var.names.grad.year <- c("Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "avg.unemp.rate", "wages.3year.avg")
+terms.grad.year <- c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+
+terms.grad.year.2.7 <- c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
 
 
 cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25")
@@ -388,7 +392,7 @@ grad.year.mn.emp.record.logit <- glm(mn.emp.record ~ ., family = binomial, data 
 grad.year.mn.emp.record.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -490,7 +494,7 @@ grad.year.meaningful.emp.logit <- glm(meaningful.emp ~ ., family = binomial, dat
 grad.year.meaningful.emp.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -597,7 +601,7 @@ grad.year.loc.match.county.logit <- glm(loc.match.county ~ ., family = binomial,
 grad.year.loc.match.county.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -694,7 +698,7 @@ grad.year.loc.match.edr.logit <- glm(loc.match.edr ~ ., family = binomial, data 
 grad.year.loc.match.edr.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school edr")
+    term = terms.grad.year
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -788,7 +792,7 @@ grad.year.loc.match.region.logit <- glm(loc.match.region ~ ., family = binomial,
 grad.year.loc.match.region.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "region 6W high school", "region 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school region")
+    term = terms.grad.year
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -884,7 +888,7 @@ grad.year.2.mn.emp.record.logit <- glm(mn.emp.record ~ ., family = binomial, dat
 grad.year.2.mn.emp.record.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -989,7 +993,7 @@ grad.year.2.meaningful.emp.logit <- glm(meaningful.emp ~ ., family = binomial, d
 grad.year.2.meaningful.emp.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1100,7 +1104,7 @@ grad.year.2.loc.match.county.logit <- glm(loc.match.county ~ ., family = binomia
 grad.year.2.loc.match.county.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1203,7 +1207,7 @@ grad.year.2.loc.match.edr.logit <- glm(loc.match.edr ~ ., family = binomial, dat
 grad.year.2.loc.match.edr.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school edr")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1302,7 +1306,7 @@ grad.year.2.loc.match.region.logit <- glm(loc.match.region ~ ., family = binomia
 grad.year.2.loc.match.region.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "region 6W high school", "region 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school region")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1401,7 +1405,7 @@ grad.year.7.mn.emp.record.logit <- glm(mn.emp.record ~ ., family = binomial, dat
 grad.year.7.mn.emp.record.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1504,7 +1508,7 @@ grad.year.7.meaningful.emp.logit <- glm(meaningful.emp ~ ., family = binomial, d
 grad.year.7.meaningful.emp.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1600,7 +1604,7 @@ grad.year.7.loc.match.county.logit <- glm(loc.match.county ~ ., family = binomia
 grad.year.7.loc.match.county.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1701,7 +1705,7 @@ grad.year.7.loc.match.edr.logit <- glm(loc.match.edr ~ ., family = binomial, dat
 grad.year.7.loc.match.edr.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school edr")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1804,7 +1808,7 @@ grad.year.7.loc.match.region.logit <- glm(loc.match.region ~ ., family = binomia
 grad.year.7.loc.match.region.logit %>%
   broom::tidy() %>%
   mutate(
-    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "region 6W high school", "region 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school region")
+    term = terms.grad.year.2.7
   ) %>%
   datatable(rownames = FALSE,
             colnames = c("Predictor", "B", "SE", "t", "p"),
@@ -1854,3 +1858,402 @@ The analysis also indicates that the following variables help predict that an in
 * Average unemployment rate increases: -.13
 
 <br>
+
+# Analysis with year
+
+So far I have not included high school graduation year. I want to see if including that makes any difference. I'm just going to use grad year plus two since that would make the most sense. Many of the folks that are plus 7 would not have many of the most recent years.
+
+```{r primary independent variables with year}
+independent.var.names.grad.year <- c("hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "avg.unemp.rate", "wages.3year.avg")
+
+independent.var.names.grad.year.2.7 <- c("hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "attended.ps", "ps.grad", "highest.cred.level", "avg.unemp.rate", "wages.3year.avg")
+
+terms.grad.year <- c("Intercept", "High school grad year", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Avg unemployment rate during high school", "Avg wages of high school county")
+
+terms.grad.year.2.7 <- c("Intercept", "High school grad year", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Average CTE intensity", "MCA - math score", "MCA - reading score", "MCA - science score", "Took SAT", "Attended post-secondary", "Graduated from post-secondary", "Earned bachelors", "College but not finished", "Earned master or higher", "Avg unemployment rate during high school", "Avg wages of high school county")
+
+
+cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25")
+```
+
+## Time X = grad year +2
+
+The following analysis uses time X as the year the individual graduated high school plus two years. For example, if an individual graduated in 2009, then the "has MN employment record" dependent variable is a binary (1 or 0) on whether that individual had a MN employment record recorded in 2011.
+
+The summary below shows that the model fit is 4.2% with 18 of the variables being significant at p-value < .05. Graduation year does not reach the p-value threshold.
+
+<br>
+
+```{r grad year 2 mn emp record with grad year model 1}
+grad.year.2.mn.emp.record.dep.var <- master.original %>%
+  select(hs.grad.year.2.county.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.2.county.match != "Unknown") %>%
+  filter(hs.grad.year.2.county.match != "After 2019") %>%
+  mutate(mn.emp.record = ifelse(hs.grad.year.2.county.match %in% c("Location match", "No location match", "No meaningful emp"), 1, 0)) %>%
+  select(26, 2:25) %>%
+  mutate_at(c(3:13, 15, 20:23), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.2.mn.emp.record.logit <- glm(mn.emp.record ~ ., family = binomial, data = grad.year.2.mn.emp.record.dep.var)
+
+grad.year.2.mn.emp.record.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = terms.grad.year.2.7
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.mn.emp.record.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. The variables related to post-secondary are creeping high though. High school graduation year also seems to creep quite high along with 3 year average wages.
+
+```{r grad year 2 mn emp record with grad year model 1 vif}
+vif(grad.year.2.mn.emp.record.logit) 
+
+```
+
+### Model 2 - has meaningful employment
+
+
+The summary below shows that the model fit is 12.8% with 18 of the variables being significant at p-value < .05. High school graduation is significant here.
+
+<br>
+
+```{r grad year 2 meaningful emp with grad year model 1}
+grad.year.2.meaningful.emp.dep.var <- master.original %>%
+  select(hs.grad.year.2.county.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.2.county.match != "Unknown") %>%
+  filter(hs.grad.year.2.county.match != "After 2019") %>%
+  filter(hs.grad.year.2.county.match %in% c("Location match", "No location match", "No meaningful emp")) %>%
+mutate(meaningful.emp = ifelse(hs.grad.year.2.county.match %in% c("Location match", "No location match"), 1, 0)) %>%
+  select(26, 2:25) %>%
+  mutate_at(c(3:13, 15, 20:23), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.2.meaningful.emp.logit <- glm(meaningful.emp ~ ., family = binomial, data = grad.year.2.meaningful.emp.dep.var)
+
+grad.year.2.meaningful.emp.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = terms.grad.year.2.7
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.2.meaningful.emp.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year 2 meaningful emp with year model 1 vif}
+vif(grad.year.2.meaningful.emp.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment two years after graduating;
+
+* Graduated from a urban/town/rural mix high school: .25
+* Male: .22
+* Graduated from a town/rural mix high school: .20
+* Eligible for free or reduced lunch: .20
+* Non-english speaker at home: .17
+* Graduated from post-secondary: .10
+* High school graduation year increases: .04
+* Average unemployment rate increases: .04
+* Total CTE courses taken increases: .02
+
+
+The analysis also indicates that the following variables help predict that an individual does has a MN employment record but NOT meaningful employment two years after graduating high school;
+
+* Earned master or higher: -1.98
+* Earned bachelors: -1.36
+* Took SAT: -.47
+* Took AP exam: -.42
+* Took ACT: -.40
+* Attended post-secondary: -.30
+* Eligible for special education: -.24
+* Took zero CTE courses: -.24
+* Graduated from EDR 6W: -.21 compared to EDR 6E
+* PSEO participant: -.20
+* Graduated from EDR 8: -.16 compared to EDR 6E
+* CTE participant: -.12
+* Average CTE intensity: -.05
+
+<br>
+
+### Model 3 - location match
+
+#### County
+
+The summary below shows that the model fit is 3.5% with 16 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year 2 location match county with grad year model 1}
+grad.year.2.loc.match.county.dep.var <- master.original %>%
+  select(hs.grad.year.2.county.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.2.county.match != "Unknown") %>%
+  filter(hs.grad.year.2.county.match != "After 2019") %>%
+  filter(hs.grad.year.2.county.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.county = ifelse(hs.grad.year.2.county.match %in% c("Location match"), 1, 0)) %>%
+  select(26, 2:25)  %>%
+  mutate_at(c(3:13, 15, 20:23), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.2.loc.match.county.logit <- glm(loc.match.county ~ ., family = binomial, data = grad.year.2.loc.match.county.dep.var)
+
+grad.year.2.loc.match.county.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = terms.grad.year.2.7
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.2.loc.match.county.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year 2 location match county with year model 1 vif}
+vif(grad.year.2.loc.match.county.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in the same county as their high school two years after graduating;
+
+* Graduated from a town/rural mix high school: .38 compared to entirely rural
+* Non-english speaker at home: .26
+* is Male: .11
+* MCA - science score increases: .08
+* Average CTE intensity increases: .04
+* Total CTE courses taken: .02
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in the same county as their high school two years after graduating;
+
+* Graduated from EDR 6W: -.64 compared to EDR 6E
+* Earned bachelors: -.31
+* Average unemployment rate increases: -.20
+* Graduated from EDR 8: -.18 compared to EDR 6E
+* Eligible for free or reduced lunch: -.14
+* Took ACT: -.14
+* Eligible for special ed: -.13
+* high school grad year becomes more recent: -.12
+* MCA - match score increases: -.10
+
+<br>
+
+#### EDR
+
+The summary below shows that the model fit is 5.0% with 13 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year 2 location match edr with grad year model 1}
+grad.year.2.loc.match.edr.dep.var <- master.original %>%
+  select(hs.grad.year.2.edr.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.2.edr.match != "Unknown") %>%
+  filter(hs.grad.year.2.edr.match != "After 2019") %>%
+  filter(hs.grad.year.2.edr.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.edr = ifelse(hs.grad.year.2.edr.match %in% c("Location match"), 1, 0)) %>%
+  select(26, 2:25)  %>%
+  mutate_at(c(3:13, 15, 20:23), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.2.loc.match.edr.logit <- glm(loc.match.edr ~ ., family = binomial, data = grad.year.2.loc.match.edr.dep.var)
+
+grad.year.2.loc.match.edr.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = terms.grad.year.2.7
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.2.loc.match.edr.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year 2 location match edr with grad year model 1 vif}
+vif(grad.year.2.loc.match.edr.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in the same edr as their high school two years after graduating high school;
+
+* Graduated from EDR 8: .28 compared to EDR 6E
+* Graduated from post secondary: .16
+* is Male: .12
+* Average CTE intensity increases: .05
+* Total CTE courses taken: .02
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in the same EDR as their high school two years after graduating;
+
+* Graduated from EDR 6W: -.74 compared to EDR 6E
+* Earned bachelors: -.38
+* Graduated from an urban/town/rural mix high school: -.29
+* Average unemployment rate increases: -.16
+* Took ACT: -.15
+* Participated in PSEO: -.12
+* MCA - match score increases: -.12
+* Attended post-secondary: -.12
+* MCA - reading score increases: -.06
+* High school grad year becomes more recent: -.05
+
+<br>
+
+#### Region
+
+The table below shows that there are 11,050 that had meaningful employment two years after graduating high school. Of those, 73% worked in one of the three EDRs.
+
+<br>
+
+```{r grad year 2 location match region  with grad year summary}
+grad.year.2.loc.match.region.summary <- master.original %>%
+  filter(hs.grad.year.2.region.match != "Unknown") %>%
+  filter(hs.grad.year.2.region.match != "No MN emp record") %>%
+  filter(hs.grad.year.2.region.match != "No meaningful emp") %>%
+  filter(hs.grad.year.2.region.match != "After 2019") %>%
+  select(hs.grad.year.2.region.match) %>%
+  mutate(location.match = hs.grad.year.2.region.match) %>%
+  group_by(location.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(pct = n / sum(n)) %>%
+  adorn_totals("row") %>%
+  datatable(rownames = FALSE,
+            options = list(columeaningfulDefs = list(list(className = "dt-center", targets = 1:2)))) %>%
+  formatCurrency(2, "", digits = 0) %>%
+  formatPercentage(3, digits = 1)
+
+grad.year.2.loc.match.region.summary
+
+```
+
+<br>
+
+The summary below shows that the model fit is 4.5% with 10 of the variables being significant at p-value < .05. 
+
+<br>
+
+```{r grad year 2 location match region with grad year model 1}
+grad.year.2.loc.match.region.dep.var <- master.original %>%
+  select(hs.grad.year.2.region.match, `independent.var.names.grad.year.2.7`) %>%
+  filter(hs.grad.year.2.region.match != "Unknown") %>%
+  filter(hs.grad.year.2.region.match != "After 2019") %>%
+  filter(hs.grad.year.2.region.match %in% c("Location match", "No location match")) %>%
+mutate(loc.match.region = ifelse(hs.grad.year.2.region.match %in% c("Location match"), 1, 0)) %>%
+  select(26, 2:25)  %>%
+  mutate_at(c(3:13, 15, 20:23), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+grad.year.2.loc.match.region.logit <- glm(loc.match.region ~ ., family = binomial, data = grad.year.2.loc.match.region.dep.var)
+
+grad.year.2.loc.match.region.logit %>%
+  broom::tidy() %>%
+  mutate(
+    term = terms.grad.year.2.7
+  ) %>%
+  datatable(rownames = FALSE,
+            colnames = c("Predictor", "B", "SE", "t", "p"),
+            options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)),
+                           pageLength = 29)) %>%
+  formatStyle("p.value",
+              target = "row",
+              backgroundColor = styleInterval(c(.05), c("#99CC33", "transparent"))) %>%
+  formatCurrency(2:4, "", digits = 2) %>%
+  formatCurrency(5, "", digits = 5)
+  
+pR2(grad.year.2.loc.match.region.logit)['McFadden']
+
+```
+
+<br>
+
+Looking at the values for the variance inflation factor test shows zero variables with a value above 5, the typical threshold. This indicates that there isn't any collinearity among the independent variables.
+
+```{r grad year 2 location match region with grad year model 1 vif}
+vif(grad.year.2.loc.match.region.logit) 
+
+```
+
+##### Discussion
+
+The analysis indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment and is employed in one of the three EDRs two years after graduating high school;
+
+* Graduated from EDR 8: .33 compared to EDR 6E
+* Graduated from post secondary: .24
+* College but not finished: .16
+
+The analysis also indicates that the following variables help predict that an individual does have a MN employment record and meaningful employment but does NOT work in one of the three EDRs two years after graduating;
+
+* Earned bachelors: -.42
+* Graduated from a urban/town/rural mix high school: -.29
+* Took ACT: -.21
+* Attended post-secondary: -.15
+* Participated in PSEO: -.14
+* Average unemployment rate increases: -.13
+* MCA - match score increases: -.12
+* MCA - reading score increases: -.07
+
+<br>
+

@@ -150,7 +150,18 @@ master.original <- read.csv("Data/SLEDS/Masters/Master-13.csv") %>%
          ps.grad.in.same.pr = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.same.pr),
          ps.grad.in.MN = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.MN),
          ps.grad.in.MN = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.MN),
-         took.ACT = ifelse(is.na(ACTCompositeScore), "No", "Yes"))
+         took.ACT = ifelse(is.na(ACTCompositeScore), "No", "Yes"),
+         hs.grad.year = ifelse(hs.grad.year == 2008, 1,
+                               ifelse(hs.grad.year == 2009, 2,
+                                      ifelse(hs.grad.year == 2010, 3,
+                                             ifelse(hs.grad.year == 2011, 4,
+                                                    ifelse(hs.grad.year == 2012, 5,
+                                                           ifelse(hs.grad.year == 2013, 6,
+                                                                  ifelse(hs.grad.year == 2014, 7,
+                                                                         ifelse(hs.grad.year == 2015, 8,
+                                                                                ifelse(hs.grad.year == 2016, 9,
+                                                                                       ifelse(hs.grad.year == 2017, 10,
+                                                                                              ifelse(hs.grad.year == 2018, 11, 12))))))))))))
 
 write_csv(master.original, "Data/SLEDS/Masters/Master.csv")
 ```
