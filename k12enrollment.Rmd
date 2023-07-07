@@ -162,6 +162,24 @@ k12.enr.homeprimlang.indicator <- enrollment.original %>%
   mutate(non.english.home = ifelse(HomePrimaryLanguage.sum > 0, 1, 0)) %>%
   select(PersonID, non.english.home)
 
+# Race
+
+k12.enr.race <- enrollment.original %>%
+  select(PersonID, RaceEthnicity) %>%
+  mutate(RaceEthnicity = ifelse(RaceEthnicity == 0, "Unknown",
+                                ifelse(RaceEthnicity == 1, "AI",
+                                       ifelse(RaceEthnicity == 2, "Asian/PI",
+                                              ifelse(RaceEthnicity == 3, "Hispanic",
+                                                     ifelse(RaceEthnicity == 4, "Black", "White"))))),
+         RaceEthnicity = as.factor(RaceEthnicity)) %>%
+  distinct(PersonID, RaceEthnicity) %>%
+  mutate(code = ifelse(RaceEthnicity == "Unknown", 0, 1)) %>%
+  group_by(PersonID) %>%
+  filter(code == max(code)) %>%
+  ungroup %>%
+  distinct(PersonID, .keep_all = TRUE) %>%
+  select(PersonID, RaceEthnicity)
+
 ```
 
 <br>
@@ -176,7 +194,8 @@ k12.enrollment.master <- graduates %>%
   left_join(k12.enr.esi.indicator, by = "PersonID") %>%
   left_join(k12.enr.pseo.indicator, by = "PersonID") %>%
   left_join(k12.enr.spced.indicator, by = "PersonID") %>%
-  left_join(k12.enr.homeprimlang.indicator, by = "PersonID")
+  left_join(k12.enr.homeprimlang.indicator, by = "PersonID") %>%
+  left_join(k12.enr.race, by = "PersonID")
 
 head(k12.enrollment.master)
 
@@ -201,6 +220,7 @@ Below is the percentage of total observations that;
 * Had limited english proficiency at some point in the dataset
 * Had non english speakders in home at some point in the dataset
 * Participated in a PSEO course at some point in the dataset.
+* Pct non white
 
 As expected, nearly half (49.4%) of the observations are female. Over a third (39.2%) of the observations have been eligible for free or reduced lunch at some point in the dataset. Also, nearly a third (34.7%) of observations participated in a PSEO course. 8.7% of observations indicated that there was a non-english speaker at home, 2% had limited english proficiency and 0.4% indicated that were homeless at some point.
 
@@ -210,15 +230,17 @@ As expected, nearly half (49.4%) of the observations are female. Over a third (3
 k12.enr.pct.total <- k12.enrollment.master %>%
   mutate(Gender = ifelse(Gender == "F", 1, 0),
          LimitedEnglishProficiencyIndicator = ifelse(LimitedEnglishProficiencyIndicator == "Y", 1, 0),
-         HomelessIndicator = ifelse(HomelessIndicator == "Y", 1, 0)) %>%
+         HomelessIndicator = ifelse(HomelessIndicator == "Y", 1, 0),
+         RaceEthnicity = ifelse(RaceEthnicity == "White", 0, 1)) %>%
   rename(Female = 4,
          `Limited English Proficiency` = 5,
          Homeless = 6,
          `Free or reduced lunch` = 7,
          `PSEO participant` = 8,
          `Special Ed` = 9,
-         `Non-english in home` = 10) %>%
-  gather(key = "indicator", value = "value", 4:10) %>%
+         `Non-english in home` = 10,
+         `Non-white` = 11) %>%
+  gather(key = "indicator", value = "value", 4:11) %>%
   group_by(indicator) %>%
   summarise(confirmed.indicator = sum(value),
             total.observations = n()) %>%
