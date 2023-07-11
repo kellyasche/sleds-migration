@@ -399,13 +399,13 @@ div.tocify {
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="analysis_methods.html">Analysis methods</a>
+      <a href="analysis_multiple_correspondence.html">Analysis - multiple correspondence analysis</a>
+    </li>
+    <li>
+      <a href="analysis_local_employment_ct.html">Local employment cross tabs</a>
     </li>
     <li>
       <a href="review.html">For Review</a>
-    </li>
-    <li>
-      <a href="analysis_local_employment.html">Local employment</a>
     </li>
   </ul>
 </li>
@@ -468,7 +468,7 @@ has taken an SAT test.</p>
 <p><br></p>
 <p>Now we will join it with the master dataset.</p>
 <p><br></p>
-<pre><code>## # A tibble: 6 × 46
+<pre><code>## # A tibble: 6 × 47
 ##   PersonID K12OrganizationID grad.year Gender LimitedEnglishProficiencyIndicator
 ##      &lt;dbl&gt;             &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                             
 ## 1      161             77452      2009 M      N                                 
@@ -477,38 +477,39 @@ has taken an SAT test.</p>
 ## 4      786             56633      2010 F      N                                 
 ## 5     1162            181770      2019 M      N                                 
 ## 6     2292             55659      2010 F      N                                 
-## # ℹ 41 more variables: HomelessIndicator &lt;chr&gt;, economic.status &lt;dbl&gt;,
+## # ℹ 42 more variables: HomelessIndicator &lt;chr&gt;, economic.status &lt;dbl&gt;,
 ## #   pseo.participant &lt;dbl&gt;, SpecialEdStatus &lt;dbl&gt;, non.english.home &lt;dbl&gt;,
-## #   DistrictName &lt;chr&gt;, county.name &lt;chr&gt;, countyfp &lt;chr&gt;, Dem_Desc &lt;chr&gt;,
-## #   edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;, ACTCompositeScore &lt;dbl&gt;, ap.exam &lt;dbl&gt;,
-## #   total.cte.courses.taken &lt;dbl&gt;, cte.0 &lt;dbl&gt;, cte.1 &lt;dbl&gt;, cte.2 &lt;dbl&gt;,
-## #   cte.3 &lt;dbl&gt;, cte.4 &lt;dbl&gt;, cte.5 &lt;dbl&gt;, cte.6 &lt;dbl&gt;, cte.7 &lt;dbl&gt;,
-## #   cte.8 &lt;dbl&gt;, cte.9 &lt;dbl&gt;, cte.10 &lt;dbl&gt;, cte.11 &lt;dbl&gt;, cte.12 &lt;dbl&gt;, …</code></pre>
+## #   RaceEthnicity &lt;chr&gt;, DistrictName &lt;chr&gt;, county.name &lt;chr&gt;, countyfp &lt;chr&gt;,
+## #   Dem_Desc &lt;chr&gt;, edr &lt;chr&gt;, n.years.attended &lt;dbl&gt;, ACTCompositeScore &lt;dbl&gt;,
+## #   ap.exam &lt;dbl&gt;, total.cte.courses.taken &lt;dbl&gt;, cte.0 &lt;dbl&gt;, cte.1 &lt;dbl&gt;,
+## #   cte.2 &lt;dbl&gt;, cte.3 &lt;dbl&gt;, cte.4 &lt;dbl&gt;, cte.5 &lt;dbl&gt;, cte.6 &lt;dbl&gt;,
+## #   cte.7 &lt;dbl&gt;, cte.8 &lt;dbl&gt;, cte.9 &lt;dbl&gt;, cte.10 &lt;dbl&gt;, cte.11 &lt;dbl&gt;, …</code></pre>
 <pre><code>##  [1] &quot;PersonID&quot;                           &quot;K12OrganizationID&quot;                 
 ##  [3] &quot;grad.year&quot;                          &quot;Gender&quot;                            
 ##  [5] &quot;LimitedEnglishProficiencyIndicator&quot; &quot;HomelessIndicator&quot;                 
 ##  [7] &quot;economic.status&quot;                    &quot;pseo.participant&quot;                  
 ##  [9] &quot;SpecialEdStatus&quot;                    &quot;non.english.home&quot;                  
-## [11] &quot;DistrictName&quot;                       &quot;county.name&quot;                       
-## [13] &quot;countyfp&quot;                           &quot;Dem_Desc&quot;                          
-## [15] &quot;edr&quot;                                &quot;n.years.attended&quot;                  
-## [17] &quot;ACTCompositeScore&quot;                  &quot;ap.exam&quot;                           
-## [19] &quot;total.cte.courses.taken&quot;            &quot;cte.0&quot;                             
-## [21] &quot;cte.1&quot;                              &quot;cte.2&quot;                             
-## [23] &quot;cte.3&quot;                              &quot;cte.4&quot;                             
-## [25] &quot;cte.5&quot;                              &quot;cte.6&quot;                             
-## [27] &quot;cte.7&quot;                              &quot;cte.8&quot;                             
-## [29] &quot;cte.9&quot;                              &quot;cte.10&quot;                            
-## [31] &quot;cte.11&quot;                             &quot;cte.12&quot;                            
-## [33] &quot;cte.14&quot;                             &quot;cte.21&quot;                            
-## [35] &quot;cte.22&quot;                             &quot;cte.23&quot;                            
-## [37] &quot;cte.24&quot;                             &quot;cte.25&quot;                            
-## [39] &quot;cte.26&quot;                             &quot;cte.achievement&quot;                   
-## [41] &quot;avg.cte.intensity&quot;                  &quot;english.learner&quot;                   
-## [43] &quot;MCA.M&quot;                              &quot;MCA.R&quot;                             
-## [45] &quot;MCA.S&quot;                              &quot;sat.taken&quot;</code></pre>
+## [11] &quot;RaceEthnicity&quot;                      &quot;DistrictName&quot;                      
+## [13] &quot;county.name&quot;                        &quot;countyfp&quot;                          
+## [15] &quot;Dem_Desc&quot;                           &quot;edr&quot;                               
+## [17] &quot;n.years.attended&quot;                   &quot;ACTCompositeScore&quot;                 
+## [19] &quot;ap.exam&quot;                            &quot;total.cte.courses.taken&quot;           
+## [21] &quot;cte.0&quot;                              &quot;cte.1&quot;                             
+## [23] &quot;cte.2&quot;                              &quot;cte.3&quot;                             
+## [25] &quot;cte.4&quot;                              &quot;cte.5&quot;                             
+## [27] &quot;cte.6&quot;                              &quot;cte.7&quot;                             
+## [29] &quot;cte.8&quot;                              &quot;cte.9&quot;                             
+## [31] &quot;cte.10&quot;                             &quot;cte.11&quot;                            
+## [33] &quot;cte.12&quot;                             &quot;cte.14&quot;                            
+## [35] &quot;cte.21&quot;                             &quot;cte.22&quot;                            
+## [37] &quot;cte.23&quot;                             &quot;cte.24&quot;                            
+## [39] &quot;cte.25&quot;                             &quot;cte.26&quot;                            
+## [41] &quot;cte.achievement&quot;                    &quot;avg.cte.intensity&quot;                 
+## [43] &quot;english.learner&quot;                    &quot;MCA.M&quot;                             
+## [45] &quot;MCA.R&quot;                              &quot;MCA.S&quot;                             
+## [47] &quot;sat.taken&quot;</code></pre>
 <p><br></p>
-<p>As expected there are 38,154 rows and 46 columns.</p>
+<p>As expected there are 38,154 rows and 47 columns.</p>
 </div>
 <div id="section-summary-of-sat-data" class="section level1">
 <h1>Summary of SAT data</h1>
@@ -520,8 +521,8 @@ a significant difference in students taking the SAT based on RUCA
 categoriy or EDR. Even if there is a significant difference, there just
 isn’t enough observations to make a difference.</p>
 <p><br></p>
-<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-bc6fae94bd9ebcbccc91" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-bc6fae94bd9ebcbccc91">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"237\" data-max=\"37917\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.006211668501336\" data-max=\"0.993788331498664\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[[0,1],[37917,237],[0.9937883314986633,0.006211668501336688]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>sat.taken<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[0,1]},{"className":"dt-right","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-a5b546c3165f401a93c0" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-a5b546c3165f401a93c0">{"x":{"filter":"top","vertical":false,"filterHTML":"<tr>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0\" data-max=\"1\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"237\" data-max=\"37917\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none;position: absolute;width: 200px;opacity: 1\">\n      <div data-min=\"0.006211668501336\" data-max=\"0.993788331498664\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[[0,1],[37917,237],[0.9937883314986633,0.006211668501336688]],"container":"<table class=\"cell-border stripe\">\n  <thead>\n    <tr>\n      <th>sat.taken<\/th>\n      <th>n<\/th>\n      <th>pct<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":1,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatCurrency(data, \"\", 0, 3, \",\", \".\", true, null);\n  }"},{"targets":2,"render":"function(data, type, row, meta) {\n    return type !== 'display' ? data : DTWidget.formatPercentage(data, 1, 3, \",\", \".\", null);\n  }"},{"className":"dt-center","targets":[0,1]},{"className":"dt-right","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true},"selection":{"mode":"multiple","selected":null,"target":"row","selectable":null}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render"],"jsHooks":[]}</script>
 </div>
 
 

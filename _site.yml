@@ -39,12 +39,13 @@ navbar:
     - text: "Analysis"
       icon: fa-gear
       menu:
-        - text: "Analysis methods"
-          href: analysis_methods.html
+        - text: "Analysis - multiple correspondence analysis"
+          href: analysis_multiple_correspondence.html
+        - text: "Local employment cross tabs"
+          href: analysis_local_employment_ct.html
         - text: "For Review"
           href: review.html
-        - text: "Local employment"
-          href: analysis_local_employment.html
+
 output:
   html_document:
     css: "styles.css"

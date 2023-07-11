@@ -1,0 +1,734 @@
+---
+title: "Analysis - local employment cross tabs"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(systemfonts)
+reset_font_cache()
+library(ggtext)
+library(gmodels)
+library(fastDummies)
+library(car)
+library(glmnet)
+library(glmnetUtils)
+library(pscl)
+
+```
+
+```{r join docs, include=FALSE}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+    select(5,6) %>%
+    unique() %>%
+    mutate(edr = str_replace(edr, "  ", " "),
+           planning.region = str_replace(planning.region, " Minnesota", ""),
+           planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+           edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"))
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+
+color.ruca <- c("Entirely rural" = "#009933", "Town/rural mix" = "#99CC33", "Urban/town/rural mix" = "#CC9966", "Entirely urban" = "#754C29", "Minnesota" = "black")
+
+color.pr <- c("Northwest" = 	"#4575b4", "Northeast" = "grey", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black")
+
+color.edr <- c("EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365", "Minnesota" = "black")
+
+color.pr.edr <- c ("Northwest" = "#4575b4","Northeast" = "#e0f3f8", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black", "EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365")
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+
+```
+
+```{r master dataset}
+master.original <- read_csv("Data/SLEDS/Masters/Master.csv")
+
+```
+
+<br>
+
+The first research question is to analyze the factors that play into whether an individual has meaningful employment within their high school county, EDR, research region, and Minnesota at time X. 
+
+There are three "times" in which we checked to see if the individual had meaningful employment within these geographies;
+
+1. the same year as graduation
+2. two years after graduation, and
+3. seven years after graduation. 
+
+Meaningful employment is determined by whether an individual worked 1,000 hours for an employer during time X. In addition, if the individual worked 1,000 hours for that employer during another year, but not for that exact "time X" year, it's still considered "meaningful". 
+
+Due to time x potentially being passed the date of the latest data (2019) for some individuals, the analysis below will filter out all individuals where time x is after 2019. 
+
+There are a number of independent variables in the master dataset. And they are likely to have significant colinearity, so we are going to split them up into larger "Groups" that will then have sub groups. For example, instead of modeling whether the institution sector from which an individual has graduated from impacts the dependent variable, we will just check to see if graduating from a post-seconary institution impacts the dependent variable. If so, then we will dig deeper to see if the institution type is significant.
+
+The primary independent variables we will use in the model is the following;
+
+* hs.grad.year
+* Gender
+* LimitedEnglishProficiencyIndicator
+* HomelessIndicator
+* economic.status
+* pseo.participant
+* SpecialEdStatus
+* non.english.home
+* Dem_Desc
+* edr
+* took.ACT
+* ap.exam
+* total.cte.courses.taken
+* cte.achievement
+* avg.cte.intensity
+* MCA.M
+* MCA.R
+* MCA.S
+* sat.taken
+* attended.ps
+* ps.grad
+* highest.cred.level
+* avg.unemp.rate
+* wages.3year.avg
+
+The following are the remaining independent variables will be a part of sub-variables that will be included in a follow-up model if the larger variable does indicate a relationship;
+
+* total.cte.courses.taken
+    + cte.0 - cte.26
+* ps.grad
+    + ps.grad.InstitutionSector
+    + ps.sector.1 - ps.sector.9
+* EDR
+    + county.name
+    + K12OrganizationID
+* Dem_Desc
+    + county.name
+    + K12OrganizationID
+    
+```{r primary independent variables}
+independent.var.names <- c("Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "attended.ps", "ps.grad", "highest.cred.level", "avg.unemp.rate", "wages.3year.avg")
+
+
+cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25")
+
+
+
+
+```
+    
+<br>
+
+# Employment in county at time X
+
+The chart below provides the percentage of individuals that had meaningful employment in the same county as their high school during time X. It shows that 12.4% of the individuals had meaningful employment in the same county as their high school at the year of graduation. The percentage increases to 17.3% of individuals 2 years after graduation, and 19.7% seven years after graduation. 
+
+In addition, the percentage of individuals that had meaningful employment at all during Time X decreased from 58.5% of individuals at the year of graduation to 9.8% seven years after graduation. With this came an increase in the percentage of individuals where there was meaningful employment at time X but not in the same county as their high school - 7.1%, to 17.2%, and then 36.2% seven years after graduation. The percentage of individuals that didn't hav a MN employment record at time X also increased from 21.7% at the year of graduation to 33.2%.
+
+<br>
+
+```{r meaningful employment county total}
+mean.emp.county.total <- master.original %>%
+  select(PersonID, hs.grad.year.county.match, hs.grad.year.2.county.match, hs.grad.year.7.county.match ) %>%
+  gather(key = "hs.grad.year",  value = "county.match", 2:4) %>%
+  filter(county.match != "After 2019") %>%
+  group_by(hs.grad.year, county.match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(hs.grad.year) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(hs.grad.year = str_sub(hs.grad.year, 1, 14),
+         hs.grad.year = str_replace(hs.grad.year, "hs.grad.year.c", "hs.grad.year"),
+         data_id = seq(n())) 
+
+mean.emp.county.total.plot <- ggplot(mean.emp.county.total, aes(county.match, pct, fill = hs.grad.year, group = hs.grad.year)) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Time x: ", hs.grad.year, "\nDoes employment location match high school county? - ", county.match, "\nNumber of individuals: ", comma(n), "\nPercent of total individuals: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  labs(x="", y = "", color="", title = "Percent of individuals with employment in high school county at\ntime X")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 4, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = .9))
+
+
+girafe(ggobj = mean.emp.county.total.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+Okay, so let's see if we can determine what factors play a role in an individuals that have meaningful employment in the county at each time X. We will start with whether the individuals have meaningful employment in the same county as their high school for each time of graduation + x years.
+
+<br>
+
+# Steps in analysis
+
+Our dependent variable - the individual has meaningful employment in same location X as their high school - has 4 different outcomes.
+
+1. Location match: the individual has
+    + a MN employment record at time X
+    + has meaningful employment at time X
+    + is employed in the same location X as their high school.
+2. No location match: the individual has 
+    + a MN employment record at time X
+    + has meaningful employment at time X
+    + does NOT have employment in the same location X as their high school.
+3. No meaningful emp: the individual has
+    + a MN employment record at time X
+    + the employment is not meaningful at time X.
+4. No MN emp record: the individual has
+    + NO MN employment record at time X.
+    
+For each time X we will analyze whether the independent variables are good at predicting whether an individual has a MN employment record and whether an individual has meaningful employment. Then, we can check to see if the same variables can predict whether an individual has meaningful employment in the same location X as their high school.
+
+<br>
+
+# Time X - grad year
+
+We will start by examining whether an individual has a MN employment record, has meaningful employment, and whether the meaningful employment is in the same location X as their high school, starting with county, then EDR, then the research region, and ending with MN.
+
+## MN Emp record
+
+```{r model mn emp record grad year}
+mn.emp.record.grad.year.dep.var <- master.original %>%
+  select(hs.grad.year.county.match, `independent.var.names`) %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  mutate(mn.emp.record = ifelse(hs.grad.year.county.match %in% c("Location match", "No location match", "No meaningful emp"), "MN emp record", "No MN emp record")) %>%
+  select(25, 2:24) %>%
+  mutate_at(c(1:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+mn.emp.record.grad.year.logit <- glm(mn.emp.record ~ ., family = binomial, data = mn.emp.record.grad.year.dep.var)
+
+summary(mn.emp.record.grad.year.logit)
+
+pR2(mn.emp.record.grad.year.logit)['McFadden']
+
+```
+
+<br>
+
+The model above provides the prediction results on whether an individual has a MN employment record or not. The model only has a 5% predictive power. Let's eliminate the insignificant variables and see if the model prediction improves.
+
+<br>
+
+```{r model mn emp record grad year sig}
+mn.emp.record.grad.year.dep.var.2 <- mn.emp.record.grad.year.dep.var %>%
+  select(-pseo.participant, -avg.cte.intensity, -MCA.M, -MCA.S)
+
+mn.emp.record.grad.year.logit.2 <- glm(mn.emp.record ~ ., family = binomial, data = mn.emp.record.grad.year.dep.var.2)
+
+mn.emp.record.grad.year.logit.2 %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Limited english proficiency", "Homeless",  "Free or reduced lunch", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "MCA - reading score", "SAT taken", "Attended post-secondary", "Graduated from post-secondary", "Earned Bachelor's", "Attended college, no degree", "Earned Masters", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  kable(format = "html", escape = FALSE,
+        col.names = c("Predictor", "B", "SE", "t", "p"),
+        digits = c(0, 2, 2, 3, 3),
+        align = c("l", "c", "c", "c", "c")) %>%
+  kable_styling(bootstrap_options = "stripe")
+
+pR2(mn.emp.record.grad.year.logit.2)['McFadden']
+
+```
+
+<br>
+
+The final model only has a 5% predictive power. This isn't good and indicates that there are a lot of other elements that play a role into whether an individual has a MN employment record. 
+
+<br>
+
+## Meaningful emp
+
+Next, let's check to see if the model can explain much of whether an individual has meaningful employment or not. We will filter out all individuals that do not have a MN employment record first. The dependent variable will then be a binomial of;
+
+1. Meaningful emp
+    + the individual had a MN employment record and,
+    + had meaningful employment the year of graduating high school.
+2. No meaningful emp
+    + the individual had a MN employment record and,
+    + did NOT have meaningful employment the year of graduating high school.
+
+<br>
+
+```{r summary meaningful emp grad year}
+meaningful.emp.grad.year <- master.original %>%
+  select(hs.grad.year.county.match, `independent.var.names`) %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  filter(hs.grad.year.county.match %in% c("Location match", "No location match", "No meaningful emp")) %>%
+  mutate(meaningful.emp = ifelse(hs.grad.year.county.match %in% c("Location match", "No location match"), "Meaningful emp", "No meaningful emp")) %>%
+  select(25, 2:24) %>%
+  mutate_at(c(1:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+names(meaningful.emp.grad.year) 
+
+head(meaningful.emp.grad.year)
+
+summary(meaningful.emp.grad.year$meaningful.emp) %>%
+  kable(format = "html", escape = FALSE) %>%
+  kable_styling(bootstrap_options = "stripe")
+  
+```
+
+<br>
+
+There are a total of `r comma(nrow(meaningful.emp.grad.year))` individuals that had a MN employment record the year they graduated from high school. The table above shows that 25% of the individuals with a MN employment record in the dataset had meaningful employment at the time of their graduation.
+
+<br>
+
+
+```{r model meaningful emp grad year}
+
+meaningful.emp.grad.year.logit <- glm(meaningful.emp ~ ., family = binomial, data = meaningful.emp.grad.year)
+
+summary(meaningful.emp.grad.year.logit)
+
+pR2(meaningful.emp.grad.year.logit)['McFadden']
+
+
+
+```
+
+<br>
+
+The model above explains 9.3% of whether an individual has meaningful employment or not the year they graduate high school among all individuals that had a MN employment record. We will see if the model improves by eliminating variables that are not significant.
+
+```{r model meaningful emp grad year 2}
+meaningful.emp.grad.year.2 <- meaningful.emp.grad.year %>%
+  select(-LimitedEnglishProficiencyIndicator, -HomelessIndicator, -MCA.M, -MCA.S, -ps.grad)
+
+meaningful.emp.grad.year.logit.2 <- glm(meaningful.emp ~ ., family = binomial, data = meaningful.emp.grad.year.2)
+
+summary(meaningful.emp.grad.year.logit.2)
+
+pR2(meaningful.emp.grad.year.logit.2)['McFadden']
+
+meaningful.emp.grad.year.logit.2 %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Free or reduced lunch", "PSEO participant", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "Avg CTE intensity of high school", "MCA - reading score", "SAT taken", "Attended post-secondary", "Earned Bachelor's", "Attended college, no degree", "Earned Masters", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  kable(format = "html", escape = FALSE,
+        col.names = c("Predictor", "B", "SE", "t", "p"),
+        digits = c(0, 2, 2, 3, 3),
+        align = c("l", "c", "c", "c", "c")) %>%
+  kable_styling(bootstrap_options = "stripe")
+```
+
+<br>
+
+The model doesn't improve when eliminating insignificant variables. The final model explains 9.3% of whether an individual with a MN employment record has meaningful employment the year of their high school graduation.
+
+<br>
+
+## Location match
+
+### County
+
+Okay, now we can see how the model performs in predicting whether an individual has meaningful employment in the same county as the high school from which they graduated. The dataset used in the model will have individuals that meet the following criteria at the time of graduation;
+
+- has MN employment record
+- has meaningful employment.
+
+```{r summary county match grad year}
+
+county.match.grad.year <- master.original %>%
+  select(hs.grad.year.county.match, `independent.var.names`) %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  filter(hs.grad.year.county.match %in% c("Location match", "No location match")) %>%
+  mutate_at(c(1:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+summary(county.match.grad.year$hs.grad.year.county.match) %>%
+  kable(format = "html", escape = FALSE) %>%
+  kable_styling(bootstrap_options = "stripe")
+  
+```
+
+<br>
+
+After filtering for individuals that have a MN employment record and had meaningful employment, there are a total of `r comma(nrow(county.match.grad.year))` individuals in the dataset. The table above shows that 63% of those individuals had meaninful employment in the same county as their high school. 
+
+<br>
+
+```{r model county match grad year}
+
+county.match.grad.year.logit <- glm(hs.grad.year.county.match ~ ., family = binomial, data = county.match.grad.year)
+
+summary(county.match.grad.year.logit)
+
+pR2(county.match.grad.year.logit)['McFadden']
+
+```
+
+The analysis above shows that the model only has a 2% predictive power. In addition, there are very few variables that are significant. Let's try eliminating the insignificant variables and see if the model improves.
+
+<br>
+
+```{r model county match grad year 2}
+county.match.grad.year.2 <- county.match.grad.year %>%
+  select(hs.grad.year.county.match, economic.status, non.english.home, Dem_Desc, edr, ap.exam, avg.cte.intensity, MCA.M, attended.ps, avg.unemp.rate, wages.3year.avg)
+
+county.match.grad.year.logit.2 <- glm(hs.grad.year.county.match ~ ., family = binomial, data = county.match.grad.year.2)
+
+summary(county.match.grad.year.logit.2)
+
+pR2(county.match.grad.year.logit.2)['McFadden']
+
+county.match.grad.year.logit.2 %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Free or reduced lunch", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took AP exam", "Avg CTE intensity of high school", "MCA - Math score", "Attended post-secondary", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  kable(format = "html", escape = FALSE,
+        col.names = c("Predictor", "B", "SE", "t", "p"),
+        digits = c(0, 2, 2, 3, 3),
+        align = c("l", "c", "c", "c", "c")) %>%
+  kable_styling(bootstrap_options = "stripe")
+
+
+```
+
+<br>
+
+The model doesn't improve when eliminating the insignficant variables. It still only has a 2% predictive power. 
+
+<br>
+
+### EDR
+
+```{r summary edr match grad year}
+
+edr.match.grad.year <- master.original %>%
+  select(hs.grad.year.edr.match, `independent.var.names`) %>%
+  filter(hs.grad.year.edr.match != "Unknown") %>%
+  filter(hs.grad.year.edr.match %in% c("Location match", "No location match")) %>%
+  mutate_at(c(1:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+summary(edr.match.grad.year$hs.grad.year.edr.match) %>%
+  kable(format = "html", escape = FALSE) %>%
+  kable_styling(bootstrap_options = "stripe")
+  
+```
+
+<br>
+
+After filtering for individuals that have a MN employment record and had meaningful employment, there are a total of `r comma(nrow(edr.match.grad.year))` individuals in the dataset. The table above shows that 76% of those individuals had meaningful employment in the same edr as their high school. 
+
+<br>
+
+```{r model edr match grad year}
+
+edr.match.grad.year.logit <- glm(hs.grad.year.edr.match ~ ., family = binomial, data = edr.match.grad.year)
+
+summary(edr.match.grad.year.logit)
+
+pR2(edr.match.grad.year.logit)['McFadden']
+
+```
+
+The analysis above shows that the model only has a 4% predictive power. In addition, there are very few variables that are significant. Let's try eliminating the insignificant variables and see if the model improves.
+
+<br>
+
+```{r model edr match grad year 2}
+edr.match.grad.year.2 <- edr.match.grad.year %>%
+  select(hs.grad.year.edr.match, economic.status, Dem_Desc, edr, avg.cte.intensity, MCA.M, highest.cred.level, avg.unemp.rate, wages.3year.avg)
+
+edr.match.grad.year.logit.2 <- glm(hs.grad.year.edr.match ~ ., family = binomial, data = edr.match.grad.year.2)
+
+summary(edr.match.grad.year.logit.2)
+
+pR2(edr.match.grad.year.logit.2)['McFadden']
+
+edr.match.grad.year.logit.2 %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Free or reduced lunch", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Avg CTE intensity of high school", "MCA - Math score", "Earned bachelors degree", "Less than associate degree", "Master degree or high", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  kable(format = "html", escape = FALSE,
+        col.names = c("Predictor", "B", "SE", "t", "p"),
+        digits = c(0, 2, 2, 3, 3),
+        align = c("l", "c", "c", "c", "c")) %>%
+  kable_styling(bootstrap_options = "stripe")
+
+
+```
+
+<br>
+
+The model did not improve. 
+
+<br>
+
+### Research region
+
+```{r summary region match grad year}
+
+region.match.grad.year <- master.original %>%
+  select(hs.grad.year.region.match, `independent.var.names`) %>%
+  filter(hs.grad.year.region.match != "Unknown") %>%
+  filter(hs.grad.year.region.match %in% c("Location match", "No location match")) %>%
+  mutate_at(c(1:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+summary(region.match.grad.year$hs.grad.year.region.match) %>%
+  kable(format = "html", escape = FALSE) %>%
+  kable_styling(bootstrap_options = "stripe")
+  
+```
+
+<br>
+
+
+After filtering for individuals that have a MN employment record and had meaningful employment, there are a total of `r comma(nrow(region.match.grad.year))` individuals in the dataset. The table above shows that 83% of those individuals had meaningful employment in the same edr as their high school. 
+
+<br>
+
+```{r model region match grad year}
+
+region.match.grad.year.logit <- glm(hs.grad.year.region.match ~ ., family = binomial, data = region.match.grad.year)
+
+summary(region.match.grad.year.logit)
+
+pR2(region.match.grad.year.logit)['McFadden']
+
+```
+
+The analysis above shows that the model only has a 3% predictive power. In addition, there are very few variables that are significant. Let's try eliminating the insignificant variables and see if the model improves.
+
+<br>
+
+```{r model region match grad year 2}
+region.match.grad.year.2 <- region.match.grad.year %>%
+  select(hs.grad.year.region.match, economic.status, Dem_Desc, edr, MCA.M)
+
+region.match.grad.year.logit.2 <- glm(hs.grad.year.region.match ~ ., family = binomial, data = region.match.grad.year.2)
+
+summary(region.match.grad.year.logit.2)
+
+pR2(region.match.grad.year.logit.2)['McFadden']
+
+region.match.grad.year.logit.2 %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Free or reduced lunch", "Town/rural mix high school", "Urban/town/rural mix high school", "region 6W high school", "region 8 high school", "MCA - Math score")
+  ) %>%
+  kable(format = "html", escape = FALSE,
+        col.names = c("Predictor", "B", "SE", "t", "p"),
+        digits = c(0, 2, 2, 3, 3),
+        align = c("l", "c", "c", "c", "c")) %>%
+  kable_styling(bootstrap_options = "stripe")
+
+
+```
+
+<br>
+
+The model did improve, but still is only 3% predictive power.
+
+<br>
+
+
+# Time X - grad year +2
+
+## MN Emp record
+
+<br>
+
+```{r model mn emp record grad year plus 2}
+mn.emp.record.grad.year.2.dep.var <- master.original %>%
+  select(hs.grad.year.2.county.match, `independent.var.names`) %>%
+  filter(hs.grad.year.2.county.match != "After 2019") %>%
+  filter(hs.grad.year.2.county.match != "Unknown") %>%
+  mutate(mn.emp.record = ifelse(hs.grad.year.2.county.match %in% c("Location match", "No location match", "No meaningful emp"), "MN emp record", "No MN emp record")) %>%
+  select(25, 2:24) %>%
+  mutate_at(c(1:12, 14, 19:22), as.factor) %>%
+  mutate(MCA.R = ifelse(is.na(MCA.R), 0, MCA.R),
+         MCA.M = ifelse(is.na(MCA.M), 0, MCA.M),
+         MCA.S = ifelse(is.na(MCA.S), 0, MCA.S)) 
+
+mn.emp.record.grad.year.2.logit <- glm(mn.emp.record ~ ., family = binomial, data = mn.emp.record.grad.year.2.dep.var)
+
+summary(mn.emp.record.grad.year.2.logit)
+
+pR2(mn.emp.record.grad.year.2.logit)['McFadden']
+
+```
+
+<br>
+
+The model above provides the prediction results on whether an individual has a MN employment record or not. The model only has a 5% predictive power. Let's eliminate the insignificant variables and see if the model prediction improves.
+
+<br>
+
+```{r model mn emp record grad year 2 sig}
+mn.emp.record.grad.year.2.dep.var.2 <- mn.emp.record.grad.year.2.dep.var %>%
+  select(-LimitedEnglishProficiencyIndicator, -pseo.participant, -avg.cte.intensity, -MCA.M, -MCA.S )
+
+mn.emp.record.grad.year.2.logit.2 <- glm(mn.emp.record ~ ., family = binomial, data = mn.emp.record.grad.year.2.dep.var.2)
+
+mn.emp.record.grad.year.2.logit.2 %>%
+  broom::tidy() %>%
+  mutate(
+    term = c("Intercept", "Gender - male", "Homeless",  "Free or reduced lunch", "Special Ed Status", "Non-english speaker at home", "Town/rural mix high school", "Urban/town/rural mix high school", "EDR 6W high school", "EDR 8 high school", "Took ACT", "Took AP exam", "Total CTE courses taken", "CTE participant", "No CTE taken", "MCA - reading score", "SAT taken", "Attended post-secondary", "Graduated from post-secondary", "Earned Bachelor's", "Attended college, no degree", "Earned Masters", "Avg unemployment rate during high school", "Avg wages of high school county")
+  ) %>%
+  kable(format = "html", escape = FALSE,
+        col.names = c("Predictor", "B", "SE", "t", "p"),
+        digits = c(0, 2, 2, 3, 3),
+        align = c("l", "c", "c", "c", "c")) %>%
+  kable_styling(bootstrap_options = "stripe")
+
+pR2(mn.emp.record.grad.year.logit.2)['McFadden']
+
+```
+
+<br>
+
+The final model only has a 5% predictive power. This isn't good and indicates that there are a lot of other elements that play a role into whether an individual has a MN employment record. 
+
+<br>
+
+## Meaningful emp
+
+## Location match
+
+### County
+
+### EDR
+
+### Research region
+
+### Minnesota
+
+# Time X - grad year +7
+
+## MN Emp record
+
+## Meaningful emp
+
+## Location match
+
+### County
+
+### EDR
+
+### Research region
+
+### Minnesota
+
+
+
+
+
+
+

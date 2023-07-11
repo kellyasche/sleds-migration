@@ -387,13 +387,13 @@ div.tocify {
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="analysis_methods.html">Analysis methods</a>
+      <a href="analysis_multiple_correspondence.html">Analysis - multiple correspondence analysis</a>
+    </li>
+    <li>
+      <a href="analysis_local_employment_ct.html">Local employment cross tabs</a>
     </li>
     <li>
       <a href="review.html">For Review</a>
-    </li>
-    <li>
-      <a href="analysis_local_employment.html">Local employment</a>
     </li>
   </ul>
 </li>
@@ -429,62 +429,63 @@ div.tocify {
 ##  [8] &quot;pseo.participant&quot;                    
 ##  [9] &quot;SpecialEdStatus&quot;                     
 ## [10] &quot;non.english.home&quot;                    
-## [11] &quot;DistrictName&quot;                        
-## [12] &quot;county.name&quot;                         
-## [13] &quot;countyfp&quot;                            
-## [14] &quot;Dem_Desc&quot;                            
-## [15] &quot;edr&quot;                                 
-## [16] &quot;n.years.attended&quot;                    
-## [17] &quot;ACTCompositeScore&quot;                   
-## [18] &quot;ap.exam&quot;                             
-## [19] &quot;total.cte.courses.taken&quot;             
-## [20] &quot;cte.0&quot;                               
-## [21] &quot;cte.1&quot;                               
-## [22] &quot;cte.2&quot;                               
-## [23] &quot;cte.3&quot;                               
-## [24] &quot;cte.4&quot;                               
-## [25] &quot;cte.5&quot;                               
-## [26] &quot;cte.6&quot;                               
-## [27] &quot;cte.7&quot;                               
-## [28] &quot;cte.8&quot;                               
-## [29] &quot;cte.9&quot;                               
-## [30] &quot;cte.10&quot;                              
-## [31] &quot;cte.11&quot;                              
-## [32] &quot;cte.12&quot;                              
-## [33] &quot;cte.14&quot;                              
-## [34] &quot;cte.21&quot;                              
-## [35] &quot;cte.22&quot;                              
-## [36] &quot;cte.23&quot;                              
-## [37] &quot;cte.24&quot;                              
-## [38] &quot;cte.25&quot;                              
-## [39] &quot;cte.26&quot;                              
-## [40] &quot;cte.achievement&quot;                     
-## [41] &quot;avg.cte.intensity&quot;                   
-## [42] &quot;english.learner&quot;                     
-## [43] &quot;MCA.M&quot;                               
-## [44] &quot;MCA.R&quot;                               
-## [45] &quot;MCA.S&quot;                               
-## [46] &quot;sat.taken&quot;                           
-## [47] &quot;attended.ps&quot;                         
-## [48] &quot;first.attend.ps&quot;                     
-## [49] &quot;attended.ps.first.year&quot;              
-## [50] &quot;attended.ps.years.hsgrad&quot;            
-## [51] &quot;attended.ps.within.first.year.hsgrad&quot;
-## [52] &quot;n.institutions&quot;                      
-## [53] &quot;first.InstitutionSector&quot;             
-## [54] &quot;ps.sector.1&quot;                         
-## [55] &quot;ps.sector.2&quot;                         
-## [56] &quot;ps.sector.3&quot;                         
-## [57] &quot;ps.sector.4&quot;                         
-## [58] &quot;ps.sector.5&quot;                         
-## [59] &quot;ps.sector.6&quot;                         
-## [60] &quot;ps.sector.7&quot;                         
-## [61] &quot;ps.sector.8&quot;                         
-## [62] &quot;ps.sector.9&quot;                         
-## [63] &quot;ps.in.same.ruca&quot;                     
-## [64] &quot;ps.in.same.edr&quot;                      
-## [65] &quot;ps.in.same.pr&quot;                       
-## [66] &quot;ps.in.MN&quot;</code></pre>
+## [11] &quot;RaceEthnicity&quot;                       
+## [12] &quot;DistrictName&quot;                        
+## [13] &quot;county.name&quot;                         
+## [14] &quot;countyfp&quot;                            
+## [15] &quot;Dem_Desc&quot;                            
+## [16] &quot;edr&quot;                                 
+## [17] &quot;n.years.attended&quot;                    
+## [18] &quot;ACTCompositeScore&quot;                   
+## [19] &quot;ap.exam&quot;                             
+## [20] &quot;total.cte.courses.taken&quot;             
+## [21] &quot;cte.0&quot;                               
+## [22] &quot;cte.1&quot;                               
+## [23] &quot;cte.2&quot;                               
+## [24] &quot;cte.3&quot;                               
+## [25] &quot;cte.4&quot;                               
+## [26] &quot;cte.5&quot;                               
+## [27] &quot;cte.6&quot;                               
+## [28] &quot;cte.7&quot;                               
+## [29] &quot;cte.8&quot;                               
+## [30] &quot;cte.9&quot;                               
+## [31] &quot;cte.10&quot;                              
+## [32] &quot;cte.11&quot;                              
+## [33] &quot;cte.12&quot;                              
+## [34] &quot;cte.14&quot;                              
+## [35] &quot;cte.21&quot;                              
+## [36] &quot;cte.22&quot;                              
+## [37] &quot;cte.23&quot;                              
+## [38] &quot;cte.24&quot;                              
+## [39] &quot;cte.25&quot;                              
+## [40] &quot;cte.26&quot;                              
+## [41] &quot;cte.achievement&quot;                     
+## [42] &quot;avg.cte.intensity&quot;                   
+## [43] &quot;english.learner&quot;                     
+## [44] &quot;MCA.M&quot;                               
+## [45] &quot;MCA.R&quot;                               
+## [46] &quot;MCA.S&quot;                               
+## [47] &quot;sat.taken&quot;                           
+## [48] &quot;attended.ps&quot;                         
+## [49] &quot;first.attend.ps&quot;                     
+## [50] &quot;attended.ps.first.year&quot;              
+## [51] &quot;attended.ps.years.hsgrad&quot;            
+## [52] &quot;attended.ps.within.first.year.hsgrad&quot;
+## [53] &quot;n.institutions&quot;                      
+## [54] &quot;first.InstitutionSector&quot;             
+## [55] &quot;ps.sector.1&quot;                         
+## [56] &quot;ps.sector.2&quot;                         
+## [57] &quot;ps.sector.3&quot;                         
+## [58] &quot;ps.sector.4&quot;                         
+## [59] &quot;ps.sector.5&quot;                         
+## [60] &quot;ps.sector.6&quot;                         
+## [61] &quot;ps.sector.7&quot;                         
+## [62] &quot;ps.sector.8&quot;                         
+## [63] &quot;ps.sector.9&quot;                         
+## [64] &quot;ps.in.same.ruca&quot;                     
+## [65] &quot;ps.in.same.edr&quot;                      
+## [66] &quot;ps.in.same.pr&quot;                       
+## [67] &quot;ps.in.MN&quot;</code></pre>
 <pre><code>## # A tibble: 6 × 8
 ##   PersonID Graduated GraduationTimeID OPEID    InstitutionName DegreeTitle Major
 ##      &lt;int&gt; &lt;chr&gt;                &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;           &lt;fct&gt;       &lt;chr&gt;

@@ -1,0 +1,463 @@
+---
+title: "Analysis - multiple correspondance analysis"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(systemfonts)
+reset_font_cache()
+library(ggtext)
+library(gmodels)
+library(leaps)
+library(bestglm)
+library(fastDummies)
+library(car)
+library(FactoMineR)
+library(factoextra)
+library(psych)
+library(corrplot)
+```
+
+```{r join docs, include=FALSE}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+    select(5,6) %>%
+    unique() %>%
+    mutate(edr = str_replace(edr, "  ", " "),
+           planning.region = str_replace(planning.region, " Minnesota", ""),
+           planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+           edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"))
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+
+color.ruca <- c("Entirely rural" = "#009933", "Town/rural mix" = "#99CC33", "Urban/town/rural mix" = "#CC9966", "Entirely urban" = "#754C29", "Minnesota" = "black")
+
+color.pr <- c("Northwest" = 	"#4575b4", "Northeast" = "grey", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black")
+
+color.edr <- c("EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365", "Minnesota" = "black")
+
+color.pr.edr <- c ("Northwest" = "#4575b4","Northeast" = "#e0f3f8", "Central" = "#fee090", "Seven County Mpls-St Paul" = "#d73027", "Southwest" = "#91bfdb", "Southeast" = "#fc8d59", "Minnesota" = "black", "EDR 1 - Northwest" = "#b3cde3", "EDR 2 - Headwaters" = "#8c96c6", "EDR 3 - Arrowhead" = "#fe9929", "EDR 4 - West Central" = "#8856a7", "EDR 5 - North Central" = "#810f7c", "EDR 6E- Southwest Central" = "#e5f5f9", "EDR 6W- Upper Minnesota Valley" = "#bdc9e1", "EDR 7E- East Central" = "#99d8c9", "EDR 7W- Central" = "#2ca25f", "EDR 8 - Southwest" = "#74a9cf", "EDR 9 - South Central" = "#0570b0", "EDR 10 - Southeast" = "#d7301f", "EDR 11 - 7 County Twin Cities" = "#d8b365")
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+```
+
+```{r master original}
+master.original <- read.csv("Data/SLEDS/Masters/Master-13.csv") %>%
+  mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions),
+         ps.attended.in.same.ruca = ifelse(is.na(ps.attended.in.same.ruca), "Never attended ps", ps.attended.in.same.ruca),
+         ps.attended.in.same.edr = ifelse(is.na(ps.attended.in.same.edr), "Never attended ps", ps.attended.in.same.edr),
+         ps.attended.in.same.pr = ifelse(is.na(ps.attended.in.same.pr), "Never attended ps", ps.attended.in.same.pr),
+         ps.attended.in.MN = ifelse(is.na(ps.attended.in.MN), "Never attended ps", ps.attended.in.MN),
+         ps.grad = ifelse(ps.grad == "Y", 1, 0),
+         ps.grad.InstitutionSector = ifelse(attended.ps == "No", "Never attended ps", ps.grad.InstitutionSector),
+         ps.grad.InstitutionSector = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.InstitutionSector),
+         ps.grad.in.same.ruca = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.same.ruca),
+         ps.grad.in.same.ruca = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.same.ruca),
+         ps.grad.in.same.edr = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.same.edr),
+         ps.grad.in.same.edr = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.same.edr),
+         ps.grad.in.same.pr = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.same.pr),
+         ps.grad.in.same.pr = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.same.pr),
+         ps.grad.in.MN = ifelse(attended.ps == "No", "Never attended ps", ps.grad.in.MN),
+         ps.grad.in.MN = ifelse(attended.ps == "Yes" & ps.grad == 0, "Did not grad", ps.grad.in.MN),
+         took.ACT = ifelse(is.na(ACTCompositeScore), "No", "Yes"),
+         hs.grad.year = ifelse(hs.grad.year == 2008, 1,
+                               ifelse(hs.grad.year == 2009, 2,
+                                      ifelse(hs.grad.year == 2010, 3,
+                                             ifelse(hs.grad.year == 2011, 4,
+                                                    ifelse(hs.grad.year == 2012, 5,
+                                                           ifelse(hs.grad.year == 2013, 6,
+                                                                  ifelse(hs.grad.year == 2014, 7,
+                                                                         ifelse(hs.grad.year == 2015, 8,
+                                                                                ifelse(hs.grad.year == 2016, 9,
+                                                                                       ifelse(hs.grad.year == 2017, 10,
+                                                                                              ifelse(hs.grad.year == 2018, 11, 12))))))))))))
+
+write_csv(master.original, "Data/SLEDS/Masters/Master.csv")
+
+```
+
+<br>
+
+The purpose of multiple correspondence analysis is to examine any patterns among the independent variables with the goal of eliminating variables that are redundant - essentially two variables that are explaining the same thing. This type of analysis is not meant to confirm any predictions, but rather explore the data and make decisions on what data should be included in the prediction model.
+
+
+
+# Independent variables
+
+The master dataset is composed of `r comma(nrow(master.original))` rows. Each row represents an individual that graduated (StatusEnd = 8 or 9) from a high school located in EDR 6W, EDR 6E, and EDR 8 between 2008 and 2019.
+
+The master dataset is also composed of `r comma(ncol(master.original))` columns. Columns mainly represent various socio-economic, demographic, and educational career characteristics of the indivdual as well as a few characteristics of the high school geographic from which they graduated (i.e. county unemployment). The variables for each individual is composed of a mix of categorical and numerical values. In this analysis, we will only be exploring categorical data.
+
+Here is a list of all the categorical variables with a description of each.
+
+```{r primary independent variables}
+qual.var.names <-  c("PersonID", "hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "cte.achievement", "english.learner", "sat.taken", "attended.ps", "ps.grad", "ps.grad.InstitutionSector", "highest.cred.level")
+
+quan.var.names <- c("total.cte.courses.taken", "cte.0", "cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25", "cte.26", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "avg.unemp.rate", "wages.3year.avg")
+
+independent.var.names <- c("hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "attended.ps", "ps.grad", "highest.cred.level", "avg.unemp.rate", "wages.3year.avg")
+
+
+cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25")
+
+ind.qual.var <- master.original %>%
+  select(`qual.var.names`) %>%
+  mutate_at(2:21, as.factor)
+
+
+```
+
+* **Demographics**
+    + *Grad year:* this is a value representing each year starting with 1 representing 2008 and 12 representing 2019.
+    + *Gender:* 
+      + M = male
+      + F = female
+    + *RaceEthnicity:* 
+      + AI = American Indian
+      + Asian/PI = Asian or Pacific Islander
+      + Black = African American
+      + Hispanic = any race any Hispanic or Latino
+      + Unknown = unknown race or ethnicity
+      + White = Caucuasian and not hispanic
+
+<br>
+    
+* **High school characteristics**
+    + *Dem_Desc:* the RUCA category of the high school from which the individual graduated.
+    + *edr:* the EDR of the high school from which the individual graduated.
+
+<br>
+
+* **High school enrollment**
+    + *LimitedEnglishProficiencyIndicator:* 
+      + Y = identified as having limited english proficiency at some point between 10th and 12th grade, otherwise N.
+    + *HomelessIndicator:* 
+      + Y = the individual was  identified as homeless at any point between 10th and 12th grade, otherwise N.
+    + *economic.status:* 
+      + 1 = the individual was eligible for free or reduced lunch (codes 1,2,4,5) at any point between 10th and 12th grade, otherwise 0.
+    + *pseo.participant:* 
+      + 1 = the individual participated in a PSEO course sometime between 10th and 12th grade, otherwise 0.
+    + *SpecialEdStatus:* 
+      + 1 = the individual required special education services at some point between 10th and 12th grade, otherwise 0.
+    + *non.english.home:*   
+      + 1 = the individual was identifed as having English as not the primary langauge spoken at home between 10th and 12th grad, otherwise 0.
+    + *english.learner:* 
+      + 1 = the individual was identified as an "english learner" at least one time between 10th and 12th grade, otherwise 0.
+      
+<br>
+      
+* **High school accomplishments**
+    + *took.ACT:* whether an indiviual took the ACT exam
+      + Yes
+      + No
+    + *ap.exam:*
+      + 1 = the individual took an AP exam at some point, 
+      + 0 = the individual did not take an AP exam.
+    + *cte.achievement:* three indicators with 
+      + "CTE concentrator or completor" being one, 
+      + "CTE participant" meaning they took a CTE course but was not a concentrator or completor, and, 
+      + "No CTE" meaning they didn't take a CTE course
+    + *sat.taken:* 
+      + 1 = individual took the SAT at some point between 10th and 12th grade, otherwise 0.
+
+<br>
+
+* **Post-secondary**
+    + *attended.ps:* 
+      + Yes = the individual attended a post-secondary education institution, otherwise No.
+    + *ps.grad:* whether the indiviual graduated from a post-secondary institution
+    + *ps.grad.InstitutionSector:* the institution sector of the post-secondary school from which an individual has graduated.
+      + 1 - Public, 4-year or above
+      + 2 - Private not-for-profit, 4-year or above
+      + 3 - Private for-profit, 4-year or above
+      + 4 - Public, 2-year
+      + 5 - Private not-for-profit, 2-year
+      + 6 - Private for-profit, 2-year
+      + 7 - Public, less-than 2-year
+      + 8 - Private not-for-profit, less-than 2-year
+      + 9 - Private for-profit, less-than 2-year
+      + 10 - multiple sectors (if attended multiple institutions)
+      + 99 - Sector unknown (not active)
+      + "Never attended ps" = the individual never attended a post-secondary institution
+      + "Did not grad" = the individual attended a post-secondary institution but did not graduate.
+    + *highest.cred.level:* an identifier of the highest credential earned by the PersonID. The categories are;
+      + Less than associate degree
+      + Associate degree
+      + Bachelors degree
+      + Higher than bachelors degree.
+    
+<br>
+
+# Frequencies
+
+First, lets check to see there aren't any variable categories with very low frequencies which can distort the analysis.
+
+The tables below shows there are a few to be concerned about.
+
+* HomelessIndicator: There are only 161 individuals in the dataset that were confirmed homeless compared to 37,993 individuals that were never confirmed homeless.
+* LimitedEnglishProficiency: There are only 805 individuals that were ever confirmed as having limited english proficiency compared to 37,349.
+* grad.InstitutionSector: there very few individuals that graduated from a post secondary institution categorized as 5, 6, 7, 8 and 9. 
+* RaceEthnicity: ther are only a 399 students categorized as American Indian and only 40 categorized as Unknown. 
+* SAT.taken: Only 237 students who took the ACT.
+
+
+<br>
+
+```{r ind qual frequencies}
+ind.qual.freq <- ind.qual.var %>%
+  gather(key = "key", value = "value", 2:21) %>%
+  group_by(key, value) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(data_id = seq(n()))
+  
+ind.qual.freq.plot <- ggplot(ind.qual.freq, aes(value, n)) +
+  facet_wrap(~key, ncol = 4, scales = "free") +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(key, "\n", value, "\nN = ", comma(n, accuracy = 1), sep = ""))) +
+  labs(x="", y = "", color="", title = "N for each independent, categorical variable")+
+  scale_y_continuous(labels=scales::comma)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = .9))
+
+
+girafe(ggobj = ind.qual.freq.plot, width_svg = 10, height_svg = 20) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+Due to these low frequencies, I'm going to do the following;
+
+* HomelessIndicator: eliminate from analysis
+* LimitedEnglishProficiency: Keep for now
+* grad.InstitutionSector: combine categories 5,6,7,8 and 9 into one category. This means that the following institution sectors will be relabeled as "11";
+    + 5 - Private not-for-profit, 2-year
+    + 6 - Private for-profit, 2-year
+    + 7 - Public, less-than 2-year
+    + 8 - Private not-for-profit, less-than 2-year
+    + 9 - Private for-profit, less-than 2-year
+* RaceEthnicity: Keep for now
+* SAT.taken: eliminate from analysis.
+
+```{r updated ind qual var}
+master.ind.qual.var <- ind.qual.var %>%
+  select(-PersonID, -HomelessIndicator, -sat.taken) %>%
+  mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("5", "6", "7", "8", "9"), "11", as.character(ps.grad.InstitutionSector)),
+         ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector))
+```
+
+<br>
+
+# MCA analysis
+
+Let's check MCA. 
+
+```{r MCA}
+mca <- MCA(master.ind.qual.var, graph = TRUE)
+
+mca
+```
+
+<br>
+
+
+## Eigenvalues
+
+The eigenvalues measure the amount of variation retained by each principle component. This will help us determine how many principle components to be considered.
+
+The values below indicate that the first dimension explains just over 10% of the variation with the next few dimensions explaining an additional 5%. After about dimension 4, each subsequent dimension explains an additional 2% to 4% of the variable until about dimension 32 where each dimension explains additional 1% of the variance.
+
+```{r eigenvalues}
+eig.val <- get_eigenvalue(mca)
+
+eig.val
+```
+
+<br>
+
+A visualization of variation explained by each dimension is below. 
+
+```{r eignevalues scree}
+fviz_eig(mca, addlabels = TRUE, ncp = 50)
+```
+
+<br>
+
+## Correlation between variables and principle dimensions
+
+Let's take a look to see which variables are going to be important. The chart below shows that the variables related to post-secondary education are highly correlated with the first dimension while the variables related to race/ethnicity and whether english is spoken is correlated with dimension 2. 
+
+```{r mca correlation between variables}
+fviz_mca_var(mca, 
+             choice = "mca.cor",
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+## Coordinates of variable categories
+
+This is too busy to interpret well, but there are a few things worth mentioning. The race/ethnicy and english language variables continue to stand out. Having limited english proficiency as well as being an englih learner, and being non-white all have opposing impacts to their related categories for each variable. Regarding post-secondary education variables, having limited no or limited post-secondary experience is in an opposing quadrant to it's related categories. For example, never attending post-secondary is in opposition to attended post-secondary. As well as having earned a masters or bachelor's degree.
+
+```{r mca coordinates of variable categories}
+fviz_mca_var(mca,
+             repel = TRUE,
+             col.var = "black")
+
+
+```
+
+<br>
+
+## Quality of representation
+
+So far, we've only looked at the first two dimensions which only explain 15% of the variance. The quality of representation will help us assess the degree of association between variable categories and a particular axis. If the variable is well represented by two dimensions, the sum of COS2 is close to one. For some of the row items, more than 2 dimensions are required to perfectly represent the data.
+
+Due to the high number of varaiable categories present in the data, I will use color to help decipher which ones have high cos2.
+
+* variable categories with low cos2 values will be colored in “white”
+* variable categories with mid cos2 values will be colored in “blue”
+* variable categories with high cos2 values will be colored in “red”
+
+From the table below, we can see that the variable categories with high cos2 are;
+
+* non.english.home
+* Less than Associate Degree
+* ps_grad
+* english.learner
+* Bachelor degree
+
+
+```{r quality of representation}
+fviz_mca_var(mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+Let's turn this into a bar plot to better visualize all of these. Since we know, according to the eigenvalues, that the first few dimensions only represent 20% of the variance, and each subsequent dimension adds only explains a bit more variance, it's likely that it will take numerous dimensions to explain a sufficient amount of our variance. Therefore, we will graph visualize the quality of representation up to the max number of dimensions allowed - 5. 
+
+The following variables and their respective categories are identified by the following Cos2 grouping;
+
+**Above 75%**
+
+* ps.grad: 
+    + 1
+    + 0
+* highest.cred.level
+    + Bachelor degree
+* attended.ps
+    + Yes
+    + No
+* ps.grad.InstitutionSector
+    + Never attended ps
+
+```{r visualize quality of representation}
+fviz_cos2(mca, choice = "var", axes = 1:2)
+
+```
+
