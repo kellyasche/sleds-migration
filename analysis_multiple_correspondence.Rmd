@@ -457,7 +457,181 @@ The following variables and their respective categories are identified by the fo
     + Never attended ps
 
 ```{r visualize quality of representation}
-fviz_cos2(mca, choice = "var", axes = 1:2)
+fviz_cos2(mca, choice = "var", axes = 1:5)
+
+```
+
+<br>
+
+Let's check the contributions to dimensions 1 through 5.
+
+The following variable categories contribute the most to dimension 1.
+
+* ps.grad.InstitutionSector
+    + never attended ps
+    + 1
+* attended.ps
+    + No
+* highest.cred.level
+    + Bachelor's degree
+    + Less than associate degree
+* ps.grad
+    + Yes
+    + No
+* took.ACT
+    + No
+* non.english.home
+    + 1
+* english.learner
+    + 1
+
+
+```{r contributions dimension 1}
+fviz_contrib(mca, choice = "var", axes = 1, xtickslab.rt = 90)
+
+```
+
+<br>
+
+The largest contributors to dimension 2 are;
+
+* non.english.home
+    + 1
+* LimitedEnglishProficiencyIndicator
+    + Yes
+* english.learner
+    + 1
+* Race/Ethnicity
+    + Hispanic
+    + Asian/PI
+
+```{r contributions dimension 2}
+fviz_contrib(mca, choice = "var", axes = 2, xtickslab.rt = 90)
+
+```
+
+<br>
+
+For dimension 3, the largest contributors are;
+
+* ps.grad.InstitutionSector
+    + 4
+    + Did not grad
+* highest.cred.level
+    + Associate degree
+* ap.exam
+    + 1
+* ps.grad
+    + 1
+    + 0
+* pseo.participant
+    + 1
+* took.act
+    + No
+* cte.achievement
+    + Concentrator or completor
+    + No CTE
+
+```{r contributions dimension 3}
+fviz_contrib(mca, choice = "var", axes = 3, xtickslab.rt = 90)
+
+```
+
+<br>
+
+The largest contributors to dimension 4 are;
+
+* ps.grad.InstitutionSector
+    + Did not grad
+    + Never attended ps
+    + 1
+    + 4
+* attended.ps
+    + No
+* highest.cred.level
+    + Bachelors degree
+    + Associate degree
+
+
+```{r contributions dimension 4}
+fviz_contrib(mca, choice = "var", axes = 4, xtickslab.rt = 90)
+
+```
+
+<br>
+
+The largets contributor sto dimension 5 are;
+
+* Dem_Desc
+    + Urban/town/rural mix
+* EDR
+    + EDR 6W
+    + EDR 6E
+* highest cred.level
+    + Associate degree
+* ps.grad.InstitutionSector
+    + 1
+
+```{r contributions dimension 5}
+fviz_contrib(mca, choice = "var", axes = 5, xtickslab.rt = 90)
+
+```
+
+## Summary
+
+So out of all this, it seems the following variables are the most important regarding the amount of variation explained;
+
+1. ps.grad.InstitutionSector
+    a. never attended ps
+    b. 1 - Public, 4-year or above
+    c. 4 - Public, 2-year
+    d. did not grad
+2. attended.ps
+    a. No
+3. highest.cred.level
+    a. Bachelor's degree
+    b. Less than associate degree
+    c. associate degree
+4. ps.grad
+    a. Yes
+    b. No
+5. took.ACT
+    a. No
+6. non.english.home
+    a. 1 - yes
+7. english.learner
+    a. 1 - yes
+8. LimitedEnglishProficiencyIndicator
+    a. Yes
+9. Race/Ethnicity
+    a. hispanic
+    b. Asian/PI
+10. ap.exam
+    a. 1 - yes
+11. pseo.participant
+    a. 1 - yes
+12. cte.achievement
+    a. Concentrator or completor
+    b. No CTE
+13. Dem_Desc
+    a. Urban/town/rural mix
+14. edr
+    a. EDR 6E
+    b. EDR 6W
+
+
+## Color individuals by group
+
+Below is the individuals. Not sure how to interpret this.
+
+```{r individuals}
+fviz_mca_ind(mca, 
+             geom.ind = "point",
+             col.ind = ind.qual.var$ps.grad.InstitutionSector,
+             palette = brewer.pal(n = 11, "RdYlBu"),
+             addEllipses = TRUE,
+             ggtheme = theme_minimal()) 
+
 
 ```
 
