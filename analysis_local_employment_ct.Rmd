@@ -151,7 +151,9 @@ cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte
 
 updated.master <- master.original %>%
   select(`updated.independent.var.names`, hs.grad.year.county.match, hs.grad.year.2.county.match, hs.grad.year.7.county.match, hs.grad.year.edr.match, hs.grad.year.2.edr.match, hs.grad.year.7.edr.match, hs.grad.year.region.match, hs.grad.year.region.match, hs.grad.year.2.region.match, hs.grad.year.7.region.match, hs.grad.year.state.match, hs.grad.year.2.state.match, hs.grad.year.7.state.match) %>%
-  mutate_at(2:15, as.factor)
+  mutate_at(2:15, as.factor) %>%
+  mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("5", "6", "7", "8", "9"), "11", as.character(ps.grad.InstitutionSector)),
+         ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector))
 
 ```
 
@@ -379,32 +381,658 @@ TukeyHSD(summary)
 
 <br>
 
+### High school enrollment variables{.tabset}
+
+**LimitedEnglishProficiencyIndicator:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and if the individual has limited english proficiency. However, the Cramer's V^2 value is only .026 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that had limited english proficiency had meaningful employment in the same county as their high school the year of graduation - 18.1% vs. 12.2% for individuals that did not have limited english proficiency.
+* A significantly larger number of individuals with limited english proficiency worked in the same county as their high school than expected - 146 observed vs. 100 expected.
 
 <br>
 
-### High school enrollment variables{.tabset}
+**pseo.participant:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and whether they participated in PSEO classes. However, the Cramer's V^2 value is only .088 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that did NOT participate in PSEO classes had meaningful employment in the same county as their high school the year of graduation - 14.5% vs. 8.4% for individuals that did participate in PSEO.
+* A significantly larger number of individuals that did NOT participate in PSEO had meaningful employment in the same county as their high school the year of graduation - 3,608 observed vs. 3,084 expected.
+
+<br>
+
+**non.english.home:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .060 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals where english wasn't the primary language at home had meaningful employment in the same county as their high school the year of graduation - 18.8% vs. 11.8% for individuals where English was the primary language at home.
+* The observed vs expected was also significantly different for this group - 623 observed vs. 411 expected.
+
+<br>
+
+**english.learner**: The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .027 indicating a weak relationship. Highlights from the table include;
+
+* A larger proportion of individuals categorized as english learners had meaningful employment in the same county as their high school - 16.1% vs. 12.2% of individuals not designated as english learners.
+* This same group had a larger number of individuals that expected - 333 observed vs. 256 expected.
 
 #### LimitedEnglishProficiencyIndicator
+
+```{r ct limitedenglishproficiencyindicator}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$LimitedEnglishProficiencyIndicator, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE,
+         statistics = "cramer")
+
+```
 
 <br>
 
 #### pseo.participant
 
+```{r ct pseo}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$pseo.participant, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
 <br>
 
 #### non.english.home
+
+```{r ct non english home}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$non.english.home, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
 
 <br>
 
 #### english.learner
 
+```{r ct english learner}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$english.learner, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
 <br>
 
-### High school accomplishments variables
+### High school accomplishments variables{.tabset}
+
+**took.ACT:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .107 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ACT had meaningful employment in the same county as their high school - 17.3% vs 9.9% of individuals that did take the ACT.
+* a significantly larger number of individuals that did NOT take the ACT had meaningful employment in the same county as their high school - 2,197 observed vs. 1,567 expected.
 
 <br>
 
-## Time X = grad year +2
+**ap.exam:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .064 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ap exam had meaningful employment in the same county as their high school - 13.3% vs 7.5% of individuals that did take the AP exam.
+* a significantly larger number of individuals that did NOT take the AP exam had meaningful employment in the same county as their high school - 4,271 observed vs. 3,976 expected.
+
+<br>
+
+**total.cte.coureses.taken:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school and the number of CTE courses an individual has taken. ???
+
+<br>
+
+**cte.achievement:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and the level of CTE achievement. However, the Cramer's V^2 value is only .074 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that was either a CTE concentrator, or completor had meaningful employment in the same county as their high school - 14.7% vs. 11.6% for CTE participant and 8.7% for individuals with no CTE.
+* This same group had a high number of individuals with meaningful employment in the same county as their high school than what was expected - 2,630 observed vs. 2,211 expected.
+
+<br>
+
+**MCA.M:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school and their MCA math score. ???
+
+<br>
+
+**MCA.R:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school and their MCA reading score. ???
+
+<br>
+
+**MCA.S:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school and their MCA science score. ???
+
+<br>
+
+#### took.ACT
+
+```{r ct act taken}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$took.ACT, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ap.exam
+
+```{r ct ap exam}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$ap.exam, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### total.cte.courses.taken
+
+```{r ct totat cte courses}
+data <- master.grad.year.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(total.cte.courses.taken ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### cte.achievement
+
+```{r cte achievement}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$cte.achievement, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### MCA.M
+
+```{r ct totat MCA math}
+data <- master.grad.year.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(MCA.M ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.R
+
+```{r ct totat MCA reading}
+data <- master.grad.year.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(MCA.R ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.S
+
+```{r ct totat MCA science}
+data <- master.grad.year.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(MCA.S~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+## Cross tabs - Time X = grad year +2
+
+```{r master ct grad year plus 2}
+master.grad.year.2.ct <- updated.master %>%
+  select(hs.grad.year.2.county.match, updated.independent.var.names) %>%
+  filter(hs.grad.year.2.county.match != "After 2019") %>%
+  filter(hs.grad.year.2.county.match != "Unknown") %>%
+  droplevels() %>%
+  mutate(hs.grad.year.2.county.match = as.factor(hs.grad.year.2.county.match)) %>%
+  rename(`County match` = 1) %>%
+  mutate(`County match` = ifelse(`County match` == "Location match", "Match", "No match"))
+
+```
+
+<br>
+
+### Demographic variables{tabset}
+
+**Race/Ethnicity:** The crosstabs indicate a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and the individual's race/ethnicity. The p-value was 0, however the Cramer's V^2 value was 0.076, indicating a weak association. Highlights in the table include;
+
+* A larger proportion of black individuals (23.0%) had meaningful employment in their high school county compared to AI, Asian/PI and White individuals. 
+* A larger observed number of Black individuals had meaningful employment in the same county as their high school than what was expected - 124 individuals vs. 94 expected.
+* A larger proportion of hispanic individuals (27.6%) had meaningful employment in their high school county compared to all other races/ethnicities. 
+* A larger observed number of hispanic individuals had meaningful employment in the same county as their high school than what was expected - 569 observed vs. 359 expected.
+
+#### Race/Ethnicity
+
+```{r ct race and ethnicity grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$RaceEthnicity, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE,
+         statistics = "cramer")
+```
+
+<br>
+
+### High school characteristic variables{.tabset}
+
+**Dem_Desc:** The p-value indicates that we can reject the null hypothesis and acknowledge that the variables may have a relationship. The Cramer's V^2 value is only 0.065, indicating that the relationships are weak. Highlights from the table include;
+
+* Individuals from entirely rural high schools had a significantly lower proportion of individuals that had meaningful employment in the same county as their high school two years after graduation - 11.6% compared to 18.7% in town/rural mix and 17.4% in urban/town/rural mix.
+* Individuals from entirely rural high schools had a significantly lower observed number of individuals that had meaningful employment in the same county as their high school two years after graduation - 550 observed vs. 824 expected.
+* Town/rural mix high schools had a significantly higher number of individuals that had meaningful employment in the same county two years after graduation than expected - 4,114 vs. 3,839 expected.
+
+<br>
+
+**EDR:** The p-value indicates that we can reject the null hypothesis and acknowledge that the variables may have a relationship. The Cramer's V^2 value however is only 0.069, indicating the associations are weak. Highlights in the table include;
+
+* EDR 6W had the lowest proportion of individuals that had meaningful employment in the same county as their high school two years after graduation - 13% compared to 16.9% in EDR 8 and 20.3% in EDR 6E. 
+* EDR 6W had a significantly lower number of individuals that had meaningful employment in the same county as their high school the year of graduation - 802 observed vs. 1,073 expected.
+
+<br>
+
+**avg.unemployment.rate:** The ANOVA table does indicate a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and the average unemployment rate in that county. ???
+
+<br>
+
+**wages.3year.avg:** The ANOVA table does indicate a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and the average household income in that county. ???
+
+
+
+#### Dem_Desc
+
+```{r ct Dem_Desc grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$Dem_Desc, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### EDR
+
+```{r ct edr grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$edr, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### avg.unemployment.rate
+
+```{r ct avg unemployment rate grad year plus 2}
+data <- master.grad.year.2.ct %>%
+  rename(dep.var = `County match`)
+
+summary <- aov(avg.unemp.rate ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+#### wages.3yr.avg
+
+```{r ct avg wages grad year plus 2}
+data <- master.grad.year.2.ct %>%
+  rename(dep.var = `County match`)
+
+summary <- aov(wages.3year.avg ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+### High school enrollment variables{.tabset}
+
+**LimitedEnglishProficiencyIndicator:** The p-value indicates that we can not reject the NULL hypothesis. 
+
+<br>
+
+**pseo.participant:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether they participated in PSEO classes. However, the Cramer's V^2 value is only .110 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that did NOT participate in PSEO classes had meaningful employment in the same county as their high school the year of graduation - 20.3% vs. 11.5% for individuals that did participate in PSEO.
+* A significantly larger number of individuals that did NOT participate in PSEO had meaningful employment in the same county as their high school the year of graduation - 4,348 observed vs. 3,729 expected.
+
+<br>
+
+**non.english.home:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .050 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals where english wasn't the primary language at home had meaningful employment in the same county as their high school the year of graduation - 23.7% vs. 16.9% for individuals where English was the primary language at home.
+* The observed vs expected was also significantly different for this group - 616 observed vs. 452 expected.
+
+<br>
+
+**english.learner**: The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .031 indicating a weak relationship. Highlights from the table include;
+
+* A larger proportion of individuals categorized as english learners had meaningful employment in the same county as their high school - 22.5% vs. 17.2% of individuals not designated as english learners.
+* This same group had a larger number of individuals that expected - 355 observed vs. 275 expected.
+
+#### LimitedEnglishProficiencyIndicator
+
+```{r ct limitedenglishproficiencyindicator grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$LimitedEnglishProficiencyIndicator, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE,
+         statistics = "cramer")
+
+```
+
+<br>
+
+#### pseo.participant
+
+```{r ct pseo grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$pseo.participant, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE,
+         statistics = "cramer")
+
+```
+
+<br>
+
+#### non.english.home
+
+```{r ct non english home grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$non.english.home, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### english.learner
+
+```{r ct english learner grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$english.learner, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+### High school accomplishments variables{.tabset}
+
+**took.ACT:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .139 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ACT had meaningful employment in the same county as their high school - 24.5% vs 13.5% of individuals that did take the ACT.
+* a significantly larger number of individuals that did NOT take the ACT had meaningful employment in the same county as their high school - 2,763 observed vs. 1,962 expected.
+
+<br>
+
+**ap.exam:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school the year of graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .083 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ap exam had meaningful employment in the same county as their high school - 18.8% vs 10.2% of individuals that did take the AP exam.
+* a significantly larger number of individuals that did NOT take the AP exam had meaningful employment in the same county as their high school - 5,027 observed vs. 4,664 expected.
+
+<br>
+
+**total.cte.coureses.taken:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school two years after graduation and the number of CTE courses an individual has taken. ???
+
+<br>
+
+**cte.achievement:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and the level of CTE achievement. However, the Cramer's V^2 value is only .094 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that was either a CTE concentrator, or completor had meaningful employment in the same county as their high school - 20.7% vs. 16.8% for CTE participant and 11.7% for individuals with no CTE.
+* This same group had a high number of individuals with meaningful employment in the same county as their high school than what was expected - 3,038 observed vs. 2,555 expected.
+
+<br>
+
+**MCA.M:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school two years after graduation and their MCA math score. ???
+
+<br>
+
+**MCA.R:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school two years after graduation and their MCA reading score. ???
+
+<br>
+
+**MCA.S:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same county as their high school two years after graduation and their MCA science score. ???
+
+<br>
+
+#### took.ACT
+
+```{r ct act taken grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$took.ACT, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ap.exam
+
+```{r ct ap exam grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$ap.exam, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### total.cte.courses.taken
+
+```{r ct totat cte courses grad year plus 2}
+data <- master.grad.year.2.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(total.cte.courses.taken ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### cte.achievement
+
+```{r cte achievement grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$cte.achievement, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### MCA.M
+
+```{r ct totat MCA math grad year plus 2}
+data <- master.grad.year.2.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(MCA.M ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.R
+
+```{r ct totat MCA reading grad year plus 2}
+data <- master.grad.year.2.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(MCA.R ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.S
+
+```{r ct totat MCA science grad year plus 2}
+data <- master.grad.year.2.ct %>%
+  rename(dep.var = `County match`)
+
+
+summary <- aov(MCA.S~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+
+<br>
+
+### Post-secondary{.tabset}
+
+**ps.grad:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether the individual graduated from a post-secondary institution.However, the Cramer's V^2 value is only .115 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT graduate from a post-secondary institution  had meaningful employment in the same county as their high school - 22.2% vs 13.4% of individuals that graduated from a post-seconary institution.
+* a significantly larger number of individuals that did NOT graduate from a post-secondary institution  had meaningful employment in the same county as their high school - 3,231 observed vs. 2,539 expected.
+
+<br>
+
+**attended.ps:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether the individual attended a post-secondary institution. However, the Cramer's V^2 value is only .071 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT attend post-secondary had meaningful employment in the same county as their high school - 22.5% vs 16% of individuals that attended a post-secondary institution.
+* a significantly larger number of individuals that did NOT attend a post-secondary institution had meaningful employment in the same county as their high school - 1,580 observed vs. 1,223 expected.
+
+<br>
+
+**ps.grad.InstitutionSector:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether the individual attended a post-secondary institution. However, the Cramer's V^2 value is only .209 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that graduated from a public, 2-year institutions (code 4) had meaningful employment in the same county as their high school two years after graduation - 25.5% compared to less than 20% for all other institutions.
+* This same group of individuals had more people with meaningful employment in the same county as their high school than expected - 1,439 vs. 984 expected.
+* A significantly larger proportion of individuals that never attended post secondary had meaningful employment in the same county as their high school two years after graduating - 22.5%.
+* These same individuals a significantly higher number have meaningful employment in the same county as their high school than expected - 1,580 observed vs. 1,223 expected.
+* A significantly larger proportion of individuals that attend post secondary but never graduated had meaningful employment in the same county as their high school two years after graduating - 21.8%.
+* These same individuals had a significantly higher number of people have meaningful employment in the same county as their high school two years after graduating - 1,659 observed vs. 1,328 expected.
+* A significantly lower proportion of individuals that graduated from a public, 4 year college had meaningful employment in the same county as their high school two years after graduation - 6.8%.
+* These same individuals had a significantly lower number of people that had meaningful employment in the same county as their high school - 482 observed vs. 1,243 expected.
+
+<br>
+
+**highest.cred.level:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same county as their high school two years after graduation and whether the highest credential an individual received. However, the Cramer's V^2 value is only .201 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that received an Associate degree or Less than Associate degree  had meaningful employment in the same county as their high school - 21.7% of individuals with Associate degree and 22.5% for individuals with less than associate degree. 
+* a significantly larger number of individuals that received an Associate degree  had meaningful employment in the same county as their high school than expected - 849 observed vs. 682 expected.
+* a significantly larger number of individuals that received less than an Associate degree had meaningful employment in the same county as their high school than expected - 4,154 observed vs. 3,215 expected.
+
+<br>
+
+
+#### ps.grad
+
+```{r ps.grad ct grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$ps.grad, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+
+<br>
+
+#### attended.ps
+
+```{r attended ps grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$attended.ps, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ps.grad.InstitutionSector
+
+```{r ps grad institution sector year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$ps.grad.InstitutionSector, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### highest.cred.level
+
+```{r highest cred level year plus 2}
+tab_xtab(var.row = master.grad.year.2.ct$`County match`, var.col = master.grad.year.2.ct$highest.cred.level, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+
+<br>
+
+## Cross tabs - Time X = grad year +7
 
 <br>
 
@@ -424,23 +1052,7 @@ TukeyHSD(summary)
 
 <br>
 
-## Time X = grad year +7
-
-<br>
-
-### Demographic variables
-
-<br>
-
-### High school characteristic variables
-
-<br>
-
-### High school enrollment variables
-
-<br>
-
-### High school accomplishments variables
+### Post-secondary
 
 <br>
 
