@@ -221,8 +221,8 @@ Summary here.
 
 <br>
 
-```{r path county emp grad year plus zero}
+```{r path county emp grad year plus zero, echo=TRUE}
 model <- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path, cp = .00028)
 
-
+rpart.plot(model)
 ```
