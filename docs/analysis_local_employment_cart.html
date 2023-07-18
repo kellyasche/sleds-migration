@@ -415,7 +415,197 @@ div.tocify {
 </div>
 
 
-
+<p><br></p>
+<p>We will use a tree-based method for classification - CART analysis.
+This type of analysis involves stratifying and/or segmenting the
+predictor space into a number of simple regions. Essentially, it’s
+another way to see which independent variables play a role in if an
+individual has meaningful employment in the local region X. We will be
+using the independent variables that were identified as being important
+in the multiple correspondence analysis.</p>
+<p>There are three “times” in which we checked to see if the individual
+had meaningful employment within these geographies;</p>
+<ol style="list-style-type: decimal">
+<li>the same year as graduation</li>
+<li>two years after graduation, and</li>
+<li>seven years after graduation.</li>
+</ol>
+<p>Meaningful employment is determined by whether an individual worked
+1,000 hours for an employer during time X. In addition, if the
+individual worked 1,000 hours for that employer during another year, but
+not for that exact “time X” year, it’s still considered
+“meaningful”.</p>
+<p>Due to time x potentially being passed the date of the latest data
+(2019) for some individuals, the analysis below will filter out all
+individuals where time x is after 2019.</p>
+<p>The primary independent variables we will use in the model is the
+following;</p>
+<pre><code>## $LimitedEnglishProficiencyIndicator
+## [1] &quot;factor&quot;
+## 
+## $pseo.participant
+## [1] &quot;factor&quot;
+## 
+## $non.english.home
+## [1] &quot;factor&quot;
+## 
+## $RaceEthnicity
+## [1] &quot;factor&quot;
+## 
+## $Dem_Desc
+## [1] &quot;factor&quot;
+## 
+## $edr
+## [1] &quot;factor&quot;
+## 
+## $took.ACT
+## [1] &quot;factor&quot;
+## 
+## $ap.exam
+## [1] &quot;factor&quot;
+## 
+## $cte.achievement
+## [1] &quot;factor&quot;
+## 
+## $english.learner
+## [1] &quot;factor&quot;
+## 
+## $attended.ps
+## [1] &quot;factor&quot;
+## 
+## $ps.grad
+## [1] &quot;factor&quot;
+## 
+## $ps.grad.InstitutionSector
+## [1] &quot;factor&quot;
+## 
+## $highest.cred.level
+## [1] &quot;factor&quot;
+## 
+## $total.cte.courses.taken
+## [1] &quot;numeric&quot;
+## 
+## $cte.0
+## [1] &quot;numeric&quot;
+## 
+## $cte.1
+## [1] &quot;numeric&quot;
+## 
+## $cte.2
+## [1] &quot;numeric&quot;
+## 
+## $cte.3
+## [1] &quot;numeric&quot;
+## 
+## $cte.4
+## [1] &quot;numeric&quot;
+## 
+## $cte.5
+## [1] &quot;numeric&quot;
+## 
+## $cte.6
+## [1] &quot;numeric&quot;
+## 
+## $cte.7
+## [1] &quot;numeric&quot;
+## 
+## $cte.8
+## [1] &quot;numeric&quot;
+## 
+## $cte.9
+## [1] &quot;numeric&quot;
+## 
+## $cte.10
+## [1] &quot;numeric&quot;
+## 
+## $cte.11
+## [1] &quot;numeric&quot;
+## 
+## $cte.12
+## [1] &quot;numeric&quot;
+## 
+## $cte.14
+## [1] &quot;numeric&quot;
+## 
+## $cte.21
+## [1] &quot;numeric&quot;
+## 
+## $cte.22
+## [1] &quot;numeric&quot;
+## 
+## $cte.23
+## [1] &quot;numeric&quot;
+## 
+## $cte.24
+## [1] &quot;numeric&quot;
+## 
+## $cte.25
+## [1] &quot;numeric&quot;
+## 
+## $cte.26
+## [1] &quot;numeric&quot;
+## 
+## $avg.cte.intensity
+## [1] &quot;numeric&quot;
+## 
+## $MCA.M
+## [1] &quot;numeric&quot;
+## 
+## $MCA.R
+## [1] &quot;numeric&quot;
+## 
+## $MCA.S
+## [1] &quot;numeric&quot;
+## 
+## $avg.unemp.rate
+## [1] &quot;numeric&quot;
+## 
+## $wages.3year.avg
+## [1] &quot;numeric&quot;</code></pre>
+<p><br></p>
+<div id="section-steps-in-analysis" class="section level1">
+<h1>Steps in analysis</h1>
+<p>Our dependent variable - the individual has meaningful employment in
+same location X as their high school - has 4 different outcomes.</p>
+<ol style="list-style-type: decimal">
+<li>Location match: the individual has
+<ul>
+<li>a MN employment record at time X</li>
+<li>has meaningful employment at time X</li>
+<li>is employed in the same location X as their high school.</li>
+</ul></li>
+<li>No location match: the individual has
+<ul>
+<li>a MN employment record at time X</li>
+<li>has meaningful employment at time X</li>
+<li>does NOT have employment in the same location X as their high
+school.</li>
+</ul></li>
+<li>No meaningful emp: the individual has
+<ul>
+<li>a MN employment record at time X</li>
+<li>the employment is not meaningful at time X.</li>
+</ul></li>
+<li>No MN emp record: the individual has
+<ul>
+<li>NO MN employment record at time X.</li>
+</ul></li>
+</ol>
+<p>Since we are most interested in whether an individual has meaningful
+employment in region X at time X we will create two groups; 1. all
+individuals that meet the criteria/outcome 1 from list above, and 2. all
+remaining individuals.</p>
+<p>For each time X we will analyze whether the independent variables are
+good at predicting whether an individual has a MN employment record AND
+has meaningful employment AND the meaningful employment is in the same
+region X as their high school.</p>
+<p><br></p>
+</div>
+<div id="section-analysis---time-x-grad-year-0" class="section level1">
+<h1>Analysis - time X = grad year +0</h1>
+<p>Summary here.</p>
+<p><br></p>
+</div>
 
 
 

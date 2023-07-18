@@ -158,3 +158,71 @@ updated.master <- master.original %>%
 
 ```
 
+<br>
+
+We will use a tree-based method for classification - CART analysis. This type of analysis involves stratifying and/or segmenting the predictor space into a number of simple regions. Essentially, it's another way to see which independent variables play a role in if an individual has meaningful employment in the local region X. We will be using the independent variables that were identified as being important in the multiple correspondence analysis.
+
+There are three "times" in which we checked to see if the individual had meaningful employment within these geographies;
+
+1. the same year as graduation
+2. two years after graduation, and
+3. seven years after graduation. 
+
+Meaningful employment is determined by whether an individual worked 1,000 hours for an employer during time X. In addition, if the individual worked 1,000 hours for that employer during another year, but not for that exact "time X" year, it's still considered "meaningful". 
+
+Due to time x potentially being passed the date of the latest data (2019) for some individuals, the analysis below will filter out all individuals where time x is after 2019. 
+
+The primary independent variables we will use in the model is the following;
+
+```{r list of ind var}
+updated.master %>%
+  select(-PersonID, -hs.grad.year.county.match, -hs.grad.year.2.county.match, -hs.grad.year.7.county.match, -hs.grad.year.edr.match, -hs.grad.year.2.edr.match, -hs.grad.year.7.edr.match, -hs.grad.year.region.match, -hs.grad.year.region.match, -hs.grad.year.2.region.match, -hs.grad.year.7.region.match, -hs.grad.year.state.match, -hs.grad.year.2.state.match, -hs.grad.year.7.state.match) %>%
+  lapply(class) 
+```
+
+<br>
+
+# Steps in analysis
+
+Our dependent variable - the individual has meaningful employment in same location X as their high school - has 4 different outcomes.
+
+1. Location match: the individual has
+    + a MN employment record at time X
+    + has meaningful employment at time X
+    + is employed in the same location X as their high school.
+2. No location match: the individual has 
+    + a MN employment record at time X
+    + has meaningful employment at time X
+    + does NOT have employment in the same location X as their high school.
+3. No meaningful emp: the individual has
+    + a MN employment record at time X
+    + the employment is not meaningful at time X.
+4. No MN emp record: the individual has
+    + NO MN employment record at time X.
+    
+Since we are most interested in whether an individual has meaningful employment in region X at time X we will create two groups; 1. all individuals that meet the criteria/outcome 1 from list above, and 2. all remaining individuals.
+    
+For each time X we will analyze whether the independent variables are good at predicting whether an individual has a MN employment record AND has meaningful employment AND the meaningful employment is in the same region X as their high school.
+
+
+
+<br>
+
+# Analysis - time X = grad year +0
+
+```{r master CART grad year}
+master.grad.year.county.path <- updated.master %>%
+  select(hs.grad.year.county.match, updated.independent.var.names) %>% 
+  mutate(hs.grad.year.county.match = ifelse(hs.grad.year.county.match == "Location match", "Match", "No match"))
+
+```
+
+Summary here.
+
+<br>
+
+```{r path county emp grad year plus zero}
+model <- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path, cp = .00028)
+
+
+```

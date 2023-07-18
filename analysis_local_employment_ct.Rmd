@@ -171,8 +171,6 @@ Meaningful employment is determined by whether an individual worked 1,000 hours 
 
 Due to time x potentially being passed the date of the latest data (2019) for some individuals, the analysis below will filter out all individuals where time x is after 2019. 
 
-There are a number of independent variables in the master dataset. And they are likely to have significant colinearity, so we are going to split them up into larger "Groups" that will then have sub groups. For example, instead of modeling whether the institution sector from which an individual has graduated from impacts the dependent variable, we will just check to see if graduating from a post-seconary institution impacts the dependent variable. If so, then we will dig deeper to see if the institution type is significant.
-
 The primary independent variables we will use in the model is the following;
 
 ```{r list of ind var}
@@ -210,7 +208,7 @@ The structure of the analysis will look like this;
 * Location match - county through region
     + For each region x
       + Summary chart
-    + For each time x (grad year, grad year +2, grad year +7)
+    + Cross tabs For each time x (grad year, grad year +2, grad year +7)
       + Demographic variables
       + HS characteristic variables
       + HS enrollment variables
@@ -2260,13 +2258,1242 @@ tab_xtab(var.row = master.grad.year.2.edr.ct$`EDR match`, var.col = master.grad.
 
 ## Cross tabs - Time X = grad year +7
 
+```{r master ct edr grad year plus 7}
+master.grad.year.7.edr.ct <- updated.master %>%
+  select(hs.grad.year.7.edr.match, updated.independent.var.names) %>%
+  filter(hs.grad.year.7.edr.match != "After 2019") %>%
+  filter(hs.grad.year.7.edr.match != "Unknown") %>%
+  droplevels() %>%
+  mutate(hs.grad.year.7.edr.match = as.factor(hs.grad.year.7.edr.match)) %>%
+  rename(`EDR match` = 1) %>%
+  mutate(`EDR match` = ifelse(`EDR match` == "Location match", "Match", "No match"))
+
+```
 <br>
 
 ### Demographic variables{.tabset}
 
+**Race/Ethnicity:** The crosstabs indicate there is no relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after they graduate and the individual's race/ethnicity. 
+
+#### Race/Ethnicity
+
+```{r ct edr race and ethnicity gread year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$RaceEthnicity, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+
 <br>
 
 ### High school characteristics variables{.tabset}
+
+**Dem_Desc:** The p-value indicates that we can reject the null hypothesis and acknowledge that the variables may have a relationship. The Cramer's V^2 value is only 0.049, indicating that the relationships are weak. Highlights from the table include;
+
+* Individuals from urban/town/rural mix high schools had a significantly lower proportion of individuals that had meaningful employment in the same EDR as their high school - 22.6% compared to 29.0% in entirely rural and 28.5% in town/rural mix.
+* Individuals from urban/town/rural mix high schools had a significantly lower observed number of individuals that had meaningful employment in the same EDR as their high school - 582 observed vs. 713 expected.
+
+<br>
+
+**EDR:** The p-value indicates that we can reject the null hypothesis and acknowledge that the variables may have a relationship. The Cramer's V^2 value however is only 0.075, indicating the associations are weak. Highlights in the table include;
+
+* EDR 6W had the lowest proportion of individuals that had meaningful employment in the same EDR as their high school seven years after graduation - 21.7% compared to 30.7% in EDR 8 and 27.2% in EDR 6E. 
+* EDR 6W had a significantly lower number of individuals that had meaningful employment in the same EDR as their high school seven years after graduation - 717 observed vs. 913 expected.
+
+<br>
+
+**avg.unemployment.rate:** The ANOVA table does indicate a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and the average unemployment rate in their high school county. It states that as unemployment increases, the likliness of having "match" increases as well. ???
+
+<br>
+
+**wages.3year.avg:** The ANOVA table does indicate a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and the average wages their high school county. ???
+
+
+
+#### Dem_Desc
+
+```{r ct edr Dem_Desc grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$Dem_Desc, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### EDR
+
+```{r ct edr edr grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$edr, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### avg.unemployment.rate
+
+```{r ct edr avg unemployment rate grad year plus 7}
+data <- master.grad.year.7.edr.ct %>%
+  rename(dep.var = `EDR match`)
+
+summary <- aov(avg.unemp.rate ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+#### wages.3yr.avg
+
+```{r ct edr avg wages grad year plus 7}
+data <- master.grad.year.7.edr.ct %>%
+  rename(dep.var = `EDR match`)
+
+summary <- aov(wages.3year.avg ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+### High school enrollment variables{.tabset}
+
+**LimitedEnglishProficiencyIndicator:** The p-value indicates that we can not reject the null hypothesis.
+
+<br>
+
+**pseo.participant:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and whether they participated in PSEO classes. However, the Cramer's V^2 value is only .070 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that did NOT participate in PSEO classes had meaningful employment in the same EDR as their high school seven years after graduation - 29.4% vs. 22% for individuals that did participate in PSEO.
+* A significantly larger number of individuals that did NOT participate in PSEO had meaningful employment in the same EDR as their high school seven years after graduation - 3,706 observed vs. 3,487 expected.
+
+<br>
+
+**non.english.home:** The p-value indicates that we can not reject the NULL hypothesis. 
+
+<br>
+
+**english.learner**: The p-value indicates that we can not reject the NULL hypothesis. 
+
+#### LimitedEnglishProficiencyIndicator
+
+```{r ct edr limitedenglishproficiencyindicator grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$LimitedEnglishProficiencyIndicator, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE,
+         statistics = "cramer")
+
+```
+
+<br>
+
+#### pseo.participant
+
+```{r ct edr pseo grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$pseo.participant, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### non.english.home
+
+```{r ct edr non english home grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$non.english.home, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### english.learner
+
+```{r ct edr english learner grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$english.learner, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+### High school accomplishments{.tabset}
+
+**took.ACT:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .108 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ACT had meaningful employment in the same EDR as their high school - 33.6% vs 23.7% of individuals that did take the ACT.
+* a significantly larger number of individuals that did NOT take the ACT had meaningful employment in the same EDR as their high school - 2,189 observed vs. 1,800 expected.
+
+<br>
+
+**ap.exam:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .094 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ap exam had meaningful employment in the same EDR as their high school - 29.5% vs 18.0% of individuals that did take the AP exam.
+* a significantly larger number of individuals that did NOT take the AP exam had meaningful employment in the same EDR as their high school - 4,097 observed vs. 3,842 expected.
+
+<br>
+
+**total.cte.coureses.taken:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same EDR as their high school and the number of CTE courses an individual has taken. ???
+
+<br>
+
+**cte.achievement:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years of graduation and the level of CTE achievement. However, the Cramer's V^2 value is only .113 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that was either a CTE concentrator, or completor had meaningful employment in the same EDR as their high school - 31.9% vs. 25.8% for CTE participant and 19.2% for individuals with no CTE.
+* This same group had a high number of individuals with meaningful employment in the same EDR as their high school than what was expected - 2,785 observed vs. 2411 expected.
+
+<br>
+
+**MCA.M:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same EDR as their high school and their MCA math score. ???
+
+<br>
+
+**MCA.R:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same EDR as their high school and their MCA reading score. ???
+
+<br>
+
+**MCA.S:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same EDR as their high school and their MCA science score. ???
+
+<br>
+
+#### took.ACT
+
+```{r ct edr act taken grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$took.ACT, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ap.exam
+
+```{r ct edr ap exam grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$ap.exam, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### total.cte.courses.taken
+
+```{r ct edr total cte courses grad year plus 7}
+data <- master.grad.year.7.edr.ct %>%
+  rename(dep.var = `EDR match`)
+
+
+summary <- aov(total.cte.courses.taken ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### cte.achievement
+
+```{r ct edr cte achievement grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$cte.achievement, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### MCA.M
+
+```{r ct edr totat MCA math grad year plus 7}
+data <- master.grad.year.7.edr.ct %>%
+  rename(dep.var = `EDR match`)
+
+
+summary <- aov(MCA.M ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.R
+
+```{r ct edr total MCA reading grad year plus 7}
+data <- master.grad.year.7.edr.ct %>%
+  rename(dep.var = `EDR match`)
+
+
+summary <- aov(MCA.R ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.S
+
+```{r ct edr totat MCA science grad year plus 7}
+data <- master.grad.year.7.edr.ct %>%
+  rename(dep.var = `EDR match`)
+
+
+summary <- aov(MCA.S~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+### Post-secondary{.tabset}
+
+**ps.grad:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and whether the individual graduated from a post-secondary institution. However, the Cramer's V^2 value is only .043 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT graduate from a post-secondary institution  had meaningful employment in the same EDR as their high school - 29.8% vs 25.9% of individuals that graduated from a post-secondary institution.
+* a significantly larger number of individuals that did NOT graduate from a post-secondary institution had meaningful employment in the same EDR as their high school - 2,149 observed vs. 1,992 expected.
+
+<br>
+
+**attended.ps:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and whether the individual attended a post-secondary institution. However, the Cramer's V^2 value is only .026 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT attend post-secondary had meaningful employment in the same EDR as their high school - 29.8% vs 27% of individuals that attended a post-secondary institution.
+* a significantly larger number of individuals that did NOT attend a post-secondary institution had meaningful employment in the same EDR as their high school - 1,056 observed vs. 978 expected.
+
+<br>
+
+**ps.grad.InstitutionSector:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and whether the individual attended a post-secondary institution. However, the Cramer's V^2 value is only .178 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that graduated from a public, 2-year institutions (code 4) had meaningful employment in the same EDR as their high school seven years after graduation - 39.5%.
+* This same group of individuals had more people with meaningful employment in the same EDR as their high school than expected - 1,159 vs. 810 expected.
+* A significantly larger proportion of individuals that never attended post secondary had meaningful employment in the same EDR as their high school seven years after graduating - 29.8%.
+* These same individuals a significantly higher number have meaningful employment in the same EDR as their high school than expected - 1,056 observed vs. 978 expected.
+* A significantly larger proportion of individuals that attend post secondary but never graduated had meaningful employment in the same EDR as their high school seven years after graduating - 29.9%.
+* These same individuals had a significantly higher number of people have meaningful employment in the same EDR as their high school seven years after graduating - 1,113 observed vs. 1,029 expected.
+* A significantly lower proportion of individuals that graduated from a 2 - Private not-for-profit, 4-year or above had meaningful employment in the same EDR as their high school seven years after graduation - 11.4%.
+* These same individuals had a significantly lower number of people that had meaningful employment in the same EDR as their high school - 158 observed vs. 381 expected.
+
+<br>
+
+**highest.cred.level:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same EDR as their high school seven years after graduation and whether the highest credential an individual received. However, the Cramer's V^2 value is only .157 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that received an Associate degree or Less than Associate degree  had meaningful employment in the same EDR as their high school - 34.7% of individuals with Associate degree and 31.7% for individuals with less than associate degree. 
+* a significantly larger number of individuals that received an Associate degree  had meaningful employment in the same EDR as their high school than expected - 703 observed vs. 559 expected.
+* a significantly larger number of individuals that received less than an Associate degree had meaningful employment in the same EDR as their high school than expected - 2,970 observed vs. 2,585 expected.
+
+<br>
+
+
+#### ps.grad
+
+```{r ps.grad ct edr grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$ps.grad, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+
+<br>
+
+#### attended.ps
+
+```{r attended ps edr grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$attended.ps, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ps.grad.InstitutionSector
+
+```{r ps grad institution sector edr grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$ps.grad.InstitutionSector, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### highest.cred.level
+
+```{r highest cred level edr grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.edr.ct$`EDR match`, var.col = master.grad.year.7.edr.ct$highest.cred.level, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+# Location match - region
+
+<br>
+
+## Summary chart
+
+The chart below provides the percentage of individuals in the dataset that had meaningful employment in one of the three research EDRs the year of their graduation, graduation year +2, and graduation year +7. The percentage of individuals does increase with each subsequent time X - 16.2% the year of gradation, 25.4% two years after graduation, and 32.1% seven years after graduation.
+
+<br>
+
+```{r summary region grad year}
+region.match.summary <- updated.master %>%
+  select(PersonID, hs.grad.year.region.match, hs.grad.year.2.region.match, hs.grad.year.7.region.match) %>%
+  gather(key = "key", value = "value", 2:4) %>%
+  filter(value != "Unknown") %>%
+  filter(value != "After 2019") %>%
+  mutate(value = ifelse(value == "Location match", "Match", "No match")) %>%
+  group_by(key, value) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(key) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(key = ifelse(str_detect(key, "2"), "grad year +2",
+                      ifelse(str_detect(key, "7"), "grad year +7", "grad year +0")),
+         key = fct_relevel(key, "grad year +0", "grad year +2", "grad year +7"),
+         data_id = seq(n()))
+                                      
+
+region.match.summary.plot <- ggplot(region.match.summary, aes(value, pct, fill = key, group = key)) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(key, "\n", value, ": ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  labs(x="", y = "", color="", title = "Meaningful employment in same region as high school for each\ntime X as share of total individuals", subtitle = "The percentage of individuals with meaningful employment in same region as their high\nschool increases for each subsequent Time X")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = region.match.summary.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+## Cross tabs - Time X = grad year
+
+```{r master ct region grad year}
+master.grad.year.region.ct <- updated.master %>%
+  select(hs.grad.year.region.match, updated.independent.var.names) %>% 
+  rename(`Region match` = 1) %>%
+  mutate(`Region match` = ifelse(`Region match` == "Location match", "Match", "No match"))
+
+```
+
+<br>
+
+### Demographic variables{.tabset}
+
+**Race/Ethnicity:** The crosstabs indicate a relationship between whether an individual has meaningful employment in the same Region as their high school the year they graduate and the individual's race/ethnicity. The p-value was 0, however the Cramer's V^2 value was 0.063, indicating a weak association. Highlights in the table include;
+
+* A larger proportion of black individuals (19.8%) had meaningful employment in their high school EDR compared to AI, Asian/PI and White individuals. 
+* A larger observed number of Black individuals had meaningful employment in the same EDR as their high school than what was expected - 148 individuals vs. 121 expected.
+* A larger proportion of hispanic individuals (24.1%) had meaningful employment in their high school EDR compared to all other races/ethnicities. 
+* A larger observed number of hispanic individuals had meaningful employment in the same EDR as their high school than what was expected - 665 observed vs. 445 expected.
+
+#### Race/Ethnicity
+
+```{r ct region race and ethnicity}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$RaceEthnicity, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+### High school characteristic variables{.tabset}
+
+**Dem_Desc:** The p-value indicates that we can reject the null hypothesis and acknowledge that the variables may have a relationship. The Cramer's V^2 value is only 0.058, indicating that the relationships are weak. Highlights from the table include;
+
+* Individuals from town/rural mix high schools had a significantly higher proportion of individuals that had meaningful employment in the same region as their high school - 17.6% compared to 13.1% in entirely rural and 12.7% in urban/town/rural mix.
+* Individuals from town/rural mix high schools had a significantly lower observed number of individuals that had meaningful employment in the same region as their high school - 4,674 observed vs. 4,300 expected.
+
+<br>
+
+**EDR:** The p-value indicates that we can not reject the null hypothesis.
+
+<br>
+
+**avg.unemployment.rate:** The ANOVA table does indicate a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and the average unemployment rate in their high school county. It states that as unemployment increases, the likliness of having "match" increases as well.???
+
+<br>
+
+**wages.3year.avg:** No relationship.
+
+
+
+#### Dem_Desc
+
+```{r ct region Dem_Desc}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$Dem_Desc, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### EDR
+
+```{r ct region region}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$edr, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### avg.unemployment.rate
+
+```{r ct region avg unemployment rate}
+data <- master.grad.year.region.ct %>%
+  rename(dep.var = `Region match`)
+
+summary <- aov(avg.unemp.rate ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+#### wages.3yr.avg
+
+```{r ct region avg wages}
+data <- master.grad.year.region.ct %>%
+  rename(dep.var = `Region match`)
+
+summary <- aov(wages.3year.avg ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+### High school enrollment variables{.tabset}
+
+**LimitedEnglishProficiencyIndicator:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and if the individual has limited english proficiency. However, the Cramer's V^2 value is only .024 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that had limited english proficiency had meaningful employment in the same region as their high school the year of graduation - 22.2% vs. 16.0% for individuals that did not have limited english proficiency.
+* A significantly larger number of individuals with limited english proficiency worked in the same region as their high school than expected - 179 observed vs. 130 expected.
+
+<br>
+
+**pseo.participant:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and whether they participated in PSEO classes. However, the Cramer's V^2 value is only .107 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that did NOT participate in PSEO classes had meaningful employment in the same region as their high school the year of graduation - 19.0% vs. 10.7% for individuals that did participate in PSEO.
+* A significantly larger number of individuals that did NOT participate in PSEO had meaningful employment in the same region as their high school the year of graduation - 4,743 observed vs. 4,027 expected.
+
+<br>
+
+**non.english.home:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .056 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals where english wasn't the primary language at home had meaningful employment in the same region as their high school the year of graduation - 22.8% vs. 15.5% for individuals where English was the primary language at home.
+* The observed vs expected was also significantly different for this group - 756 observed vs. 536 expected.
+
+<br>
+
+**english.learner**: The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .032 indicating a weak relationship. Highlights from the table include;
+
+* A larger proportion of individuals categorized as english learners had meaningful employment in the same region as their high school - 21.1% vs. 15.9% of individuals not designated as english learners.
+* This same group had a larger number of individuals that expected - 437 observed vs. 334 expected.
+
+#### LimitedEnglishProficiencyIndicator
+
+```{r ct region limitedenglishproficiencyindicator}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$LimitedEnglishProficiencyIndicator, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE,
+         statistics = "cramer")
+
+```
+
+<br>
+
+#### pseo.participant
+
+```{r ct region pseo}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$pseo.participant, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### non.english.home
+
+```{r ct region non english home}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$non.english.home, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### english.learner
+
+```{r ct region english learner}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$english.learner, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+### High school accomplishments{.tabset}
+
+**took.ACT:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .132 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ACT had meaningful employment in the same region as their high school - 23.0% vs 12.7% of individuals that did take the ACT.
+* a significantly larger number of individuals that did NOT take the ACT had meaningful employment in the same region as their high school - 2,917 observed vs. 2,046 expected.
+
+<br>
+
+**ap.exam:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .087 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ap exam had meaningful employment in the same region as their high school - 17.5% vs 8.8% of individuals that did take the AP exam.
+* a significantly larger number of individuals that did NOT take the AP exam had meaningful employment in the same region as their high school - 5,637 observed vs. 5,192 expected.
+
+<br>
+
+**total.cte.coureses.taken:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and the number of CTE courses an individual has taken. ???
+
+<br>
+
+**cte.achievement:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school the year of graduation and the level of CTE achievement. However, the Cramer's V^2 value is only .085 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that was either a CTE concentrator, or completor had meaningful employment in the same region as their high school - 19.2% vs. 15.0% for CTE participant and 11.6% for individuals with no CTE.
+* This same group had a high number of individuals with meaningful employment in the same region as their high school than what was expected - 3,432 observed vs. 2,887 expected.
+
+<br>
+
+**MCA.M:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and their MCA math score. ???
+
+<br>
+
+**MCA.R:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and their MCA reading score. ???
+
+<br>
+
+**MCA.S:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and their MCA science score. ???
+
+<br>
+
+#### took.ACT
+
+```{r ct region act taken}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$took.ACT, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ap.exam
+
+```{r ct region ap exam}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$ap.exam, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### total.cte.courses.taken
+
+```{r ct region total cte courses}
+data <- master.grad.year.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(total.cte.courses.taken ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### cte.achievement
+
+```{r ct region cte achievement}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$cte.achievement, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### MCA.M
+
+```{r ct region totat MCA math}
+data <- master.grad.year.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(MCA.M ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.R
+
+```{r ct region total MCA reading}
+data <- master.grad.year.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(MCA.R ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.S
+
+```{r ct region totat MCA science}
+data <- master.grad.year.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(MCA.S~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+## Cross tabs - Time X = grad year +2
+
+```{r master ct region grad year plus 2}
+master.grad.year.2.region.ct <- updated.master %>%
+  select(hs.grad.year.2.region.match, updated.independent.var.names) %>% 
+  filter(hs.grad.year.2.region.match != "Unknown") %>%
+  filter(hs.grad.year.2.region.match != "After 2019") %>%
+  droplevels() %>%
+  rename(`Region match` = 1) %>%
+  mutate(`Region match` = ifelse(`Region match` == "Location match", "Match", "No match"))
+
+```
+
+<br>
+
+### Demographic variables{.tabset}
+
+**Race/Ethnicity:** The crosstabs indicate a relationship between whether an individual has meaningful employment in the same Region as their high school two years after they graduate and the individual's race/ethnicity. The p-value was 0, however the Cramer's V^2 value was 0.058, indicating a weak association. Highlights in the table include;
+
+* A larger proportion of hispanic individuals (34.4%) had meaningful employment in their high school EDR compared to all other races/ethnicities. 
+* A larger observed number of hispanic individuals had meaningful employment in the same EDR as their high school than what was expected - 710 observed vs. 524 expected.
+
+#### Race/Ethnicity
+
+```{r ct region race and ethnicity grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$RaceEthnicity, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+### High school characteristic variables{.tabset}
+
+**Dem_Desc:** The p-value indicates that we can reject the null hypothesis and acknowledge that the variables may have a relationship. The Cramer's V^2 value is only 0.063, indicating that the relationships are weak. Highlights from the table include;
+
+* Individuals from town/rural mix high schools had a significantly higher proportion of individuals that had meaningful employment in the same region as their high school - 27.2% compared to 21.8% in entirely rural and 20.8% in urban/town/rural mix.
+* Individuals from town/rural mix high schools had a significantly lower observed number of individuals that had meaningful employment in the same region as their high school - 5,996 observed vs. 5,593 expected.
+
+<br>
+
+**EDR:** The p-value indicates that we can not reject the null hypothesis.
+
+<br>
+
+**avg.unemployment.rate:** The ANOVA table does not indicate a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and the average unemployment rate in their high school county. 
+
+<br>
+
+**wages.3year.avg:** The ANOVA table does not indicate a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and the average wages in their high school county. 
+
+
+
+#### Dem_Desc
+
+```{r ct region Dem_Desc grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$Dem_Desc, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### EDR
+
+```{r ct region region grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$edr, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+#### avg.unemployment.rate
+
+```{r ct region avg unemployment rate grad year plus 2}
+data <- master.grad.year.2.region.ct %>%
+  rename(dep.var = `Region match`)
+
+summary <- aov(avg.unemp.rate ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+#### wages.3yr.avg
+
+```{r ct region avg wages grad year plus 2}
+data <- master.grad.year.2.region.ct %>%
+  rename(dep.var = `Region match`)
+
+ 
+summary <- aov(wages.3year.avg ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+```
+
+<br>
+
+### High school enrollment variables{.tabset}
+
+**LimitedEnglishProficiencyIndicator:** The p-value indicates that we can not reject the NULL hypothesis.
+
+<br>
+
+**pseo.participant:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether they participated in PSEO classes. However, the Cramer's V^2 value is only .135 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that did NOT participate in PSEO classes had meaningful employment in the same region as their high school two years after graduation - 29.5% vs. 16.9% for individuals that did participate in PSEO.
+* A significantly larger number of individuals that did NOT participate in PSEO had meaningful employment in the same region as their high school two years after graduation - 6,311 observed vs. 5,532 expected.
+
+<br>
+
+**non.english.home:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .037 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals where english wasn't the primary language at home had meaningful employment in the same region as their high school the year of graduation - 30.8% vs. 24.9% for individuals where English was the primary language at home.
+* The observed vs expected was also significantly different for this group - 798 observed vs. 658 expected.
+
+<br>
+
+**english.learner**: The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the individual had someone in their home where english wasn't the primary language. However, the Cramer's V^2 value is only .030 indicating a weak relationship. Highlights from the table include;
+
+* A larger proportion of individuals categorized as english learners had meaningful employment in the same region as their high school - 31.0% vs. 25.1% of individuals not designated as english learners.
+* This same group had a larger number of individuals that expected - 490 observed vs. 401 expected.
+
+#### LimitedEnglishProficiencyIndicator
+
+```{r ct region limitedenglishproficiencyindicator grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$LimitedEnglishProficiencyIndicator, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE,
+         statistics = "cramer")
+
+```
+
+<br>
+
+#### pseo.participant
+
+```{r ct region pseo grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$pseo.participant, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### non.english.home
+
+```{r ct region non english home grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$non.english.home, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### english.learner
+
+```{r ct region english learner grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$english.learner, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+<br>
+
+### High school accomplishments{.tabset}
+
+**took.ACT:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .177 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ACT had meaningful employment in the same region as their high school - 35.8% vs 19.7% of individuals that did take the ACT.
+* a significantly larger number of individuals that did NOT take the ACT had meaningful employment in the same region as their high school - 4,029 observed vs. 2,858 expected.
+
+<br>
+
+**ap.exam:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the individual took the ACT. However, the Cramer's V^2 value is only .121 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT take the ap exam had meaningful employment in the same region as their high school - 27.7% vs 13.2% of individuals that did take the AP exam.
+* a significantly larger number of individuals that did NOT take the AP exam had meaningful employment in the same region as their high school - 7407 observed vs. 6,796 expected.
+
+<br>
+
+**total.cte.coureses.taken:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and the number of CTE courses an individual has taken. ???
+
+<br>
+
+**cte.achievement:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and the level of CTE achievement. However, the Cramer's V^2 value is only .119 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that was either a CTE concentrator, or completor had meaningful employment in the same region as their high school - 30.1% vs. 24.5% for CTE participant and 14.2% for individuals with no CTE.
+* This same group had a high number of individuals with meaningful employment in the same region as their high school than what was expected - 4,421 observed vs. 3,723 expected.
+
+<br>
+
+**MCA.M:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and their MCA math score. ???
+
+<br>
+
+**MCA.R:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and their MCA reading score. ???
+
+<br>
+
+**MCA.S:** The p-value indicates we can reject the null hypothesis and accept that there's a relationship between whether an individual works in the same region as their high school and their MCA science score. ???
+
+<br>
+
+#### took.ACT
+
+```{r ct region act taken grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$took.ACT, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ap.exam
+
+```{r ct region ap exam grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$ap.exam, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### total.cte.courses.taken
+
+```{r ct region total cte courses grad year plus 2}
+data <- master.grad.year.2.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(total.cte.courses.taken ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### cte.achievement
+
+```{r ct region cte achievement grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$cte.achievement, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### MCA.M
+
+```{r ct region totat MCA math grad year plus 2}
+data <- master.grad.year.2.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(MCA.M ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.R
+
+```{r ct region total MCA reading grad year plus 2}
+data <- master.grad.year.2.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(MCA.R ~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+#### MCA.S
+
+```{r ct region totat MCA science grad year plus 2}
+data <- master.grad.year.2.region.ct %>%
+  rename(dep.var = `Region match`)
+
+
+summary <- aov(MCA.S~ dep.var, 
+             data = data)
+
+summary(summary) 
+
+TukeyHSD(summary)
+
+```
+
+<br>
+
+### Post secondary{.tabset}
+
+**ps.grad:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the individual graduated from a post-secondary institution. However, the Cramer's V^2 value is only .143 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT graduate from a post-secondary institution  had meaningful employment in the same region as their high school - 32.1% vs 19.7% of individuals that graduated from a post-secondary institution.
+* a significantly larger number of individuals that did NOT graduate from a post-secondary institution had meaningful employment in the same region as their high school - 4,683 observed vs. 3,699 expected.
+
+<br>
+
+**attended.ps:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the individual attended a post-secondary institution. However, the Cramer's V^2 value is only .096 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that did NOT attend post-secondary had meaningful employment in the same region as their high school - 33.2% vs 23.2% of individuals that attended a post-secondary institution.
+* a significantly larger number of individuals that did NOT attend a post-secondary institution had meaningful employment in the same region as their high school - 2,333 observed vs. 1,781 expected.
+
+<br>
+
+**ps.grad.InstitutionSector:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the individual attended a post-secondary institution. However, the Cramer's V^2 value is only .277 indicating a weak relationship. Highlights from the table include;
+
+* A significantly larger proportion of individuals that graduated from a public, 2-year institutions (code 4) had meaningful employment in the same region as their high school two years after graduation - 38.8%.
+* This same group of individuals had more people with meaningful employment in the same region as their high school than expected - 2,192 vs. 1,434 expected.
+* A significantly larger proportion of individuals that never attended post secondary had meaningful employment in the same region as their high school seven years after graduating - 33.2%.
+* These same individuals a significantly higher number have meaningful employment in the same region as their high school than expected - 2,333 observed vs. 1,781 expected.
+* A significantly lower proportion of individuals that graduated from a public, 4 year college had meaningful employment in the same region as their high school two years after graduation - 9.8%.
+* These same individuals had a significantly lower number of people that had meaningful employment in the same region as their high school - 700 observed vs. 1,810 expected.
+
+<br>
+
+**highest.cred.level:** The p-value indicates that we can reject the NULL hypothesis and acknowledge there may be a relationship between whether an individual has meaningful employment in the same region as their high school two years after graduation and whether the highest credential an individual received. However, the Cramer's V^2 value is only .259 indicating a weak relationship. Highlights from the table include;
+
+* a significantly larger proportion of individuals that received an Associate degree or Less than Associate degree  had meaningful employment in the same region as their high school - 31.1% of individuals with Associate degree and 33.0% for individuals with less than associate degree. 
+* a significantly larger number of individuals that received an Associate degree  had meaningful employment in the same region as their high school than expected - 1,218 observed vs. 993 expected.
+* a significantly larger number of individuals that received less than an Associate degree had meaningful employment in the same region as their high school than expected - 6,090 observed vs. 4,684 expected.
+
+<br>
+
+
+#### ps.grad
+
+```{r ps.grad ct region grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$ps.grad, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+
+<br>
+
+#### attended.ps
+
+```{r attended ps region grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$attended.ps, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### ps.grad.InstitutionSector
+
+```{r ps grad institution sector region grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$ps.grad.InstitutionSector, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+
+<br>
+
+#### highest.cred.level
+
+```{r highest cred level region grad year plus 2}
+tab_xtab(var.row = master.grad.year.2.region.ct$`Region match`, var.col = master.grad.year.2.region.ct$highest.cred.level, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+```
+<br>
+
+## Cross tabs - Time X = grad year +7
+
+```{r master ct region grad year plus 7}
+master.grad.year.7.region.ct <- updated.master %>%
+  select(hs.grad.year.7.region.match, updated.independent.var.names) %>% 
+  filter(hs.grad.year.7.region.match != "Unknown") %>%
+  filter(hs.grad.year.7.region.match != "After 2019") %>%
+  droplevels() %>%
+  rename(`Region match` = 1) %>%
+  mutate(`Region match` = ifelse(`Region match` == "Location match", "Match", "No match"))
+
+```
+
+<br>
+
+### Demographic variables{.tabset}
+
+**Race/Ethnicity:** The crosstabs indicate a relationship between whether an individual has meaningful employment in the same Region as their high school two years after they graduate and the individual's race/ethnicity. The p-value was 0, however the Cramer's V^2 value was 0.060, indicating a weak association. Highlights in the table include;
+
+* A larger proportion of hispanic individuals (25.8%) had meaningful employment in their high school EDR compared to all other races/ethnicities. 
+* A larger observed number of hispanic individuals had meaningful employment in the same EDR as their high school than what was expected - 710 observed vs. 583 expected.
+
+#### Race/Ethnicity
+
+```{r ct region race and ethnicity grad year plus 7}
+tab_xtab(var.row = master.grad.year.7.region.ct$`Region match`, var.col = master.grad.year.7.region.ct$RaceEthnicity, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+### High school characteristic variables{.tabset}
 
 <br>
 
@@ -2278,9 +3505,9 @@ tab_xtab(var.row = master.grad.year.2.edr.ct$`EDR match`, var.col = master.grad.
 
 <br>
 
-### Post-secondary{.tabset}
+### Post secondary{.tabset}
 
-
+<br>
 
 
 
