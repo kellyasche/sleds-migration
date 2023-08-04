@@ -494,9 +494,34 @@ master.10 <- read_csv("Data/SLEDS/Masters/Master-9.csv") %>%
          ps.attended.in.MN = ps.in.MN,
          ps.grad.InstitutionSector = InstitutionSector)
 
+nsccompletions.master<- read_csv("Data/SLEDS/Masters/Master-9.csv") %>%
+  select(PersonID, grad.year, ps.in.same.ruca, ps.in.same.edr, ps.in.same.pr, ps.in.MN) %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  left_join(ps.graduate, by = "PersonID") %>%
+  mutate(Graduated = ifelse(is.na(Graduated), "N", Graduated)) %>%
+  left_join(year.first.last.graduated, by = "PersonID") %>%
+  mutate(years.between.grads = min.ps.grad.year - grad.year) %>%
+  left_join(grad.institution.sector, by = "PersonID") %>%
+  left_join(highest.credential.code, by = "PersonID") %>%
+  mutate(highest.cred.level = ifelse(is.na(highest.cred.level), "Less than Associate Degree", highest.cred.level)) %>%
+  left_join(nsccompletions.same.ruca, by = "PersonID") %>%
+  left_join(nsccompletions.same.edr, by = "PersonID") %>%
+  left_join(nsccompletions.same.pr, by = "PersonID") %>%
+  left_join(nsccompletions.in.MN, by = "PersonID") %>%
+  rename(ps.grad = Graduated,
+         hs.grad.year = grad.year,
+         ps.attended.in.same.ruca = ps.in.same.ruca,
+         ps.attended.in.same.edr = ps.in.same.edr,
+         ps.attended.in.same.pr = ps.in.same.pr,
+         ps.attended.in.MN = ps.in.MN,
+         ps.grad.InstitutionSector = InstitutionSector) 
+
+write_csv(nsccompletions.master, "Data/SLEDS/Masters/nsccompletions_master.csv")
+
 head(master.10)
 
 names(master.10)
+
 ```
 
 <br>

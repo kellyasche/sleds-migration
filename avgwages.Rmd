@@ -126,7 +126,18 @@ head(avg.wage.original)
 
 <br>
 
-The dataset above provides the graduation year along with the three year rolling average of the average salary and wages for each county. The rolling average is a three year rolling average.
+The dataset above provides the graduation year along with the three year rolling average of the average salary and wages for each county. Next, in order to hold these values constant over time, we will be calculating the three year averages as a percentage of the state average over that same time period.
+
+<br>
+
+```{r avg percent of state}
+avg.wage.pct.state <- avg.wage.original %>%
+  group_by(hs.grad.year) %>%
+  mutate(avg.wages.pct.state = wages.3year.avg / wages.3year.avg[countyfp == "000"]) %>%
+  ungroup()
+
+names(avg.wage.pct.state)
+```
 
 Now we just need to join it with the original.
 
@@ -137,6 +148,13 @@ master.12 <- read_csv("Data/SLEDS/Masters/Master-12.csv")
 
 master.13 <- master.12 %>%
   left_join(avg.wage.original, by = c("hs.grad.year", "countyfp"))
+
+avgwages.master <- read_csv("Data/SLEDS/Masters/Master-1.csv") %>%
+  select(PersonID, grad.year, countyfp) %>%
+  left_join(avg.wage.pct.state, by = c("grad.year" = "hs.grad.year", "countyfp")) %>%
+  select(-grad.year, -countyfp)
+
+write_csv(avgwages.master, "Data/SLEDS/Masters/avgwages_master.csv")
 
 names(master.13)
 

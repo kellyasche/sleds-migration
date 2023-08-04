@@ -136,7 +136,7 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 ```
 
 ```{r master original}
-master.original <- read.csv("Data/SLEDS/Masters/Master-13.csv") %>%
+master.original <- read.csv("Data/SLEDS/Masters/Master.csv") %>%
   mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions),
          ps.attended.in.same.ruca = ifelse(is.na(ps.attended.in.same.ruca), "Never attended ps", ps.attended.in.same.ruca),
          ps.attended.in.same.edr = ifelse(is.na(ps.attended.in.same.edr), "Never attended ps", ps.attended.in.same.edr),
@@ -187,7 +187,7 @@ Here is a list of all the categorical variables with a description of each.
 ```{r primary independent variables}
 qual.var.names <-  c("PersonID", "hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "cte.achievement", "english.learner", "sat.taken", "attended.ps", "ps.grad", "ps.grad.InstitutionSector", "highest.cred.level")
 
-quan.var.names <- c("total.cte.courses.taken", "cte.0", "cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25", "cte.26", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "avg.unemp.rate", "wages.3year.avg")
+quan.var.names <- c("total.cte.courses.taken", "cte.0", "cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25", "cte.26", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "avg.unemp.rate", "wages.3year.avg", "avg.wages.pct.state")
 
 independent.var.names <- c("hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "total.cte.courses.taken", "cte.achievement", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "sat.taken", "attended.ps", "ps.grad", "highest.cred.level", "avg.unemp.rate", "wages.3year.avg")
 
@@ -195,7 +195,7 @@ independent.var.names <- c("hs.grad.year", "Gender", "LimitedEnglishProficiencyI
 cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25")
 
 ind.qual.var <- master.original %>%
-  select(`qual.var.names`) %>%
+  select(all_of(`qual.var.names`)) %>%
   mutate_at(2:21, as.factor)
 
 
@@ -342,6 +342,11 @@ Due to these low frequencies, I'm going to do the following;
 ```{r updated ind qual var}
 master.ind.qual.var <- ind.qual.var %>%
   select(-PersonID, -HomelessIndicator, -sat.taken) %>%
+  mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("5", "6", "7", "8", "9"), "11", as.character(ps.grad.InstitutionSector)),
+         ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector))
+
+master.ind.qua.var.write <- ind.qual.var %>%
+  select(-HomelessIndicator, -sat.taken) %>%
   mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("5", "6", "7", "8", "9"), "11", as.character(ps.grad.InstitutionSector)),
          ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector))
 ```
@@ -635,3 +640,16 @@ fviz_mca_ind(mca,
 
 ```
 
+<br>
+
+```{r final master}
+master.final.after.mca <- master.ind.qua.var.write %>%
+  select(-hs.grad.year, -Gender, -economic.status, -SpecialEdStatus)
+
+write_csv(master.final.after.mca, "Data/SLEDS/Masters/Master-final-after-mca.csv")
+
+names(master.final.after.mca)
+
+test <- master.final.after.mca %>%
+  select(ps.grad)
+```

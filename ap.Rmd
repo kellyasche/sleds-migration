@@ -134,6 +134,13 @@ master.3 <- read_csv("Data/SLEDS/Masters/master-2.csv") %>%
   left_join(ap.tookexam, by = "PersonID") %>%
   mutate(ap.exam = ifelse(is.na(ap.exam), 0, ap.exam))
 
+ap.master <- read_csv("Data/SLEDS/Masters/master-2.csv") %>%
+  select(PersonID) %>%
+  left_join(ap.tookexam, by = "PersonID") %>%
+  mutate(ap.exam = ifelse(is.na(ap.exam), 0, ap.exam))
+
+write_csv(ap.master, "Data/SLEDS/Masters/ap.master.csv")
+
 head(master.3)
 
 names(master.3)

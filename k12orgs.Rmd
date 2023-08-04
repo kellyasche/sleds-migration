@@ -277,7 +277,7 @@ Next, I will join both the Organization dataset and the years attended dataset w
 <br>
 
 ```{r k12org joining with master enrollment}
-graduates <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment-master.csv")
+graduates <- read_csv("Data/SLEDS/K12 Enrollment/K12Enrollment-master.csv") 
 
 master <- graduates %>%
   left_join(k12.org.master, by = "K12OrganizationID") %>%
@@ -981,4 +981,10 @@ TukeyHSD(summary.edr)
 ```{r write master, include=FALSE}
 write_csv(master, "Data/SLEDS/Masters/Master-1.csv")
 
+
+
+k12_org <- master %>%
+  select(PersonID, DistrictName, county.name, countyfp, Dem_Desc, edr, n.years.attended)
+
+write_csv(k12_org, "Data/SLEDS/Masters/k12_org.csv")
 ```

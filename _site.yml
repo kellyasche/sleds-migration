@@ -45,8 +45,6 @@ navbar:
           href: analysis_local_employment_ct.html
         - text: "Local employment CART analysis"
           href: analysis_local_employment_cart.html
-        - text: "For Review"
-          href: review.html
 
 output:
   html_document:

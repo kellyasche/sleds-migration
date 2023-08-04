@@ -204,6 +204,13 @@ master.4 <- master.3 %>%
   left_join(cte.n.total.courses, by = "PersonID") %>%
   left_join(cte.n.careercluster, by = "PersonID")
 
+cteenrollment.master <- master.3 %>%
+  select(PersonID) %>%
+  left_join(cte.n.total.courses, by = "PersonID") %>%
+  left_join(cte.n.careercluster, by = "PersonID")
+
+write_csv(cteenrollment.master, "Data/SLEDS/Masters/cteenrollment_master.csv")
+
 head(master.4)
 
 names(master.4)

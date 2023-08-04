@@ -515,6 +515,27 @@ master.9 <- master %>%
   left_join(nsc.enrollment.in.MN, by = "PersonID") %>%
   mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions))
 
+nscenrollment.master <- read_csv("Data/SLEDS/Masters/Master-1.csv") %>%
+  select(PersonID, grad.year) %>%
+  left_join(nsc.enrollment.confirm, by = "PersonID") %>%
+  mutate(attended.ps = ifelse(is.na(attended.ps), "No", attended.ps)) %>%
+  left_join(nsc.enrollment.first.attend, by = "PersonID") %>%
+  mutate(attended.ps.first.year = as.integer(str_sub(first.attend.ps, 1, 4)),
+         attended.ps.years.hsgrad = attended.ps.first.year - grad.year,
+         attended.ps.within.first.year.hsgrad = ifelse(attended.ps.years.hsgrad < 2, "Yes", "No")) %>%
+  left_join(nsc.enrollment.n.institutions, by = "PersonID") %>%
+  left_join(nsc.enrollment.first.institution, by = "PersonID") %>%
+  rename(first.InstitutionSector = InstitutionSector) %>%
+  left_join(nsc.enrollment.institution.types, by = "PersonID") %>%
+  left_join(nsc.enrollment.same.ruca, by = "PersonID") %>%
+  left_join(nsc.enrollment.same.edr, by = "PersonID") %>%
+  left_join(nsc.enrollment.same.pr, by = "PersonID") %>%
+  left_join(nsc.enrollment.in.MN, by = "PersonID") %>%
+  mutate(n.institutions = ifelse(is.na(n.institutions), 0, n.institutions)) %>%
+  select(-grad.year)
+
+write_csv(nscenrollment.master, "Data/SLEDS/Masters/nscenrollment_master.csv")
+
 head(master.9)
 
 names(master.9)

@@ -238,6 +238,15 @@ master.7 <- read_csv("Data/SLEDS/Masters/Master-6.csv") %>%
   left_join(el, by = "PersonID") %>%
   left_join(mca.highest, by = "PersonID") %>%
   mutate(english.learner = ifelse(is.na(english.learner), 0, english.learner))
+
+assessments.master <- read_csv("Data/SLEDS/Masters/Master-6.csv") %>%
+  select(PersonID) %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  left_join(el, by = "PersonID") %>%
+  left_join(mca.highest, by = "PersonID") %>%
+  mutate(english.learner = ifelse(is.na(english.learner), 0, english.learner))
+
+write_csv(assessments.master, "Data/SLEDS/Masters/assessments_master.csv")
 ```
 
 # Summary of English Learners

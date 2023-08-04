@@ -265,6 +265,13 @@ master.6 <- read_csv("Data/SLEDS/Masters/Master-5.csv") %>%
   mutate(PersonID = as.integer(PersonID)) %>%
   left_join(cte.intensity.summarise, by = "PersonID") 
 
+cteintensity.master <- read_csv("Data/SLEDS/Masters/Master-5.csv") %>%
+  select(PersonID) %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  left_join(cte.intensity.summarise, by = "PersonID") 
+
+write_csv(cteintensity.master, "Data/SLEDS/Masters/cteintensity_master.csv")
+
 head(master.6)
 
 names(master.6)

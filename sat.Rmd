@@ -158,6 +158,13 @@ master.8 <- read_csv("Data/SLEDS/Masters/Master-7.csv") %>%
   left_join(sat.taken, by = "PersonID") %>%
   mutate(sat.taken = ifelse(is.na(sat.taken), 0, sat.taken))
 
+sat.master <- read_csv("Data/SLEDS/Masters/Master-1.csv") %>%
+  select(PersonID) %>%
+  left_join(sat.taken, by = "PersonID") %>%
+  mutate(sat.taken = ifelse(is.na(sat.taken), 0, sat.taken))
+
+write_csv(sat.master, "Data/SLEDS/Masters/sat_master.csv")
+
 head(master.8)
 
 names(master.8)

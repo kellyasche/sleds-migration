@@ -395,9 +395,6 @@ div.tocify {
     <li>
       <a href="analysis_local_employment_cart.html">Local employment CART analysis</a>
     </li>
-    <li>
-      <a href="review.html">For Review</a>
-    </li>
   </ul>
 </li>
       </ul>
@@ -436,7 +433,12 @@ employment.</p>
 <p><br></p>
 <p>The dataset above provides the graduation year along with the three
 year rolling average of the average salary and wages for each county.
-The rolling average is a three year rolling average.</p>
+Next, in order to hold these values constant over time, we will be
+calculating the three year averages as a percentage of the state average
+over that same time period.</p>
+<p><br></p>
+<pre><code>## [1] &quot;countyfp&quot;            &quot;hs.grad.year&quot;        &quot;wages.3year.avg&quot;    
+## [4] &quot;avg.wages.pct.state&quot;</code></pre>
 <p>Now we just need to join it with the original.</p>
 <p><br></p>
 <pre><code>##   [1] &quot;PersonID&quot;                            

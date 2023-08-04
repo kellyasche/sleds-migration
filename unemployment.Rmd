@@ -138,6 +138,13 @@ master.11 <- read_csv("Data/SLEDS/Masters/Master-11.csv")
 master.12 <- master.11 %>%
   left_join(unemployment.original, by = c("hs.grad.year", "countyfp"))
 
+unemployment.master <- read_csv("Data/SLEDS/Masters/Master-1.csv") %>%
+  select(PersonID, grad.year, countyfp) %>%
+  left_join(unemployment.original, by = c("grad.year" = "hs.grad.year", "countyfp")) %>%
+  select(-countyfp, -grad.year)
+
+write_csv(unemployment.master, "Data/SLEDS/Masters/unemployment_master.csv")
+
 head(master.12)
 
 names(master.12)

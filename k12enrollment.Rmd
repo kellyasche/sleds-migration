@@ -256,3 +256,8 @@ datatable(k12.enr.pct.total, class = "cell-border stripe", filter = "top", rowna
 
 <br>
 
+```{r write final}
+write_csv(k12.enrollment.master, "Data/SLEDS/Masters/k12_enrollment.csv")
+
+```
+

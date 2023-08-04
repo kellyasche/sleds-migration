@@ -181,6 +181,10 @@ Now we will join it up with the master.
 master.2 <- read_csv("Data/SLEDS/Masters/master-1.csv") %>%
   left_join(act.highest.comp, by = "PersonID")
 
+act.master <- read_csv("Data/SLEDS/Masters/master-1.csv") %>%
+  select(PersonID) %>%
+  left_join(act.highest.comp, by = "PersonID")
+
 head(master.2)
 
 names(master.2)
@@ -309,4 +313,5 @@ girafe(ggobj = act.taken.county.map, height_svg = 10, width_svg = 10) %>%
 ```{r write master, include=FALSE}
 write_csv(master.2, "Data/SLEDS/Masters/Master-2.csv")
 
+write_csv(act.master, "Data/SLEDS/Masters/act.master.csv")
 ```

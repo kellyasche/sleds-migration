@@ -167,6 +167,12 @@ Lets join this dataset with the master to confirm this thought.
 master.5 <- read_csv("Data/SLEDS/Masters/Master-4.csv") %>%
   left_join(cte.concentrator.cat, by = "PersonID")
 
+ctedemographics.master <- read_csv("Data/SLEDS/Masters/Master-4.csv") %>%
+  select(PersonID) %>%
+  left_join(cte.concentrator.cat, by = "PersonID")
+
+write_csv(ctedemographics.master, "Data/SLEDS/Masters/ctedemographics_master.csv")
+
 head(master.5)
 
 names(master.5)
