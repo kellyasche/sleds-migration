@@ -137,7 +137,7 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 ```
 
 ```{r master dataset}
-master.original <- read_csv("Data/SLEDS/Masters/Master.csv")
+master.original <- read_csv("Data/SLEDS/Masters/Master-updated-1.csv")
 
 ```
 

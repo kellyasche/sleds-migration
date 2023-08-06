@@ -166,7 +166,7 @@ master.original <- read.csv("Data/SLEDS/Masters/Master.csv") %>%
                                                                                        ifelse(hs.grad.year == 2017, 10,
                                                                                               ifelse(hs.grad.year == 2018, 11, 12))))))))))))
 
-write_csv(master.original, "Data/SLEDS/Masters/Master.csv")
+write_csv(master.original, "Data/SLEDS/Masters/Master-updated-1.csv")
 
 ```
 
@@ -648,8 +648,4 @@ master.final.after.mca <- master.ind.qua.var.write %>%
 
 write_csv(master.final.after.mca, "Data/SLEDS/Masters/Master-final-after-mca.csv")
 
-names(master.final.after.mca)
-
-test <- master.final.after.mca %>%
-  select(ps.grad)
 ```
