@@ -7223,11 +7223,238 @@ tab_xtab(var.row = master.grad.year.7.mn.ct$`MN match`, var.col = master.grad.ye
 
 # Summary
 
-* Location match - county
-    * Demographic variables
-      + Hispanic has a significantly higher proportion of individuals working in the same county as their high school at graduation, but that proportion advantage decreases over time, although still statistically significant.
-    * High school charateristics
-      + 
+Okay, let's summarize all of this analysis. Below are tables that indicate which variables were significant (p-value < .01).
+
+We will group variables by their themes/labels, for example we will start with Demographic variables, and then summarize the High school characteristics, etc.....
+
+```{r pvalue summary table framework}
+pvalue.summary.table.framework <- matrix(c("Grad year", "Grad year +0", "Grad year +2", "Grad year +7", "County", "", "", "", "EDR", "", "", "", "All 3 EDRs","", "", "", "MN", "", "", ""), ncol = 5) %>%
+  row_to_names(1) %>%
+  as.tibble()
+```
+
+<br>
+
+## Demographic variables
+
+The race and ethnicity variable provided significant differences pretty consistently across time and place. A couple of interesting things about this variable, however, is that the race and ethnicity  that experienced significant differences changes over time. For grad year +0, Hispanic and Black individuals had meaningful employment at a much higher rate than all other races. By grad year +7, that advantage decreased and there was much less difference. All other races were pretty equal. Interestingly, white individuals had an equal or higher rate of meaningful employment by grad year +7, especially at the MN level. 
+
+<br>
+
+```{r summary demographic}
+
+dem.race.ethnicity.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(0, 0, .007),
+         EDR = c(0, 0, .093),
+         `All 3 EDRs` = c(0, 0, .004),
+         MN = c(0, 0, 0)) 
+
+datatable(dem.race.ethnicity.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+## High school characteristic variables{.tabset}
+
+**Dem_Desc:** At grad year +0, there was a higher proportion of individuals that graduated from a town/rural mix high school that had meaningful employment. By grad year +7, that separation was less significant. In particular, there became a higher proportion of individuals that graduated from a entirely rural high school that had meaningful employment.
+
+**EDR:** For all grad years, EDR 6W consistently had a significantly lower proportion of individuals that had meaningful employment at the county and EDR level. However, that changed when looking at whether an individual had meaningful employment in any of the three EDRs where there was not much difference at all between the EDRs. Interestingly, when we get to the question of whether an individual has meaningful employment in Minnesota at any of the time X, EDR 8 - Southwest has a significantly lower proportion.
+
+**avg.unemployment.rate:** This variable seems to have very little impact.
+
+**avg.wages.pct.state"** This variable only seemed to have an impact when asking whether an individual had meaningful employment at the county and Minnesota level. When there was a relationship, the boxplots indicated that if the average wages of an individuals high school county made up a higher percentage of the state average then there was a higher liklihood that the individual had meaningful employment in their high school county and Minnesota.
+
+**avg.cte.intensity:** This variable seems to have no impact.
+
+
+
+<br>
+
+### Dem_Desc
+
+```{r summary hs characteristics dem_desc}
+
+hschar.dem_desc.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(0, 0, .007),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, .072)) 
+
+datatable(hschar.dem_desc.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### EDR
+
+```{r summary hs characteristics EDR}
+
+hschar.edr.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(.012, .639, 0),
+         MN = c(0, 0, 0)) 
+
+datatable(hschar.edr.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### avg.unemployment.rate
+
+```{r summary hs characteristics average unemployment rate}
+
+hschar.avg.unemployment.rate.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(.01295, .0477, 0),
+         EDR = c(.005401, .0195, 0),
+         `All 3 EDRs` = c(.00818, .6165, .01565),
+         MN = c(0.07123, 0, 0)) 
+
+datatable(hschar.avg.unemployment.rate.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### avg.wages.pct.state
+
+```{r summary hs characteristics average wages as pct of state avg}
+
+hschar.avg.wages.pct.state.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(0, 0, 0),
+         EDR = c(0.01038, 0.2369, 0.03764),
+         `All 3 EDRs` = c(0.02715, 0.4286, 0.001539),
+         MN = c(0, 0.0002099, 0)) 
+
+datatable(hschar.avg.wages.pct.state.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### avg.cte.intensity
+
+```{r summary hs characteristics average cte intensity}
+
+hschar.avg.cte.intensity.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0.006514, 0.02743, 0.7816),
+         EDR = c(0.0554, 0.3711, 0.9731),
+         `All 3 EDRs` = c(0.6134, 0.9881, 0.9728),
+         MN = c(0.1357, 0.9323, 0.116)) 
+
+datatable(hschar.avg.cte.intensity.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+## High school enrollment variables{.tabset}
+
+**LimitedEnglishProficiencyIndicator:** This variable was signifiacnt for grad year +0, but no other. It consistently showed that a larger proportion of individuals designated as having limited english proficiency had meaningful employment across all geographies.
+
+**PSEO.participant:** This variable was consistently significantly different across time X and geographies. It always showed that a significantly larger proportion of individuals that participated in PSEO class(es) had meaningful employment across all geographies. The only time that wasn't the case was at time X = grad year +7 and if having meaningful employment in Minnesota. There was no statistically significant difference at that time X and for all meaningful employment in Minnesota.
+
+**non.english.home:** A larger proportion of individuals that were categorized as having a non-english speaking home had meaningful employment at the time of graduation across all geographies, and two years after graduation. However, by seven years after graduation, that changed. There was no statistical difference for individuals having meaningful employment at the County or EDR level. And by seven years after graduation, there was a larger proportion of individuals that were NOT designated as having a non-english speaker at home that had meaningful employment in one of the three EDRs and Minnesota.
+
+<br>
+
+### LimitedEnglishProficiency
+
+```{r summary hs enrollment limited english proficiency}
+
+hsenroll.LimitedEnglishProficiencyIndicator.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0.032, 0.898),
+         EDR = c(0, 0.025, 0.794),
+         `All 3 EDRs` = c(0, 0.263, 0.199),
+         MN = c(0, 0.265, 0)) 
+
+datatable(hsenroll.LimitedEnglishProficiencyIndicator.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### PSEO.participant
+
+```{r summary hs enrollment pseo participant}
+
+hsenroll.pseo.participant.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0.233)) 
+
+datatable(hsenroll.pseo.participant.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### non.english.home
+
+```{r summary hs enrollment non english home}
+
+hsenroll.non.english.home.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0.928),
+         EDR = c(0, 0, 0.253),
+         `All 3 EDRs` = c(0, 0, 0.007),
+         MN = c(0, 0, 0)) 
+
+datatable(hsenroll.non.english.home.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+
 
 
 
