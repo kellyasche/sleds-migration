@@ -44,6 +44,7 @@ library(glmnet)
 library(glmnetUtils)
 library(pscl)
 library(sjPlot)
+library(ggforce)
 
 ```
 
@@ -7389,6 +7390,8 @@ datatable(hschar.avg.cte.intensity.pvalues, class = "cell-border stripe", filter
 
 **non.english.home:** A larger proportion of individuals that were categorized as having a non-english speaking home had meaningful employment at the time of graduation across all geographies, and two years after graduation. However, by seven years after graduation, that changed. There was no statistical difference for individuals having meaningful employment at the County or EDR level. And by seven years after graduation, there was a larger proportion of individuals that were NOT designated as having a non-english speaker at home that had meaningful employment in one of the three EDRs and Minnesota.
 
+**english.learner:** This is EXACTLY the same as non.english.home.
+
 <br>
 
 ### LimitedEnglishProficiency
@@ -7453,6 +7456,384 @@ datatable(hsenroll.non.english.home.pvalues, class = "cell-border stripe", filte
 ```
 
 <br>
+
+### english.learner
+
+```{r summary hs enrollment english learner}
+
+hsenroll.english.learner.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0.815),
+         EDR = c(0, 0, 0.970),
+         `All 3 EDRs` = c(0, 0, 0.280),
+         MN = c(0, 0, 0)) 
+
+datatable(hsenroll.english.learner.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+## High school accomplishments variables{.tabset}
+
+**took.act:** For nearly all geographies and time X, a larger proportion of individuals that did not take the ACT had meaningful employment in the measured geography compared to individuals that did take the ACT. However, there is no significant difference at seven years after graduation and individuals having meaningful employment in Minnesota.
+
+**ap.exam:** For all geographies and Time X, a larger proportion of individuals that did not take the AP Exam had meaningful employment in those geographies. 
+
+**total.cte.courses.taken:** For all geographies and Time X, individuals that had meaningful employment had likely taken more CTE courses.
+
+**cte.achievement:** For all geographies and Time X, individuals that had meaningful employment were more likely to have been a CTE concentrator or completor. In addition, being a CTE participator had a larger proportion than an individual that took no CTE courses.
+
+**MCA.M-S:** For all geographies and Time X, individuals that had meaningful employment typically had lower MCA scores.
+
+<br>
+
+### took.act
+
+```{r summary hs accomplishments took act}
+
+hsaccom.took.act.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0.046)) 
+
+datatable(hsaccom.took.act.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### ap.exam
+
+```{r summary hs accomplishments took ap exam}
+
+hsaccom.ap.exam.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0)) 
+
+datatable(hsaccom.took.act.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### total.cte.courses.taken
+
+```{r summary hs accomplishments total cte courses taken}
+
+hsaccom.total.cte.courses.taken.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0)) 
+
+datatable(hsaccom.total.cte.courses.taken.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### cte.achievement
+
+```{r summary hs accomplishments cte achievement}
+
+hsaccom.cte.achievement.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0)) 
+
+datatable(hsaccom.cte.achievement.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### MCA.M
+
+```{r summary hs accomplishments MCA math}
+
+hsaccom.mca.m.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0)) 
+
+datatable(hsaccom.mca.m.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### MCA.M
+
+```{r summary hs accomplishments MCA reading}
+
+hsaccom.mca.r.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0)) 
+
+datatable(hsaccom.mca.r.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### MCA.M
+
+```{r summary hs accomplishments MCA science}
+
+hsaccom.mca.s.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, 0, 0),
+         EDR = c(0, 0, 0),
+         `All 3 EDRs` = c(0, 0, 0),
+         MN = c(0, 0, 0)) 
+
+datatable(hsaccom.mca.s.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+## Post secondary variables{.tabset}
+
+**ps.grad:** For ALMOST all geographies and Time X, a larger proportion of individuals that did NOT graduate from a post-secondary institution had meaningful employment. However, it switches when looking at meaningful employment at the Minnesota level. By seven years after graduation, a larger proportion of individuals that DID graduate from a post-secondary institution had meaningful employment in Minnesota.
+
+**attended.ps:** For ALMOST all geographies and Time X, a larger proportion of individuals that did NOT attend a post-secondary institution had meaningful employment. However, it switches when looking at meaningful employment at the Minnesota level. By seven years after graduation, a larger proportion of individuals that DID attend a post-secondary institution had meaningful employment in Minnesota.
+
+**ps.grad.InstitutionSector:** For all geographies at two and seven years after graduation, a larger proportion of individuals that graduated from a 2-year public had meaningful employment in that geography. 
+
+**highest.cred.level:** For all geographies and Time X, a larger proportion of individuals that earned an associate's degree had meaninful employment in that geography.
+
+<br>
+
+### ps.grad
+
+```{r summary post secondary graduating from post-secondary}
+
+post.sec.ps.grad.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, 0, 0),
+         EDR = c(NA, 0, 0),
+         `All 3 EDRs` = c(NA, 0, 0),
+         MN = c( NA, 0, 0)) 
+
+datatable(post.sec.ps.grad.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### attended.ps
+
+```{r summary post secondary attended post-secondary}
+
+post.sec.attended.ps.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, 0, 0),
+         EDR = c(NA, 0, 0.001),
+         `All 3 EDRs` = c(NA, 0, 0.009),
+         MN = c(NA, 0, 0)) 
+
+datatable(post.sec.attended.ps.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### ps.grad.InstitutionSector
+
+```{r summary post secondary institution sector graduating post secondary}
+
+post.sec.ps.grad.InstitutionSector.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, 0, 0),
+         EDR = c(NA, 0, 0),
+         `All 3 EDRs` = c(NA, 0, 0),
+         MN = c(NA, 0, 0)) 
+
+datatable(post.sec.ps.grad.InstitutionSector.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+### highest.cred.level
+
+```{r summary post secondary highest credential earned}
+
+post.sec.highest.cred.level.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, 0, 0),
+         EDR = c(NA, 0, 0),
+         `All 3 EDRs` = c(NA, 0, 0),
+         MN = c(NA, 0, 0)) 
+
+datatable(post.sec.highest.cred.level.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
+<br>
+
+# Visualizations of important variables
+
+The analysis indicates that the following variables are the most influential in this dataset in answering where and when individuals have meaningful employment.
+
+* Demographic variables
+    + Race/ethnicity
+* High school characteristic variables
+    + Dem_Desc
+    + EDR
+    + avg.wages.pct.state
+* High school enrollment variables
+    + LimitedEnglishProficiencyIndicator
+    + PSEO.participant
+    + non.english.home
+    + english.learner
+* High school accomplishments
+    + took.act
+    + ap.exam
+    + total.cte.courses.taken
+    + cte.achievement
+    + MCA.M.R.S
+* Post-secondary
+    + ps.grad
+    + attended.ps
+    + ps.grad.InstitutionSector
+    + highest.cred.level
+    
+Let's visualize all of these to tell the story.
+
+<br>
+
+## Demographic variables
+
+Summary
+
+```{r prep select dependent variables}
+dep.var <- c("hs.grad.year.county.match", "hs.grad.year.2.county.match", "hs.grad.year.7.county.match", "hs.grad.year.edr.match", "hs.grad.year.2.edr.match", "hs.grad.year.7.edr.match", "hs.grad.year.region.match", "hs.grad.year.region.match", "hs.grad.year.2.region.match", "hs.grad.year.7.region.match", "hs.grad.year.state.match", "hs.grad.year.2.state.match", "hs.grad.year.7.state.match")
+
+```
+
+<br>
+
+```{r demographic race ethnicity vis}
+dem.race.ethnicity.vis <- updated.master %>%
+  select(`dep.var`, RaceEthnicity) %>%
+  gather(key = "grad.year", value = "meaningful.emp", 1:12) %>%
+  filter(meaningful.emp != "Unknown") %>%
+  filter(meaningful.emp != "After 2019") %>%
+  filter(RaceEthnicity != "Unknown") %>%
+  mutate(geography = str_sub(grad.year, -12, -7),
+         geography = str_replace(geography, ".2.edr", "EDR"),
+         geography = str_replace(geography, ".7.edr", "EDR"),
+         geography = str_replace(geography, ".state", "MN"),
+         geography = str_replace(geography, "ar.edr", "EDR"),
+         geography = str_replace(geography, "region", "All 3 EDRs"),
+         geography = str_replace(geography, "county", "County"),
+         geography = as.factor(geography),
+         geography = fct_relevel(geography,"County", "EDR", "All 3 EDRs", "MN"),
+         grad.year = str_sub(grad.year, 14, 14),
+         grad.year = str_replace(grad.year, "c", "0"),
+         grad.year = str_replace(grad.year, "e", "0"),
+         grad.year = str_replace(grad.year, "r", "0"),
+         grad.year = str_replace(grad.year, "s", "0"),
+         grad.year = paste("Grad year +", grad.year, sep = ""),
+         grad.year = as.factor(grad.year)) %>%
+  group_by(grad.year, geography, meaningful.emp, RaceEthnicity) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, geography, RaceEthnicity) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(meaningful.emp == "Location match") %>%
+  mutate(data_id = seq(n()))
+
+dem.race.ethnicity.plot <- ggplot(dem.race.ethnicity.vis, aes(geography, pct, fill = RaceEthnicity, group = RaceEthnicity)) +
+  facet_wrap(~grad.year, ncol = 2, scales = "free_y") +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(RaceEthnicity, "\nTime X: ", grad.year, "\nNumber of individuals with meaningful employment: ", comma(n), "\nProportion of race and ethnicity: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_mark_ellipse(data = filter(dem.race.ethnicity.vis, RaceEthnicity == "Hispanic" & grad.year %in% c("Grad year +0", "Grad year +2"))) +
+  geom_mark_ellipse(data = filter(dem.race.ethnicity.vis, RaceEthnicity == "Black" & grad.year %in% c("Grad year +0", "Grad year +2"))) +
+  labs(x="", y = "", color="", title = "Proportion of race and ethnicity with meaningful employment at each\nTime X ") + 
+  geom_text(data = filter(dem.race.ethnicity.vis, RaceEthnicity == "Hispanic" & grad.year %in% c("Grad year +0")), aes(x = 1.5, y = .27, label = "A larger proportion of\nHispanic and Black individuals\nhave meaningful employment"), size = 5) +
+  geom_text(data = filter(dem.race.ethnicity.vis, RaceEthnicity == "Hispanic" & grad.year %in% c("Grad year +2")), aes(x = 1.5, y = .4, label = "A larger proportion of\nHispanic and Black\nindividuals have meaningful\nemployment"), size = 5) +
+   geom_text(data = filter(dem.race.ethnicity.vis, RaceEthnicity == "Hispanic" & grad.year %in% c("Grad year +7")), aes(x = 2, y = .4, label = "The proportions are more\nequal across Race\nand Ethnicity"), size = 5) +
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = dem.race.ethnicity.plot, width_svg = 12, height_svg = 15) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+
 
 
 
