@@ -393,6 +393,9 @@ div.tocify {
       <a href="analysis_local_employment_ct.html">Local employment cross tabs</a>
     </li>
     <li>
+      <a href="visualizations_local_employment_ct.html">Visualizations - cross tabs</a>
+    </li>
+    <li>
       <a href="analysis_local_employment_cart.html">Local employment CART analysis</a>
     </li>
   </ul>
@@ -437,18 +440,9 @@ not for that exact “time X” year, it’s still considered
 <p>Due to time x potentially being passed the date of the latest data
 (2019) for some individuals, the analysis below will filter out all
 individuals where time x is after 2019.</p>
-<p>The primary independent variables we will use in the model is the
-following;</p>
-<pre><code>## $LimitedEnglishProficiencyIndicator
-## [1] &quot;factor&quot;
-## 
-## $pseo.participant
-## [1] &quot;factor&quot;
-## 
-## $non.english.home
-## [1] &quot;factor&quot;
-## 
-## $RaceEthnicity
+<p>The primary independent variables that the cross tables indicated as
+important are;</p>
+<pre><code>## $RaceEthnicity
 ## [1] &quot;factor&quot;
 ## 
 ## $Dem_Desc
@@ -457,95 +451,32 @@ following;</p>
 ## $edr
 ## [1] &quot;factor&quot;
 ## 
+## $avg.wages.pct.state
+## [1] &quot;numeric&quot;
+## 
+## $LimitedEnglishProficiencyIndicator
+## [1] &quot;factor&quot;
+## 
+## $pseo.participant
+## [1] &quot;factor&quot;
+## 
+## $non.english.home
+## [1] &quot;factor&quot;
+## 
+## $english.learner
+## [1] &quot;factor&quot;
+## 
 ## $took.ACT
 ## [1] &quot;factor&quot;
 ## 
 ## $ap.exam
 ## [1] &quot;factor&quot;
 ## 
-## $cte.achievement
-## [1] &quot;factor&quot;
-## 
-## $english.learner
-## [1] &quot;factor&quot;
-## 
-## $attended.ps
-## [1] &quot;factor&quot;
-## 
-## $ps.grad
-## [1] &quot;factor&quot;
-## 
-## $ps.grad.InstitutionSector
-## [1] &quot;factor&quot;
-## 
-## $highest.cred.level
-## [1] &quot;factor&quot;
-## 
 ## $total.cte.courses.taken
 ## [1] &quot;numeric&quot;
 ## 
-## $cte.0
-## [1] &quot;numeric&quot;
-## 
-## $cte.1
-## [1] &quot;numeric&quot;
-## 
-## $cte.2
-## [1] &quot;numeric&quot;
-## 
-## $cte.3
-## [1] &quot;numeric&quot;
-## 
-## $cte.4
-## [1] &quot;numeric&quot;
-## 
-## $cte.5
-## [1] &quot;numeric&quot;
-## 
-## $cte.6
-## [1] &quot;numeric&quot;
-## 
-## $cte.7
-## [1] &quot;numeric&quot;
-## 
-## $cte.8
-## [1] &quot;numeric&quot;
-## 
-## $cte.9
-## [1] &quot;numeric&quot;
-## 
-## $cte.10
-## [1] &quot;numeric&quot;
-## 
-## $cte.11
-## [1] &quot;numeric&quot;
-## 
-## $cte.12
-## [1] &quot;numeric&quot;
-## 
-## $cte.14
-## [1] &quot;numeric&quot;
-## 
-## $cte.21
-## [1] &quot;numeric&quot;
-## 
-## $cte.22
-## [1] &quot;numeric&quot;
-## 
-## $cte.23
-## [1] &quot;numeric&quot;
-## 
-## $cte.24
-## [1] &quot;numeric&quot;
-## 
-## $cte.25
-## [1] &quot;numeric&quot;
-## 
-## $cte.26
-## [1] &quot;numeric&quot;
-## 
-## $avg.cte.intensity
-## [1] &quot;numeric&quot;
+## $cte.achievement
+## [1] &quot;factor&quot;
 ## 
 ## $MCA.M
 ## [1] &quot;numeric&quot;
@@ -556,11 +487,82 @@ following;</p>
 ## $MCA.S
 ## [1] &quot;numeric&quot;
 ## 
-## $avg.unemp.rate
-## [1] &quot;numeric&quot;
+## $ps.grad
+## [1] &quot;factor&quot;
 ## 
-## $wages.3year.avg
-## [1] &quot;numeric&quot;</code></pre>
+## $attended.ps
+## [1] &quot;factor&quot;
+## 
+## $ps.grad.InstitutionSector
+## [1] &quot;factor&quot;
+## 
+## $highest.cred.level
+## [1] &quot;factor&quot;</code></pre>
+<p>However, there are plenty of variables here that are VERY similar.
+For example, whether an individual graduated from a post-secondary
+institution and the type of institution they graduated from. So let’s
+simplify the variables to what is most important and has the least
+amount of overlap with other variables.</p>
+<ul>
+<li>Demographic
+<ul>
+<li>RaceEthnicity</li>
+</ul></li>
+<li>High school characteristics
+<ul>
+<li>Dem_Desc</li>
+<li>EDR</li>
+<li>avg.wages.pct.state</li>
+</ul></li>
+<li>High school enrollment
+<ul>
+<li>LimitedEnglishProficiencyIndicator</li>
+<li>PSEO.participant</li>
+</ul></li>
+<li>High school accomplishments
+<ul>
+<li>took.act</li>
+<li>ap.exam</li>
+<li>cte.achievement</li>
+<li>MCA.M</li>
+<li>MCA.R</li>
+<li>MCA.S</li>
+</ul></li>
+<li>Post-secondary
+<ul>
+<li>ps.grad.InstitutionSector</li>
+<li>highest.cred.level</li>
+</ul></li>
+</ul>
+<p>We eliminated the following variables for now;</p>
+<ul>
+<li>non.english.home</li>
+<li>english.learner</li>
+<li>total.cte.courses.taken</li>
+<li>ps.grad</li>
+<li>attended.ps</li>
+</ul>
+<p>In addition to eliminating those variables, we will also simplify the
+ps.grad.InstitutionSector to the following codes;</p>
+<ul>
+<li>1 = graduated from the following insitutions
+<ul>
+<li>Public, 4-year (1)</li>
+<li>Private, not for profit 4-year (2)</li>
+<li>Private, for profit 4-year (3)</li>
+</ul></li>
+<li>2 = graduated from the following institutions
+<ul>
+<li>Private, not for profit 2-year (5, 11)</li>
+<li>Private, for profit 2-year (6, 11)</li>
+<li>Public, less than 2-year (7, 11)</li>
+<li>Private, not for profit less than 2-year (8, 11)</li>
+<li>Private for-profit, less-than 2-year (9, 11)</li>
+</ul></li>
+<li>3 = graduated from multiple institution sectors (10)</li>
+<li>4 = graduated from a public, 2-year institution (4,4)</li>
+<li>5 = Did not graduate or attend a post-secondary institution</li>
+</ul>
 <p><br></p>
 <div id="section-steps-in-analysis" class="section level1">
 <h1>Steps in analysis</h1>
@@ -602,12 +604,86 @@ region X as their high school.</p>
 </div>
 <div id="section-analysis---time-x-grad-year-0" class="section level1">
 <h1>Analysis - time X = grad year +0</h1>
-<p>Summary here.</p>
+<div id="section-county-meaningful-employment" class="section level2">
+<h2>County meaningful employment</h2>
+<p>This is an overly complex tree.</p>
 <p><br></p>
-<pre class="r"><code>model &lt;- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path, cp = .00028)
+<pre class="r"><code>model &lt;- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path, method = &quot;class&quot;, cp = .000252)
 
-rpart.plot(model)</code></pre>
-<p><img src="analysis_local_employment_cart_files/figure-html/path%20county%20emp%20grad%20year%20plus%20zero-1.png" width="672" /></p>
+model</code></pre>
+<pre><code>## n= 38050 
+## 
+## node), split, n, loss, yval, (yprob)
+##       * denotes terminal node
+## 
+##     1) root 38050 4720 No match (0.12404731 0.87595269)  
+##       2) highest.cred.level=Associate degree,Less than Associate Degree 28501 4223 No match (0.14817024 0.85182976)  
+##         4) took.ACT=No 12126 2156 No match (0.17779977 0.82220023)  
+##           8) cte.achievement=CTE Concentrator or Completor,CTE Participant 9575 1846 No match (0.19279373 0.80720627)  
+##            16) avg.wages.pct.state&gt;=0.7000086 4896 1070 No match (0.21854575 0.78145425)  
+##              32) avg.wages.pct.state&lt; 0.7123319 1544  402 No match (0.26036269 0.73963731)  
+##                64) edr=EDR 6E- Southwest Central 873  261 No match (0.29896907 0.70103093)  
+##                 128) Dem_Desc=Town/rural mix 799  253 No match (0.31664581 0.68335419)  
+##                   256) cte.achievement=CTE Concentrator or Completor 523  180 No match (0.34416826 0.65583174)  
+##                     512) avg.wages.pct.state&lt; 0.7053184 240   98 No match (0.40833333 0.59166667)  
+##                      1024) MCA.R&lt; 3.5 219   93 No match (0.42465753 0.57534247)  
+##                        2048) ps.grad.InstitutionSector&lt; 4.5 54   26 Match (0.51851852 0.48148148)  
+##                          4096) RaceEthnicity=Hispanic 8    2 Match (0.75000000 0.25000000) *
+##                          4097) RaceEthnicity=Black,White 46   22 No match (0.47826087 0.52173913)  
+##                            8194) pseo.participant=1 8    2 Match (0.75000000 0.25000000) *
+##                            8195) pseo.participant=0 38   16 No match (0.42105263 0.57894737)  
+##                             16390) MCA.R&gt;=2.5 18    7 Match (0.61111111 0.38888889) *
+##                             16391) MCA.R&lt; 2.5 20    5 No match (0.25000000 0.75000000) *
+##                        2049) ps.grad.InstitutionSector&gt;=4.5 165   65 No match (0.39393939 0.60606061)  
+##                          4098) avg.wages.pct.state&lt; 0.7025719 53   25 No match (0.47169811 0.52830189)  
+##                            8196) MCA.M&lt; 1.5 33   16 Match (0.51515152 0.48484848)  
+##                             16392) RaceEthnicity=Black,Hispanic 10    4 Match (0.60000000 0.40000000) *
+##                             16393) RaceEthnicity=White 23   11 No match (0.47826087 0.52173913)  
+##                               32786) MCA.R&gt;=1.5 8    2 Match (0.75000000 0.25000000) *
+##                               32787) MCA.R&lt; 1.5 15    5 No match (0.33333333 0.66666667) *
+##                            8197) MCA.M&gt;=1.5 20    8 No match (0.40000000 0.60000000) *
+##                          4099) avg.wages.pct.state&gt;=0.7025719 112   40 No match (0.35714286 0.64285714)  
+##                            8198) MCA.S&gt;=2.5 16    7 Match (0.56250000 0.43750000) *
+##                            8199) MCA.S&lt; 2.5 96   31 No match (0.32291667 0.67708333) *
+##                      1025) MCA.R&gt;=3.5 21    5 No match (0.23809524 0.76190476) *
+##                     513) avg.wages.pct.state&gt;=0.7053184 283   82 No match (0.28975265 0.71024735) *
+##                   257) cte.achievement=CTE Participant 276   73 No match (0.26449275 0.73550725)  
+##                     514) avg.wages.pct.state&gt;=0.7077928 35   17 No match (0.48571429 0.51428571)  
+##                      1028) RaceEthnicity=Asian/PI,Black 18    6 Match (0.66666667 0.33333333) *
+##                      1029) RaceEthnicity=Hispanic,Unknown,White 17    5 No match (0.29411765 0.70588235) *
+##                     515) avg.wages.pct.state&lt; 0.7077928 241   56 No match (0.23236515 0.76763485) *
+##                 129) Dem_Desc=Entirely rural 74    8 No match (0.10810811 0.89189189) *
+##                65) edr=EDR 6W- Upper Minnesota Valley,EDR 8 - Southwest 671  141 No match (0.21013413 0.78986587) *
+##              33) avg.wages.pct.state&gt;=0.7123319 3352  668 No match (0.19928401 0.80071599) *
+##            17) avg.wages.pct.state&lt; 0.7000086 4679  776 No match (0.16584740 0.83415260)  
+##              34) avg.wages.pct.state&gt;=0.6487133 3493  628 No match (0.17978815 0.82021185)  
+##                68) avg.wages.pct.state&lt; 0.6752799 1463  316 No match (0.21599453 0.78400547)  
+##                 136) edr=EDR 6E- Southwest Central 93   32 No match (0.34408602 0.65591398)  
+##                   272) MCA.M&lt; 1.5 50   22 No match (0.44000000 0.56000000)  
+##                     544) MCA.R&gt;=2.5 13    3 Match (0.76923077 0.23076923) *
+##                     545) MCA.R&lt; 2.5 37   12 No match (0.32432432 0.67567568) *
+##                   273) MCA.M&gt;=1.5 43   10 No match (0.23255814 0.76744186) *
+##                 137) edr=EDR 6W- Upper Minnesota Valley,EDR 8 - Southwest 1370  284 No match (0.20729927 0.79270073) *
+##                69) avg.wages.pct.state&gt;=0.6752799 2030  312 No match (0.15369458 0.84630542) *
+##              35) avg.wages.pct.state&lt; 0.6487133 1186  148 No match (0.12478921 0.87521079)  
+##                70) RaceEthnicity=AI,Black,White 1092  147 No match (0.13461538 0.86538462)  
+##                 140) Dem_Desc=Town/rural mix 392   70 No match (0.17857143 0.82142857)  
+##                   280) avg.wages.pct.state&lt; 0.6002872 69   25 No match (0.36231884 0.63768116)  
+##                     560) cte.achievement=CTE Concentrator or Completor 33   15 No match (0.45454545 0.54545455)  
+##                      1120) MCA.R&lt; 2.5 24    9 Match (0.62500000 0.37500000) *
+##                      1121) MCA.R&gt;=2.5 9    0 No match (0.00000000 1.00000000) *
+##                     561) cte.achievement=CTE Participant 36   10 No match (0.27777778 0.72222222) *
+##                   281) avg.wages.pct.state&gt;=0.6002872 323   45 No match (0.13931889 0.86068111) *
+##                 141) Dem_Desc=Entirely rural 700   77 No match (0.11000000 0.89000000) *
+##                71) RaceEthnicity=Asian/PI,Hispanic 94    1 No match (0.01063830 0.98936170) *
+##           9) cte.achievement=No CTE 2551  310 No match (0.12152097 0.87847903) *
+##         5) took.ACT=Yes 16375 2067 No match (0.12622901 0.87377099) *
+##       3) highest.cred.level=Bachelor degree,Master degree or higher 9549  497 No match (0.05204733 0.94795267) *</code></pre>
+<pre class="r"><code>rpart.plot(model)</code></pre>
+<p><img src="analysis_local_employment_cart_files/figure-html/cart%20county%20emp%20grad%20year%20plus%20zero-1.png" width="672" /></p>
+<p><br></p>
+<p>Test dataset.</p>
+</div>
 </div>
 
 

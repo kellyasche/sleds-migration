@@ -137,26 +137,11 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 ```
 
 ```{r master dataset}
-master.original <- read_csv("Data/SLEDS/Masters/Master-updated-1.csv")
+master.after.ct <- read_csv("Data/SLEDS/Masters/Master-after-ct.csv") %>%
+    mutate_at(c(2:16, 18:23, 25, 29:32), as.factor) 
 
 ```
 
-```{r independent and dependent variables}
-updated.qual.var.names <-  c("PersonID", "LimitedEnglishProficiencyIndicator", "pseo.participant", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "cte.achievement", "english.learner", "attended.ps", "ps.grad", "ps.grad.InstitutionSector", "highest.cred.level")
-
-quan.var.names <- c("total.cte.courses.taken", "cte.0", "cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25", "cte.26", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "avg.unemp.rate", "wages.3year.avg")
-
-updated.independent.var.names <- c("PersonID", "LimitedEnglishProficiencyIndicator", "pseo.participant", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "cte.achievement", "english.learner", "attended.ps", "ps.grad", "ps.grad.InstitutionSector", "highest.cred.level", "total.cte.courses.taken", "cte.0", "cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25", "cte.26", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "avg.unemp.rate", "wages.3year.avg")
-
-cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25")
-
-updated.master <- master.original %>%
-  select(`updated.independent.var.names`, hs.grad.year.county.match, hs.grad.year.2.county.match, hs.grad.year.7.county.match, hs.grad.year.edr.match, hs.grad.year.2.edr.match, hs.grad.year.7.edr.match, hs.grad.year.region.match, hs.grad.year.region.match, hs.grad.year.2.region.match, hs.grad.year.7.region.match, hs.grad.year.state.match, hs.grad.year.2.state.match, hs.grad.year.7.state.match) %>%
-  mutate_at(2:15, as.factor) %>%
-  mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("5", "6", "7", "8", "9"), "11", as.character(ps.grad.InstitutionSector)),
-         ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector))
-
-```
 
 <br>
 
@@ -172,12 +157,80 @@ Meaningful employment is determined by whether an individual worked 1,000 hours 
 
 Due to time x potentially being passed the date of the latest data (2019) for some individuals, the analysis below will filter out all individuals where time x is after 2019. 
 
-The primary independent variables we will use in the model is the following;
+The primary independent variables that the cross tables indicated as important are;
 
 ```{r list of ind var}
-updated.master %>%
-  select(-PersonID, -hs.grad.year.county.match, -hs.grad.year.2.county.match, -hs.grad.year.7.county.match, -hs.grad.year.edr.match, -hs.grad.year.2.edr.match, -hs.grad.year.7.edr.match, -hs.grad.year.region.match, -hs.grad.year.region.match, -hs.grad.year.2.region.match, -hs.grad.year.7.region.match, -hs.grad.year.state.match, -hs.grad.year.2.state.match, -hs.grad.year.7.state.match) %>%
-  lapply(class) 
+ind.var <- master.after.ct %>%
+  select(-PersonID, -hs.grad.year.county.match, -hs.grad.year.2.county.match, -hs.grad.year.7.county.match, -hs.grad.year.edr.match, -hs.grad.year.2.edr.match, -hs.grad.year.7.edr.match, -hs.grad.year.region.match, -hs.grad.year.region.match, -hs.grad.year.2.region.match, -hs.grad.year.7.region.match, -hs.grad.year.state.match, -hs.grad.year.2.state.match, -hs.grad.year.7.state.match) 
+
+dep.var.names <- master.after.ct %>%
+  select(hs.grad.year.county.match, hs.grad.year.2.county.match, hs.grad.year.7.county.match, hs.grad.year.edr.match, hs.grad.year.2.edr.match, hs.grad.year.7.edr.match, hs.grad.year.region.match, hs.grad.year.region.match, hs.grad.year.2.region.match, hs.grad.year.7.region.match, hs.grad.year.state.match, hs.grad.year.2.state.match, hs.grad.year.7.state.match) %>%
+  names()
+
+ind.var.names <- ind.var %>%
+  names()
+
+ind.var %>%
+  lapply(class)
+```
+However, there are plenty of variables here that are VERY similar. For example, whether an individual graduated from a post-secondary institution and the type of institution they graduated from. So let's simplify the variables to what is most important and has the least amount of overlap with other variables.
+
+* Demographic
+    + RaceEthnicity
+* High school characteristics
+    + Dem_Desc
+    + EDR
+    + avg.wages.pct.state
+* High school enrollment
+    + LimitedEnglishProficiencyIndicator
+    + PSEO.participant
+* High school accomplishments
+    + took.act
+    + ap.exam
+    + cte.achievement
+    + MCA.M
+    + MCA.R
+    + MCA.S
+* Post-secondary
+    + ps.grad.InstitutionSector
+    + highest.cred.level
+    
+We eliminated the following variables for now;
+
+* non.english.home
+* english.learner
+* total.cte.courses.taken
+* ps.grad
+* attended.ps
+
+In addition to eliminating those variables, we will also simplify the ps.grad.InstitutionSector to the following codes;
+
+* 1 = graduated from the following insitutions
+    + Public, 4-year (1)
+    + Private, not for profit 4-year (2)
+    + Private, for profit 4-year (3)
+* 2 = graduated from the following institutions
+    + Private, not for profit 2-year (5, 11)
+    + Private, for profit 2-year (6, 11)
+    + Public, less than 2-year (7, 11)
+    + Private, not for profit less than 2-year (8, 11)
+    + Private for-profit, less-than 2-year (9, 11)
+* 3 = graduated from multiple institution sectors (10)
+* 4 = graduated from a public, 2-year institution (4,4)
+* 5 = Did not graduate or attend a post-secondary institution
+
+```{r updating master}
+updated.master <- master.after.ct %>%
+  select(`dep.var.names`, RaceEthnicity, Dem_Desc, edr, avg.wages.pct.state, LimitedEnglishProficiencyIndicator, pseo.participant, took.ACT, ap.exam, cte.achievement, MCA.M, MCA.R, MCA.S, ps.grad.InstitutionSector, highest.cred.level) %>%
+  mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c(1,2,3), 1,
+                                            ifelse(ps.grad.InstitutionSector == 11, 2,
+                                                   ifelse(ps.grad.InstitutionSector == 10, 3,
+                                                          ifelse(ps.grad.InstitutionSector == 4, 4, 5))))) 
+
+updated.ind.var.names <- updated.master %>%
+  select(-`dep.var.names`) %>%
+  names()
+
 ```
 
 <br>
@@ -210,19 +263,30 @@ For each time X we will analyze whether the independent variables are good at pr
 
 # Analysis - time X = grad year +0
 
-```{r master CART grad year}
-master.grad.year.county.path <- updated.master %>%
-  select(hs.grad.year.county.match, updated.independent.var.names) %>% 
-  mutate(hs.grad.year.county.match = ifelse(hs.grad.year.county.match == "Location match", "Match", "No match"))
+## County meaningful employment
 
+```{r master CART grad year county}
+master.grad.year.county.path <- updated.master %>%
+  select(hs.grad.year.county.match, `updated.ind.var.names`)  %>%
+  filter(hs.grad.year.county.match != "Unknown") %>%
+  filter(hs.grad.year.county.match != "After 2019") %>%
+  drop_na(hs.grad.year.county.match) %>%
+  mutate(hs.grad.year.county.match = ifelse(hs.grad.year.county.match == "Location match", "Match", "No match")) 
+  
 ```
 
-Summary here.
+This is an overly complex tree.
 
 <br>
 
-```{r path county emp grad year plus zero, echo=TRUE}
-model <- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path, cp = .00028)
+```{r cart county emp grad year plus zero, echo=TRUE}
+model <- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path, method = "class", cp = .000252)
 
+model
 rpart.plot(model)
 ```
+
+<br>
+
+Test dataset.
+

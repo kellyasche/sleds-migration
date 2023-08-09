@@ -43,6 +43,8 @@ navbar:
           href: analysis_multiple_correspondence.html
         - text: "Local employment cross tabs"
           href: analysis_local_employment_ct.html
+        - text: "Visualizations - cross tabs"
+          href: visualizations_local_employment_ct.html
         - text: "Local employment CART analysis"
           href: analysis_local_employment_cart.html
 
