@@ -138,7 +138,7 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 
 ```{r master dataset}
 master.after.ct <- read_csv("Data/SLEDS/Masters/Master-after-ct.csv") %>%
-    mutate_at(c(2:16, 18:23, 25, 29:32), as.factor) 
+    mutate_at(c(2:16, 18:23, 25, 29:33), as.factor) 
 
 ```
 
@@ -192,6 +192,7 @@ However, there are plenty of variables here that are VERY similar. For example, 
     + MCA.R
     + MCA.S
 * Post-secondary
+    + attended.ps.within.first.year.hsgrad: only for grad year +0 dependent variable
     + ps.grad.InstitutionSector
     + highest.cred.level
     
@@ -219,13 +220,19 @@ In addition to eliminating those variables, we will also simplify the ps.grad.In
 * 4 = graduated from a public, 2-year institution (4,4)
 * 5 = Did not graduate or attend a post-secondary institution
 
+We will also simplify the attended.ps.within.first.year.hsgrad variable to the following;
+
+* Yes = Attended PS within first year
+* No = Attended PS but not within first year & never attended PS
+
 ```{r updating master}
 updated.master <- master.after.ct %>%
-  select(`dep.var.names`, RaceEthnicity, Dem_Desc, edr, avg.wages.pct.state, LimitedEnglishProficiencyIndicator, pseo.participant, took.ACT, ap.exam, cte.achievement, MCA.M, MCA.R, MCA.S, ps.grad.InstitutionSector, highest.cred.level) %>%
+  select(`dep.var.names`, RaceEthnicity, Dem_Desc, edr, avg.wages.pct.state, LimitedEnglishProficiencyIndicator, pseo.participant, took.ACT, ap.exam, cte.achievement, MCA.M, MCA.R, MCA.S, attended.ps.within.first.year.hsgrad, ps.grad.InstitutionSector, highest.cred.level) %>%
   mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c(1,2,3), 1,
                                             ifelse(ps.grad.InstitutionSector == 11, 2,
                                                    ifelse(ps.grad.InstitutionSector == 10, 3,
-                                                          ifelse(ps.grad.InstitutionSector == 4, 4, 5))))) 
+                                                          ifelse(ps.grad.InstitutionSector == 4, 4, 5)))),
+         attended.ps.within.first.year.hsgrad = ifelse(attended.ps.within.first.year.hsgrad == "Attended first year after HS", "Yes", "No")) 
 
 updated.ind.var.names <- updated.master %>%
   select(-`dep.var.names`) %>%
@@ -267,26 +274,177 @@ For each time X we will analyze whether the independent variables are good at pr
 
 ```{r master CART grad year county}
 master.grad.year.county.path <- updated.master %>%
-  select(hs.grad.year.county.match, `updated.ind.var.names`)  %>%
+  select(hs.grad.year.county.match, `updated.ind.var.names`, -highest.cred.level)  %>%
   filter(hs.grad.year.county.match != "Unknown") %>%
   filter(hs.grad.year.county.match != "After 2019") %>%
   drop_na(hs.grad.year.county.match) %>%
   mutate(hs.grad.year.county.match = ifelse(hs.grad.year.county.match == "Location match", "Match", "No match")) 
-  
-```
 
-This is an overly complex tree.
+
+```
+The following analysis will determine which variables are most important in predicting whether an individual has meaningful employment in the same county as their high school the year they graduate.
+
+Let's split the data into two sets, Train and Test, in a 70:30 ratio. The Train set is used for training and creating the model. The Test set is considered to be a dummy production environment to test predictions and evaluate the accuracy of the model.
 
 <br>
 
-```{r cart county emp grad year plus zero, echo=TRUE}
-model <- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path, method = "class", cp = .000252)
+```{r split dataset into test and train grad year +0 county, echo=TRUE}
+set.seed(1234)
+sample_ind <- sample(nrow(master.grad.year.county.path), nrow(master.grad.year.county.path) *.7)
 
-model
-rpart.plot(model)
+train <- master.grad.year.county.path[sample_ind,]
+
+test <- master.grad.year.county.path[-sample_ind,]
 ```
 
 <br>
 
-Test dataset.
+Next, we create a decision tree model by calling the rpart function. Let's first create a base model with default parameters and value. The CP (complexity parameter) is used to control tree growth. If the cost of adding a variable is higher then the value of CP, then tree growth stops.
+
+<br>
+
+```{r create decision tree grad year +0 county, echo=TRUE}
+#Base model
+grad.year.0.county.model <- rpart(hs.grad.year.county.match ~ ., data = train, method = "class", control = rpart.control(cp = 0))
+
+```
+
+```{r decision tree summary and plots grad year +0 county, echo=TRUE, include=FALSE}
+
+#Summary
+summary(grad.year.0.county.model)
+
+#Plot tree
+rpart.plot(grad.year.0.county.model)
+
+```
+
+```{r decision tree error grad year +0 county, echo=TRUE}
+
+# Examine the complexity plot
+printcp(grad.year.0.county.model)
+plotcp(grad.year.0.county.model)
+
+```
+
+<br>
+
+The resulting model produced a VERY complex tree with too many nodes that it isn't interpretable. However, examining the complexity parameters shows that I have an increasing cross-validated error which provides evidence of a decision tree with too much complexity.
+
+Below are the values in variable important and it shows that average wages, post-secondary pathway, MCA-reading scores, EDR, and CTE achievement play an important role in this model.
+
+<br>
+
+```{r base model variable importance grad year +0 county, echo=TRUE}
+grad.year.0.county.model$variable.importance
+```
+
+<br>
+
+Next, the accuracy of the model is computed and stored in a variable base_accuracy so we can compare it to our pruned trees later.
+
+<br>
+
+```{r model accuracy grad year +0 county, echo=TRUE}
+test$pred <- predict(grad.year.0.county.model, test, type = "class")
+
+base_accuracy <- mean(test$pred == test$hs.grad.year.county.match)
+
+base_accuracy
+```
+
+<br>
+
+Next, we need to prune. We can either pre-prune or post-prune. We will start with pre-pruning and use each method - max depth, min depth, and min bucket.
+
+<br>
+
+```{r pre pruning  grad year +0 county, echo=TRUE}
+# Grow a tree with minsplit of 40 and max depth of 10
+grad.year.0.county.model.preprune <- rpart(hs.grad.year.county.match ~ ., data = train, method = "class", 
+                   control = rpart.control(cp = 0, maxdepth = 10, minsplit = 40))
+
+#Summary
+summary(grad.year.0.county.model.preprune)
+
+#Plot tree
+rpart.plot(grad.year.0.county.model.preprune)
+
+# Examine the complexity plot
+printcp(grad.year.0.county.model.preprune)
+plotcp(grad.year.0.county.model.preprune)
+
+
+# Compute the accuracy of the pruned tree
+
+test$pred <- predict(grad.year.0.county.model.preprune, test, type = "class")
+
+accuracy_preprun <- mean(test$pred == test$hs.grad.year.county.match)
+
+accuracy_preprun
+```
+
+<br>
+
+The pre-pruning resulted in a significantly less complex tree with a .877442 accuracy. Let's see what variables are important in this model.
+
+This model does indicate a difference in important when pruned. Average wages are no longer as important, however post-secondary pathway is still very important. 
+
+<br>
+
+```{r pre pruning variable importance grad year +0 county, echo=TRUE}
+grad.year.0.county.model.preprune$variable.importance
+
+```
+
+Next, let's try postpruning. The idea here is to allow the decision tree to grow fully and observe the CP value. Next, we prune/cut the tree with the optimal CP value as the parameter as shown in below code:
+
+<br>
+
+```{r postpruning grad year +0 county, echo=TRUE}
+
+# Prune the hr_base_model based on the optimal cp value
+grad.year.0.county.model.postprune <- prune(grad.year.0.county.model, cp = .00024657 )
+
+#Summary
+summary(grad.year.0.county.model.postprune)
+
+#Plot tree
+rpart.plot(grad.year.0.county.model.postprune)
+
+# Examine the complexity plot
+printcp(grad.year.0.county.model.postprune)
+plotcp(grad.year.0.county.model.postprune)
+
+
+# Compute the accuracy of the pruned tree
+
+test$pred <- predict(grad.year.0.county.model.postprune, test, type = "class")
+
+accuracy_postprun <- mean(test$pred == test$hs.grad.year.county.match)
+
+accuracy_postprun
+
+```
+
+<br>
+
+We still end up with a highly complex tree that is difficult to interpret. Let's check to see what variables are considered important.
+
+And it tells me that none of the variables are important?????
+
+<br>
+
+```{r post pruning variable importance grad year +0 county, echo=TRUE}
+grad.year.0.county.model.postprune$variable.importance
+
+```
+<br>
+
+Now let's compare the accuracy.
+
+```{r compare accuracy grad year +0 county, echo=TRUE}
+data.frame(base_accuracy, accuracy_preprun, accuracy_postprun)
+
+```
 

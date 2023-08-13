@@ -164,7 +164,12 @@ master.original <- read.csv("Data/SLEDS/Masters/Master.csv") %>%
                                                                          ifelse(hs.grad.year == 2015, 8,
                                                                                 ifelse(hs.grad.year == 2016, 9,
                                                                                        ifelse(hs.grad.year == 2017, 10,
-                                                                                              ifelse(hs.grad.year == 2018, 11, 12))))))))))))
+                                                                                              ifelse(hs.grad.year == 2018, 11, 12))))))))))),
+         attended.ps.within.first.year.hsgrad = ifelse(is.na(attended.ps.within.first.year.hsgrad), "Never attended PS", attended.ps.within.first.year.hsgrad),
+         attended.ps.within.first.year.hsgrad = ifelse(attended.ps.within.first.year.hsgrad == "Yes", "Attended first year after HS",
+                                                       ifelse(attended.ps == "No", "Never attended PS", "Attended but not first year"))) %>%
+  drop_na(Dem_Desc)
+
 
 write_csv(master.original, "Data/SLEDS/Masters/Master-updated-1.csv")
 
@@ -185,7 +190,7 @@ The master dataset is also composed of `r comma(ncol(master.original))` columns.
 Here is a list of all the categorical variables with a description of each.
 
 ```{r primary independent variables}
-qual.var.names <-  c("PersonID", "hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "cte.achievement", "english.learner", "sat.taken", "attended.ps", "ps.grad", "ps.grad.InstitutionSector", "highest.cred.level")
+qual.var.names <-  c("PersonID", "hs.grad.year", "Gender", "LimitedEnglishProficiencyIndicator", "HomelessIndicator", "economic.status", "pseo.participant", "SpecialEdStatus", "non.english.home", "RaceEthnicity", "Dem_Desc", "edr", "took.ACT", "ap.exam", "cte.achievement", "english.learner", "sat.taken", "attended.ps.within.first.year.hsgrad", "attended.ps", "ps.grad", "ps.grad.InstitutionSector", "highest.cred.level")
 
 quan.var.names <- c("total.cte.courses.taken", "cte.0", "cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte.7", "cte.8", "cte.9", "cte.10", "cte.11", "cte.12", "cte.14", "cte.21", "cte.22", "cte.23", "cte.24", "cte.25", "cte.26", "avg.cte.intensity", "MCA.M", "MCA.R", "MCA.S", "avg.unemp.rate", "wages.3year.avg", "avg.wages.pct.state")
 
@@ -196,7 +201,8 @@ cte.cc.var.names <- c("cte.1", "cte.2", "cte.3", "cte.4", "cte.5", "cte.6", "cte
 
 ind.qual.var <- master.original %>%
   select(all_of(`qual.var.names`)) %>%
-  mutate_at(2:21, as.factor)
+  mutate_at(2:22, as.factor)
+
 
 
 ```
@@ -257,6 +263,10 @@ ind.qual.var <- master.original %>%
 <br>
 
 * **Post-secondary**
+    + *attended.ps.within.first.year.hsgrad:* the individual attended a post-secondary institution within the first year of graduating high school.
+      + Attended PS within first year
+      + Atteded PS but not within first year
+      + Never attended PS
     + *attended.ps:* 
       + Yes = the individual attended a post-secondary education institution, otherwise No.
     + *ps.grad:* whether the indiviual graduated from a post-secondary institution
@@ -299,12 +309,12 @@ The tables below shows there are a few to be concerned about.
 
 ```{r ind qual frequencies}
 ind.qual.freq <- ind.qual.var %>%
-  gather(key = "key", value = "value", 2:21) %>%
+  gather(key = "key", value = "value", 2:22) %>%
   group_by(key, value) %>%
   summarize(n = n()) %>%
   ungroup() %>%
   mutate(data_id = seq(n()))
-  
+
 ind.qual.freq.plot <- ggplot(ind.qual.freq, aes(value, n)) +
   facet_wrap(~key, ncol = 4, scales = "free") +
   geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(key, "\n", value, "\nN = ", comma(n, accuracy = 1), sep = ""))) +
@@ -349,6 +359,7 @@ master.ind.qua.var.write <- ind.qual.var %>%
   select(-HomelessIndicator, -sat.taken) %>%
   mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("5", "6", "7", "8", "9"), "11", as.character(ps.grad.InstitutionSector)),
          ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector))
+
 ```
 
 <br>
@@ -430,6 +441,7 @@ From the table below, we can see that the variable categories with high cos2 are
 * non.english.home
 * Less than Associate Degree
 * ps_grad
+* attended.ps.within.first.year.hsgrad
 * english.learner
 * Bachelor degree
 
@@ -483,6 +495,9 @@ The following variable categories contribute the most to dimension 1.
 * ps.grad
     + Yes
     + No
+* attended.ps.within.first.year.hsgrad
+    + Attended within first year
+    + Never attended PS
 * took.ACT
     + No
 * non.english.home
@@ -593,34 +608,37 @@ So out of all this, it seems the following variables are the most important rega
     d. did not grad
 2. attended.ps
     a. No
-3. highest.cred.level
+3. attended.ps.within.first.year.hsgrad
+    a. Attended PS within first year
+    b. Never attended PS
+4. highest.cred.level
     a. Bachelor's degree
     b. Less than associate degree
     c. associate degree
-4. ps.grad
+5. ps.grad
     a. Yes
     b. No
-5. took.ACT
+6. took.ACT
     a. No
-6. non.english.home
+7. non.english.home
     a. 1 - yes
-7. english.learner
+8. english.learner
     a. 1 - yes
-8. LimitedEnglishProficiencyIndicator
+9. LimitedEnglishProficiencyIndicator
     a. Yes
-9. Race/Ethnicity
+10. Race/Ethnicity
     a. hispanic
     b. Asian/PI
-10. ap.exam
+11. ap.exam
     a. 1 - yes
-11. pseo.participant
+12. pseo.participant
     a. 1 - yes
-12. cte.achievement
+13. cte.achievement
     a. Concentrator or completor
     b. No CTE
-13. Dem_Desc
+14. Dem_Desc
     a. Urban/town/rural mix
-14. edr
+15. edr
     a. EDR 6E
     b. EDR 6W
 

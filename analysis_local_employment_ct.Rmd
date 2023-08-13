@@ -795,6 +795,28 @@ wilcox.test(MCA.S ~ `County match`, data = data)
 
 <br>
 
+### Post-secondary{.tabset}
+
+**attended.ps.within.first.year.hsgrad:** The p-value indicates that we can reject the NULL hypothesis and accept that whether an individual attends a post-secondary institution within the first year of graduating high school is related to whether an individual has meaningful employment in the same county as their high school. However, the v-score is only .087 so it explains little of the variance. Some highlights included;
+
+* Individuals that do attend post-secondary but not within the first year have a significantly higher proportion of individuals that have meaningful employment in the same county as their high school - 18.2%; 341 individuals observed vs. 231 expected.
+* In addition, a higher proportion of individuals that never attended PS have meaningful employment in the same county as their high school - 16.6%; 1,462 observed vs. 1,087 expected.
+
+<br>
+
+#### attended.ps.within.first.year.hsgrad
+
+```{r ct attending post-secondary within first year after hs graduation}
+tab_xtab(var.row = master.grad.year.ct$`County match`, var.col = master.grad.year.ct$attended.ps.within.first.year.hsgrad, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
+
+
 ## Cross tabs - Time X = grad year +2
 
 ```{r master ct grad year plus 2}
@@ -2552,6 +2574,26 @@ wilcox.test(MCA.S ~ `EDR match`, data = data)
 
 <br>
 
+### Post-secondary{.tabset}
+
+**attended.ps.within.first.year.hsgrad:** The p-value indicates that we can reject the NULL hypothesis and accept that whether an individual attends a post-secondary institution within the first year of graduating high school is related to whether an individual has meaningful employment in the same EDR as their high school. However, the v-score is only .105 so it explains little of the variance. Some highlights included;
+
+* Individuals that do attend post-secondary but not within the first year have a significantly higher proportion of individuals that have meaningful employment in the same EDR as their high school - 21.3%; 397 individuals observed vs. 277 expected.
+* In addition, a higher proportion of individuals that never attended PS have meaningful employment in the same EDR as their high school - 20.8%; 1,815 observed vs. 1,298 expected.
+
+<br>
+
+#### attended.ps.within.first.year.hsgrad
+
+```{r ct attending post-secondary within first year after hs graduation edr}
+tab_xtab(var.row = master.grad.year.edr.ct$`EDR match`, var.col = master.grad.year.edr.ct$attended.ps.within.first.year.hsgrad, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
 ## Cross tabs - Time X = grad year +2
 
 ```{r master ct edr grad year plus 2}
@@ -4299,6 +4341,24 @@ wilcox.test(MCA.S ~ `Region match`, data = data)
 
 <br>
 
+### Post-secondary{.tabset}
+
+**attended.ps.within.first.year.hsgrad:** The p-value indicates that we can reject the NULL hypothesis and accept that whether an individual attends a post-secondary institution within the first year of graduating high school is related to whether an individual has meaningful employment in one of the three EDRs. However, the v-score is only .118 so it explains little of the variance. Some highlights included;
+
+* Individuals that do attend post-secondary but not within the first year AND individuals that never attend Post-secondary have a significantly higher proportion of individuals that have meaningful employment in one of the three EDRs - 23.3% for individuals that eventually attend Post-secondary but not within the first year and 23.2% of individuals that never attend post-secondary; 435 individuals observed vs. 302 expected and 2,027 oberved vs. 1,416 expected.
+<br>
+
+#### attended.ps.within.first.year.hsgrad
+
+```{r ct attending post-secondary within first year after hs graduation region}
+tab_xtab(var.row = master.grad.year.region.ct$`Region match`, var.col = master.grad.year.region.ct$attended.ps.within.first.year.hsgrad, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
 ## Cross tabs - Time X = grad year +2
 
 ```{r master ct region grad year plus 2}
@@ -6041,6 +6101,25 @@ wilcox.test(MCA.S ~ `MN match`, data = data)
 
 <br>
 
+### Post-secondary{.tabset}
+
+**attended.ps.within.first.year.hsgrad:** The p-value indicates that we can reject the NULL hypothesis and accept that whether an individual attends a post-secondary institution within the first year of graduating high school is related to whether an individual has meaningful employment in Minnesota. However, the v-score is only .135 so it explains little of the variance. Some highlights included;
+
+* Individuals that do attend post-secondary but not within the first year AND individuals that never attend post-secondary have a significantly higher proportion of individuals that have meaningful employment in the same county as their high school - 28.1% and 28.2% respectively.
+
+<br>
+
+#### attended.ps.within.first.year.hsgrad
+
+```{r ct attending post-secondary within first year after hs graduation MN}
+tab_xtab(var.row = master.grad.year.mn.ct$`MN match`, var.col = master.grad.year.mn.ct$attended.ps.within.first.year.hsgrad, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+```
+
+<br>
+
 ## Cross tabs - Time X = grad year +2
 
 ```{r master ct mn grad year plus 2}
@@ -7655,6 +7734,25 @@ datatable(hsaccom.mca.s.pvalues, class = "cell-border stripe", filter = "top", r
 
 <br>
 
+### attended.ps.within.first.year.hsgrad
+
+```{r summary attending post secondary within first year}
+
+post.sec.ps.grad.pvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0, NA, NA),
+         EDR = c(0, NA, NA),
+         `All 3 EDRs` = c(0, NA, NA),
+         MN = c( 0, NA, NA)) 
+
+datatable(post.sec.ps.grad.pvalues, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatCurrency(2:5, "", digits = 3) %>%
+  formatStyle(c("County", "EDR", "All 3 EDRs", "MN"),
+              backgroundColor = styleInterval(c(.01), c("#99CC33", "#fb9a99")))
+
+
+```
+
 ### ps.grad
 
 ```{r summary post secondary graduating from post-secondary}
@@ -7760,6 +7858,7 @@ The analysis indicates that the following variables are the most influential in 
     + cte.achievement
     + MCA.M.R.S
 * Post-secondary
+    + attended.ps.within.first.year.hsgrad
     + ps.grad
     + attended.ps
     + ps.grad.InstitutionSector
@@ -7767,7 +7866,7 @@ The analysis indicates that the following variables are the most influential in 
 
 ```{r export master}
 master.after.ct <- updated.master %>%
-  select(PersonID, `dep.var.names`, RaceEthnicity, Dem_Desc, edr, avg.wages.pct.state, LimitedEnglishProficiencyIndicator, pseo.participant, non.english.home, english.learner, took.ACT, ap.exam, total.cte.courses.taken, cte.achievement, MCA.M, MCA.R, MCA.S, ps.grad, attended.ps, ps.grad.InstitutionSector, highest.cred.level)
+  select(PersonID, `dep.var.names`, RaceEthnicity, Dem_Desc, edr, avg.wages.pct.state, LimitedEnglishProficiencyIndicator, pseo.participant, non.english.home, english.learner, took.ACT, ap.exam, total.cte.courses.taken, cte.achievement, MCA.M, MCA.R, MCA.S, attended.ps.within.first.year.hsgrad, ps.grad, attended.ps, ps.grad.InstitutionSector, highest.cred.level)
 
 write_csv(master.after.ct, "Data/SLEDS/Masters/Master-after-ct.csv")
 
