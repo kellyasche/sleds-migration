@@ -221,7 +221,8 @@ What economic development leaders across Southwest Minnesota want to know is wha
 The Classification and Regression Tree analysis concludes the following variables in our dataset as being important in predicting whether an individual has meaningful employment in the same regions as their high school.
 
 1. Post-secondary pathway
-    a. ps.grad.InstitutionSector
+    b. attended.ps.within.first.year.hsgrad
+
 
 
 ```{r ind var}

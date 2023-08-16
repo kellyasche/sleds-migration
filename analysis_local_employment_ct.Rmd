@@ -7307,6 +7307,8 @@ tab_xtab(var.row = master.grad.year.7.mn.ct$`MN match`, var.col = master.grad.ye
 
 # Summary
 
+## P-values
+
 Okay, let's summarize all of this analysis. Below are tables that indicate which variables were significant (p-value < .01).
 
 We will group variables by their themes/labels, for example we will start with Demographic variables, and then summarize the High school characteristics, etc.....
@@ -7319,7 +7321,7 @@ pvalue.summary.table.framework <- matrix(c("Grad year", "Grad year +0", "Grad ye
 
 <br>
 
-## Demographic variables
+### Demographic variables
 
 The race and ethnicity variable provided significant differences pretty consistently across time and place. A couple of interesting things about this variable, however, is that the race and ethnicity  that experienced significant differences changes over time. For grad year +0, Hispanic and Black individuals had meaningful employment at a much higher rate than all other races. By grad year +7, that advantage decreased and there was much less difference. All other races were pretty equal. Interestingly, white individuals had an equal or higher rate of meaningful employment by grad year +7, especially at the MN level. 
 
@@ -7344,7 +7346,7 @@ datatable(dem.race.ethnicity.pvalues, class = "cell-border stripe", filter = "to
 
 <br>
 
-## High school characteristic variables{.tabset}
+### High school characteristic variables{.tabset}
 
 **Dem_Desc:** At grad year +0, there was a higher proportion of individuals that graduated from a town/rural mix high school that had meaningful employment. By grad year +7, that separation was less significant. In particular, there became a higher proportion of individuals that graduated from a entirely rural high school that had meaningful employment.
 
@@ -7360,7 +7362,7 @@ datatable(dem.race.ethnicity.pvalues, class = "cell-border stripe", filter = "to
 
 <br>
 
-### Dem_Desc
+#### Dem_Desc
 
 ```{r summary hs characteristics dem_desc}
 
@@ -7381,7 +7383,7 @@ datatable(hschar.dem_desc.pvalues, class = "cell-border stripe", filter = "top",
 
 <br>
 
-### EDR
+#### EDR
 
 ```{r summary hs characteristics EDR}
 
@@ -7402,7 +7404,7 @@ datatable(hschar.edr.pvalues, class = "cell-border stripe", filter = "top", rown
 
 <br>
 
-### avg.unemployment.rate
+#### avg.unemployment.rate
 
 ```{r summary hs characteristics average unemployment rate}
 
@@ -7423,7 +7425,7 @@ datatable(hschar.avg.unemployment.rate.pvalues, class = "cell-border stripe", fi
 
 <br>
 
-### avg.wages.pct.state
+#### avg.wages.pct.state
 
 ```{r summary hs characteristics average wages as pct of state avg}
 
@@ -7444,7 +7446,7 @@ datatable(hschar.avg.wages.pct.state.pvalues, class = "cell-border stripe", filt
 
 <br>
 
-### avg.cte.intensity
+#### avg.cte.intensity
 
 ```{r summary hs characteristics average cte intensity}
 
@@ -7465,7 +7467,7 @@ datatable(hschar.avg.cte.intensity.pvalues, class = "cell-border stripe", filter
 
 <br>
 
-## High school enrollment variables{.tabset}
+### High school enrollment variables{.tabset}
 
 **LimitedEnglishProficiencyIndicator:** This variable was signifiacnt for grad year +0, but no other. It consistently showed that a larger proportion of individuals designated as having limited english proficiency had meaningful employment across all geographies.
 
@@ -7477,7 +7479,7 @@ datatable(hschar.avg.cte.intensity.pvalues, class = "cell-border stripe", filter
 
 <br>
 
-### LimitedEnglishProficiency
+#### LimitedEnglishProficiency
 
 ```{r summary hs enrollment limited english proficiency}
 
@@ -7498,7 +7500,7 @@ datatable(hsenroll.LimitedEnglishProficiencyIndicator.pvalues, class = "cell-bor
 
 <br>
 
-### PSEO.participant
+#### PSEO.participant
 
 ```{r summary hs enrollment pseo participant}
 
@@ -7519,7 +7521,7 @@ datatable(hsenroll.pseo.participant.pvalues, class = "cell-border stripe", filte
 
 <br>
 
-### non.english.home
+#### non.english.home
 
 ```{r summary hs enrollment non english home}
 
@@ -7540,7 +7542,7 @@ datatable(hsenroll.non.english.home.pvalues, class = "cell-border stripe", filte
 
 <br>
 
-### english.learner
+#### english.learner
 
 ```{r summary hs enrollment english learner}
 
@@ -7561,7 +7563,7 @@ datatable(hsenroll.english.learner.pvalues, class = "cell-border stripe", filter
 
 <br>
 
-## High school accomplishments variables{.tabset}
+### High school accomplishments variables{.tabset}
 
 **took.act:** For nearly all geographies and time X, a larger proportion of individuals that did not take the ACT had meaningful employment in the measured geography compared to individuals that did take the ACT. However, there is no significant difference at seven years after graduation and individuals having meaningful employment in Minnesota.
 
@@ -7575,7 +7577,7 @@ datatable(hsenroll.english.learner.pvalues, class = "cell-border stripe", filter
 
 <br>
 
-### took.act
+#### took.act
 
 ```{r summary hs accomplishments took act}
 
@@ -7596,7 +7598,7 @@ datatable(hsaccom.took.act.pvalues, class = "cell-border stripe", filter = "top"
 
 <br>
 
-### ap.exam
+#### ap.exam
 
 ```{r summary hs accomplishments took ap exam}
 
@@ -7617,7 +7619,7 @@ datatable(hsaccom.took.act.pvalues, class = "cell-border stripe", filter = "top"
 
 <br>
 
-### total.cte.courses.taken
+#### total.cte.courses.taken
 
 ```{r summary hs accomplishments total cte courses taken}
 
@@ -7638,7 +7640,7 @@ datatable(hsaccom.total.cte.courses.taken.pvalues, class = "cell-border stripe",
 
 <br>
 
-### cte.achievement
+#### cte.achievement
 
 ```{r summary hs accomplishments cte achievement}
 
@@ -7659,7 +7661,7 @@ datatable(hsaccom.cte.achievement.pvalues, class = "cell-border stripe", filter 
 
 <br>
 
-### MCA.M
+#### MCA.M
 
 ```{r summary hs accomplishments MCA math}
 
@@ -7680,7 +7682,7 @@ datatable(hsaccom.mca.m.pvalues, class = "cell-border stripe", filter = "top", r
 
 <br>
 
-### MCA.M
+#### MCA.M
 
 ```{r summary hs accomplishments MCA reading}
 
@@ -7701,7 +7703,7 @@ datatable(hsaccom.mca.r.pvalues, class = "cell-border stripe", filter = "top", r
 
 <br>
 
-### MCA.M
+#### MCA.M
 
 ```{r summary hs accomplishments MCA science}
 
@@ -7722,7 +7724,7 @@ datatable(hsaccom.mca.s.pvalues, class = "cell-border stripe", filter = "top", r
 
 <br>
 
-## Post secondary variables{.tabset}
+### Post secondary variables{.tabset}
 
 **ps.grad:** For ALMOST all geographies and Time X, a larger proportion of individuals that did NOT graduate from a post-secondary institution had meaningful employment. However, it switches when looking at meaningful employment at the Minnesota level. By seven years after graduation, a larger proportion of individuals that DID graduate from a post-secondary institution had meaningful employment in Minnesota.
 
@@ -7734,7 +7736,7 @@ datatable(hsaccom.mca.s.pvalues, class = "cell-border stripe", filter = "top", r
 
 <br>
 
-### attended.ps.within.first.year.hsgrad
+#### attended.ps.within.first.year.hsgrad
 
 ```{r summary attending post secondary within first year}
 
@@ -7753,7 +7755,7 @@ datatable(post.sec.ps.grad.pvalues, class = "cell-border stripe", filter = "top"
 
 ```
 
-### ps.grad
+#### ps.grad
 
 ```{r summary post secondary graduating from post-secondary}
 
@@ -7774,7 +7776,7 @@ datatable(post.sec.ps.grad.pvalues, class = "cell-border stripe", filter = "top"
 
 <br>
 
-### attended.ps
+#### attended.ps
 
 ```{r summary post secondary attended post-secondary}
 
@@ -7795,7 +7797,7 @@ datatable(post.sec.attended.ps.pvalues, class = "cell-border stripe", filter = "
 
 <br>
 
-### ps.grad.InstitutionSector
+#### ps.grad.InstitutionSector
 
 ```{r summary post secondary institution sector graduating post secondary}
 
@@ -7816,7 +7818,7 @@ datatable(post.sec.ps.grad.InstitutionSector.pvalues, class = "cell-border strip
 
 <br>
 
-### highest.cred.level
+#### highest.cred.level
 
 ```{r summary post secondary highest credential earned}
 
@@ -7872,10 +7874,411 @@ write_csv(master.after.ct, "Data/SLEDS/Masters/Master-after-ct.csv")
 
 ```
 
+<br>
+
+## Z-values
+
+Next, let's compare the v-scores to see which ones have some of the highest explanation. The only v-scores provided will be for variables that had a p-value below .01.
+
+
+<br>
+
+### Demographic variables
+
+The race and ethnicity variable never had a strong association. However, it was most weak seven years after graduation.
+
+<br>
+
+```{r summary demographic z scores}
+
+dem.race.ethnicity.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(0.068, 0.076, .029),
+         EDR = c(0.064, 0.063, .022),
+         `All 3 EDRs` = c(0.064, 0.058, .031),
+         MN = c(0.062, 0.046, 0.050)) 
+
+dem.race.ethnicity.quantile <- dem.race.ethnicity.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(dem.race.ethnicity.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(dem.race.ethnicity.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+```
+
+<br>
+
+### High school characteristic variables{.tabset}
+
+**Dem_Desc:** The RUCA category was never strongly associated with the dependent variable. However, it was strongest during gradd year +0 and grad year +2 and at the more "local" geographies.
+
+**EDR:** EDR was never strongly associated with the dependent variable. However, it was the strongest at grad year +2 and grad year +7, and whether meaningful employment was had in Minnesota.
+
+<br>
+
+#### Dem_Desc
+
+```{r summary z scores hs characteristics dem_desc}
+
+hschar.dem_desc.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(0.053, 0.065, .054),
+         EDR = c(0.047, 0.043, 0.049),
+         `All 3 EDRs` = c(0.058, 0.063, 0.080),
+         MN = c(0.054, 0.045, .072)) 
+
+
+hschar.dem_desc.quantile <- hschar.dem_desc.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(hschar.dem_desc.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(dem.race.ethnicity.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+```
+
+<br>
+
+#### EDR
+
+```{r summary z scores hs characteristics EDR}
+
+hschar.edr.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c(0.050, 0.069, 0.059),
+         EDR = c(0.043, 0.062, 0.075),
+         `All 3 EDRs` = c(.015, .005, 0.040),
+         MN = c(0.047, 0.059, 0.107)) 
+
+hschar.edr.quantile <- hschar.edr.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(hschar.edr.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(hschar.edr.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+```
+
+<br>
+
+
+### High school enrollment variables{.tabset}
+
+**LimitedEnglishProficiencyIndicator:** This variable was never strongly associated with the dependent variable.
+
+**PSEO.participant:** This variable did have a somewhat strong association with the dependent variable with many of the z-scores being above .1. It was particularly strong during grad year +0 and grad year +2, and loses association passed that time.
+
+<br>
+
+#### LimitedEnglishProficiency
+
+```{r summary z scores hs enrollment limited english proficiency}
+
+hsenroll.LimitedEnglishProficiencyIndicator.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0.026, 0.012, 0.002),
+         EDR = c(0.028, 0.013, 0.003),
+         `All 3 EDRs` = c(0.024, 0.007, 0.011),
+         MN = c(0.029, 0.006, 0.032)) 
+
+hsenroll.LimitedEnglishProficiencyIndicator.quantile <- hsenroll.LimitedEnglishProficiencyIndicator.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(hsenroll.LimitedEnglishProficiencyIndicator.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(hsenroll.LimitedEnglishProficiencyIndicator.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+```
+
+<br>
+
+#### PSEO.participant
+
+```{r summary z scores hs enrollment pseo participant}
+
+hsenroll.pseo.participant.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0.088, 0.110, 0.068),
+         EDR = c(0.100, 0.128, 0.070),
+         `All 3 EDRs` = c(0.108, 0.135, 0.067),
+         MN = c(0.118, 0.127, 0.009)) 
+
+hsenroll.pseo.participant.quantile <- hsenroll.pseo.participant.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(hsenroll.pseo.participant.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(hsenroll.pseo.participant.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+```
+
+
+<br>
+
+### High school accomplishments variables{.tabset}
+
+**took.act:** Taking the ACT had a consistently strong-ish association with the dependent variable. It's particularly strong at grad year +0 and grad year +2.
+
+**ap.exam:** Taking the AP Exam had a consistently strong-ish association with the dependent variable. It's particularly strong in whether there was meaningful employment in the same EDR, in one of the three EDRs, and in Minnesota during grad year +0 and grad year +2. 
+
+**cte.achievement:** CTE achievement had a consistently strong-ish association with the dependent variable. It was particularly strong at grad year +0 and grad year +2.
+
+<br>
+
+#### took.act
+
+```{r summary z scores hs accomplishments took act}
+
+hsaccom.took.act.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0.107, 0.139, 0.089),
+         EDR = c(0.122, 0.163, 0.108),
+         `All 3 EDRs` = c(0.132, 0.177, 0.109),
+         MN = c(0.147, 0.172, 0.016)) 
+
+hsaccom.took.act.quantile <- hsaccom.took.act.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(hsaccom.took.act.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(hsaccom.took.act.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+```
+
+<br>
+
+#### ap.exam
+
+```{r summary z scores hs accomplishments took ap exam}
+
+hsaccom.ap.exam.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0.064, 0.083, 0.066),
+         EDR = c(0.080, 0.109, 0.094),
+         `All 3 EDRs` = c(0.087, 0.177, 0.109),
+         MN = c(0.100, 0.172, 0.036)) 
+
+hsaccom.ap.exam.quantile <- hsaccom.ap.exam.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(hsaccom.ap.exam.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(hsaccom.ap.exam.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+```
+
+<br>
+
+
+#### cte.achievement
+
+```{r summary z scores hs accomplishments cte achievement}
+
+hsaccom.cte.achievement.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0.074, 0.094, 0.091),
+         EDR = c(0.082, 0.110, 0.113),
+         `All 3 EDRs` = c(0.085, 0.119, 0.121),
+         MN = c(0.091, 0.120, 0.084)) 
+
+hsaccom.cte.achievement.quantile <- hsaccom.cte.achievement.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(hsaccom.cte.achievement.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(hsaccom.cte.achievement.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+```
 
 
 
+<br>
 
+### Post secondary variables{.tabset}
+
+**attended.ps.within.first.year.hsgrad:** This variable had a strong-ish association with the dependent variable. It gets stronger as the geography increases. 
+
+**ps.grad:** Graduating from a post-secondary institution had a strong-ish association with the dependent variable during grad year +2.
+
+**attended.ps:** Attending a post-secondary institution had a strong-ish association with the dependent variable during grad year +2.
+
+**ps.grad.InstitutionSector:** This variable had the strongest association of all variables. It was strongest at grad year +2.
+
+**highest.cred.level:** This variable had the strongest association of all variables. It was strongest at grad year +2
+
+<br>
+
+#### attended.ps.within.first.year.hsgrad
+
+```{r summary z scores attending post secondary within first year}
+
+post.sec.ps.within.first.year.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( 0.087, NA, NA),
+         EDR = c(0.105, NA, NA),
+         `All 3 EDRs` = c(0.118, NA, NA),
+         MN = c( 0.135, NA, NA)) 
+
+post.sec.ps.within.first.year.quantile <- post.sec.ps.within.first.year.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(post.sec.ps.within.first.year.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(post.sec.ps.within.first.year.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+```
+
+<br>
+
+#### ps.grad
+
+```{r summary z scores post secondary graduating from post-secondary}
+
+post.sec.ps.grad.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, .115, 0.051),
+         EDR = c(NA, 0.133, 0.043),
+         `All 3 EDRs` = c(NA, 0.143, 0.035),
+         MN = c( NA, 0.160, 0.068)) 
+
+
+post.sec.ps.grad.quantile <- post.sec.ps.grad.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(post.sec.ps.grad.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(post.sec.ps.grad.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+
+```
+
+<br>
+
+#### attended.ps
+
+```{r summary z scores post secondary attended post-secondary}
+
+post.sec.attended.ps.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, 0.071, 0.028),
+         EDR = c(NA, 0.133, 0.026),
+         `All 3 EDRs` = c(NA, 0.096, 0.021),
+         MN = c(NA, 0.092, 0.074)) 
+
+post.sec.attended.ps.quantile <- post.sec.attended.ps.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(post.sec.attended.ps.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(post.sec.attended.ps.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+```
+
+<br>
+
+#### ps.grad.InstitutionSector
+
+```{r summary z scores post secondary institution sector graduating post secondary}
+
+post.sec.ps.grad.InstitutionSector.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, 0.209, 0.146),
+         EDR = c(NA, 0.253, 0.178),
+         `All 3 EDRs` = c(NA, 0.277, 0.188),
+         MN = c(NA, 0.309, 0.120)) 
+
+post.sec.ps.grad.InstitutionSector.quantile <- post.sec.ps.grad.InstitutionSector.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(post.sec.ps.grad.InstitutionSector.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(post.sec.ps.grad.InstitutionSector.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+
+```
+
+<br>
+
+#### highest.cred.level
+
+```{r summary z scores post secondary highest credential earned}
+
+post.sec.highest.cred.level.zvalues <- pvalue.summary.table.framework %>%
+  mutate(County = c( NA, 0.201, 0.137),
+         EDR = c(NA, 0.238, 0.157),
+         `All 3 EDRs` = c(NA, 0.259, 0.156),
+         MN = c(NA, 0.288, 0.070)) 
+
+post.sec.highest.cred.level.quantile <- post.sec.highest.cred.level.zvalues %>%
+  gather(key = "geo", value = "zscores", 2:5)
+
+brks <- quantile(post.sec.highest.cred.level.quantile$zscores, probs = seq(.05, .95, .05), na.rm = TRUE)
+
+clrs <- round(seq(152, 251, length.out = length(brks) + 1), 144) %>%
+  {paste0("rgb(124,", ., ",", ., ")")}
+
+datatable(post.sec.highest.cred.level.zvalues, class = "cell-border stipe", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>% 
+  formatStyle(names(dem.race.ethnicity.zvalues), backgroundColor = styleInterval(brks, clrs))
+
+```
+
+<br>
 
 
 
