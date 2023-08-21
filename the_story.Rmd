@@ -16,6 +16,12 @@ resource_files:
 - Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
 ---
 
+<style type="text/css">
+   .main-container {max-width: 100%;}
+   .row {display: flex;}
+   .column {flex: 50%;}
+</style>
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(tidyverse)
@@ -218,78 +224,1099 @@ What economic development leaders across Southwest Minnesota want to know is wha
 
 # The factors at Time X = grad year +0
 
-The Classification and Regression Tree analysis concludes the following variables in our dataset as being important in predicting whether an individual has meaningful employment in the same regions as their high school.
+The Classification and Regression Tree analysis concludes the following variables in our dataset as being important in predicting whether an individual has meaningful employment in the same regions as their high school the year of graduating high school.
 
-1. Post-secondary pathway
-    b. attended.ps.within.first.year.hsgrad
+1. High school accomplishments
+    a. took.act
+    b. cte.achievement
+2. High school enrollment
+    a. pseo.participant
+3. Post-secondary pathway
+    a. attended.ps.within.first.year.hsgrad
+4. High school characteristics
+    a. Dem_Desc
+5. Demographic variables
+    a. Race/Ethnicity
+    
+The charts below show the following;
 
+A statistically significantly larger proportion of individuals with the following attributes had meaningful employment in the same geography as their high school;
 
+* Did NOT take the ACT
+* Took CTE courses (especially completors and concentrators)
+* Did NOT take PSEO courses
+* Did NOT attend post-secondary within the first year of graduating high school
+* Graduated from a town/rural mix high school
+* Were hispanic or black
+    
+```{r master grad year +0}
 
-```{r ind var}
-master %>%
+ind.var <- master %>%
   select(-1:-13) %>%
-  names() 
+  names()
+
+master.grad.year.0 <- master %>%
+  select(hs.grad.year.county.match, hs.grad.year.edr.match, hs.grad.year.region.match, hs.grad.year.state.match, ind.var) %>%
+  gather(key = "grad.year", value = "emp.match", 1:4) %>%
+  filter(emp.match != "Unknown") %>%
+  filter(emp.match != "After 2019") %>%
+  mutate(geo = ifelse(str_detect(grad.year, "county"), "County",
+                      ifelse(str_detect(grad.year, "edr"), "EDR",
+                             ifelse(str_detect(grad.year, "region"), "Any three EDRs",
+                                    ifelse(str_detect(grad.year, "state"), "MN", grad.year)))),
+         geo = fct_relevel(geo, "County", "EDR", "Any three EDRs", "MN"),
+         grad.year = "Grad year +0")
+
 ```
 
-However, there are plenty of variables here that are VERY similar. For example, whether an individual graduated from a post-secondary institution and the type of institution they graduated from. So let's simplify the variables to what is most important and has the least amount of overlap with other variables.
 
-* Demographic
-    + RaceEthnicity
-* High school characteristics
-    + Dem_Desc
-    + EDR
-    + avg.wages.pct.state
-* High school enrollment
-    + LimitedEnglishProficiencyIndicator
-    + PSEO.participant
-* High school accomplishments
-    + took.act
-    + ap.exam
-    + cte.achievement
-    + MCA.M
-    + MCA.R
-    + MCA.S
-* Post-secondary
-    + ps.grad.InstitutionSector
-    + highest.cred.level
-    
-We eliminated the following variables for now;
+<br>
 
-* non.english.home
-* english.learner
-* total.cte.courses.taken
-* ps.grad
-* attended.ps
+## Factors - high school accomplishments{.tabset}
 
-In addition to eliminating those variables, we will also simplify the ps.grad.InstitutionSector to the following codes;
+**Took ACT**
 
-* 1 = graduated from the following insitutions
-    + Public, 4-year (1)
-    + Private, not for profit 4-year (2)
-    + Private, for profit 4-year (3)
-* 2 = graduated from the following institutions
-    + Private, not for profit 2-year (5, 11)
-    + Private, for profit 2-year (6, 11)
-    + Public, less than 2-year (7, 11)
-    + Private, not for profit less than 2-year (8, 11)
-    + Private for-profit, less-than 2-year (9, 11)
-* 3 = graduated from multiple institution sectors (10)
-* 4 = graduated from a public, 2-year institution (4,4)
-* 5 = Did not graduate or attend a post-secondary institution
+A significantly larger proportion of individuals that did not take the ACT in high school had meaningful employment in the same county and EDR as their high school, or had meaningful employment in one of the three EDRS and/or Minnesota. 
 
-```{r updating master}
-updated.master <- master %>%
-  select(`dep.var.names`, RaceEthnicity, Dem_Desc, edr, avg.wages.pct.state, LimitedEnglishProficiencyIndicator, pseo.participant, took.ACT, ap.exam, cte.achievement, MCA.M, MCA.R, MCA.S, ps.grad.InstitutionSector, highest.cred.level) %>%
-  mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c(1,2,3), 1,
-                                            ifelse(ps.grad.InstitutionSector == 11, 2,
-                                                   ifelse(ps.grad.InstitutionSector == 10, 3,
-                                                          ifelse(ps.grad.InstitutionSector == 4, 4, 5))))) 
+<br>
 
-updated.ind.var.names <- updated.master %>%
-  select(-`dep.var.names`) %>%
-  names()
+**Achievement in Career and Technical Education**
+
+A significantly larger proportion of individual that were categorized as completors or concentrators in CTE programming had meaningful employment in the same county or EDR as their high school, or in one of the three EDRs and/or Minnesota. This was also true for individuals that participated in CTE courses but were not concentrators or completors.
+
+<br>
+
+### Took ACT
+
+<br>
+
+```{r chart took act grad year +0}
+took.act.grad.year.0 <- master.grad.year.0 %>%
+  mutate(emp.match = ifelse(emp.match == "Location match", "Employment", "No employment")) 
+
+took.act.grad.year.0.chart <- took.act.grad.year.0 %>%
+  group_by(emp.match, geo, took.ACT) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(took.ACT, geo) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(emp.match == "Employment") %>%
+  mutate(data_id = as.character(seq(n())))
+
+took.act.grad.year.0.plot <- ggplot(took.act.grad.year.0.chart, aes(took.ACT, pct)) +
+  facet_wrap(~geo, ncol = 2) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Geography of high school: ", geo, "\nTook ACT: ", took.ACT, "\nNumber of indiviuals with meaningful employment in that geography: ", comma(n), "\nProportion of individuals with meaningful employment in that geography: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5, position = position_dodge(width = .9)) +
+  annotate(geom = "text",
+           x = 2,
+           y = .23,
+           label = "Significantly larger\nproportion",
+           size = 5,
+           color = "red") +
+  annotate(geom = "segment",
+           x = 2,
+           xend = 1.5,
+           y = .2,
+           yend = .16,
+           arrow = arrow(length = unit(.2, "cm")),
+           color = "red") +
+  labs(x="Took ACT", y = "", color="", title = "Proportion of individuals that had meaningful employment in same\ngeography as high school by whether they took ACT", subtitle = "A larger proportion of individuals that did not take the ACT consistently had meaningful\nemployment")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = took.act.grad.year.0.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
 
 ```
 
 <br>
+
+<div class = "row">
+<div class = "column">
+```{r xtab took act grad year +0 county}
+took.act.grad.year.0.county <- took.act.grad.year.0 %>%
+  filter(geo == "County")
+
+took.act.grad.year.0.edr <- took.act.grad.year.0 %>%
+  filter(geo == "EDR")
+
+table_county <- tab_xtab(var.row = took.act.grad.year.0.county$emp.match, var.col = took.act.grad.year.0.county$took.ACT, 
+         title = "County employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_edr <- tab_xtab(var.row = took.act.grad.year.0.edr$emp.match, var.col = took.act.grad.year.0.edr$took.ACT, 
+         title = "EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_county
+
+```
+</div>
+
+<div class = "column">
+```{r xtab took act grad year +0 edr}
+
+table_edr
+
+```
+
+</div>
+</div>
+
+<br>
+
+
+<div class = "row">
+<div class = "column">
+```{r xtab took act grad year +0 any EDR}
+took.act.grad.year.0.region <- took.act.grad.year.0 %>%
+  filter(geo == "Any three EDRs")
+
+took.act.grad.year.0.mn <- took.act.grad.year.0 %>%
+  filter(geo == "MN")
+
+table_region <- tab_xtab(var.row = took.act.grad.year.0.region$emp.match, var.col = took.act.grad.year.0.region$took.ACT, 
+         title = "Any three EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_mn <- tab_xtab(var.row = took.act.grad.year.0.mn$emp.match, var.col = took.act.grad.year.0.mn$took.ACT, 
+         title = "MN employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_region
+
+```
+</div>
+
+<div class = "column">
+```{r xtab took act grad year +0 mn}
+
+table_mn
+
+```
+
+</div>
+</div>
+
+
+<br>
+
+### Achievement in career and technology pathways
+
+<br>
+
+```{r chart cte achievement grad year +0}
+cte.achievement.grad.year.0 <- master.grad.year.0 %>%
+  mutate(emp.match = ifelse(emp.match == "Location match", "Employment", "No employment")) 
+
+cte.achievement.grad.year.0.chart <- cte.achievement.grad.year.0 %>%
+  group_by(emp.match, geo, cte.achievement) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(cte.achievement, geo) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(emp.match == "Employment") %>%
+  mutate(data_id = as.character(seq(n())))
+
+cte.achievement.grad.year.0.plot <- ggplot(cte.achievement.grad.year.0.chart, aes(cte.achievement, pct)) +
+  facet_wrap(~geo, ncol = 2) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Geography of high school: ", geo, "\nCTE achievement: ", cte.achievement, "\nNumber of indiviuals with meaningful employment in that geography: ", comma(n), "\nProportion of individuals with meaningful employment in that geography: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5, position = position_dodge(width = .9)) +
+  annotate(geom = "text",
+           x = 2,
+           y = .27,
+           label = "Significantly larger\nproportion",
+           size = 5,
+           color = "red") +
+  annotate(geom = "segment",
+           x = 2,
+           xend = 1.5,
+           y = .24,
+           yend = .16,
+           arrow = arrow(length = unit(.2, "cm")),
+           color = "red") +
+  geom_segment(data = filter(cte.achievement.grad.year.0.chart, geo == "County", cte.achievement == "CTE Participant"), 
+               x = 2,
+               xend = 2,
+               y = .24,
+               yend = .15,
+               arrow = arrow(length = unit(.2, "cm")),
+               color = "red") +
+  geom_segment(data = filter(cte.achievement.grad.year.0.chart, geo == "EDR", cte.achievement == "CTE Participant"), 
+               x = 2,
+               xend = 2,
+               y = .24,
+               yend = .16,
+               arrow = arrow(length = unit(.2, "cm")),
+               color = "red") +
+  labs(x="CTE Achievement", y = "", color="", title = "Proportion of individuals that had meaningful employment in same\ngeography as high school by their CTE achievement", subtitle = "A larger proportion of individuals that were CTE concentrators, completors, or just\nparticipated in a CTE course consistently had a higher proportion of individuals with\nmeaningful employment in same geography as high school\n") + 
+  geom_segment(data = filter(cte.achievement.grad.year.0.chart, geo == "Any three EDRs", cte.achievement == "CTE Participant"), 
+               x = 2,
+               xend = 2,
+               y = .24,
+               yend = .17,
+               arrow = arrow(length = unit(.2, "cm")),
+               color = "red") +
+  geom_segment(data = filter(cte.achievement.grad.year.0.chart, geo == "MN", cte.achievement == "CTE Participant"), 
+               x = 2,
+               xend = 2,
+               y = .24,
+               yend = .2,
+               arrow = arrow(length = unit(.2, "cm")),
+               color = "red") +
+  scale_y_continuous(labels=scales::percent,
+                     limits = c(0, .3))+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = .9))
+
+
+girafe(ggobj = cte.achievement.grad.year.0.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+<div class = "row">
+<div class = "column">
+```{r xtab cte achievement grad year +0 county}
+cte.achievement.grad.year.0.county <- cte.achievement.grad.year.0 %>%
+  filter(geo == "County")
+
+cte.achievement.grad.year.0.edr <- cte.achievement.grad.year.0 %>%
+  filter(geo == "EDR")
+
+table_county <- tab_xtab(var.row = cte.achievement.grad.year.0.county$emp.match, var.col = cte.achievement.grad.year.0.county$cte.achievement, 
+         title = "County employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_edr <- tab_xtab(var.row = cte.achievement.grad.year.0.edr$emp.match, var.col = cte.achievement.grad.year.0.edr$cte.achievement, 
+         title = "EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_county
+
+```
+</div>
+
+<div class = "column">
+```{r xtab cte achievement grad year +0 edr}
+
+table_edr
+
+```
+
+</div>
+</div>
+
+<br>
+
+
+<div class = "row">
+<div class = "column">
+```{r xtab cte achievement grad year +0 any EDR}
+cte.achievement.grad.year.0.region <- cte.achievement.grad.year.0 %>%
+  filter(geo == "Any three EDRs")
+
+cte.achievement.grad.year.0.mn <- cte.achievement.grad.year.0 %>%
+  filter(geo == "MN")
+
+table_region <- tab_xtab(var.row = cte.achievement.grad.year.0.region$emp.match, var.col = cte.achievement.grad.year.0.region$cte.achievement, 
+         title = "Any three EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_mn <- tab_xtab(var.row = cte.achievement.grad.year.0.mn$emp.match, var.col = cte.achievement.grad.year.0.mn$cte.achievement, 
+         title = "MN employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_region
+
+```
+</div>
+
+<div class = "column">
+```{r xtab cte achievement grad year +0 mn}
+
+table_mn
+
+```
+
+</div>
+</div>
+
+<br>
+
+## Factors - high school enrollment{.tabset}
+
+**Enrolled in PSEO**
+
+A significantly larger proportion of individuals that never enrolled in PSEO courses had meaningful employment the year they graduated high school.The percentage also increased for these individuals as the geography enlarged.
+
+<br>
+
+### Enrolled in PSEO
+
+<br>
+
+```{r chart pseo enrollment grad year +0}
+pseo.participant.grad.year.0 <- master.grad.year.0 %>%
+  mutate(emp.match = ifelse(emp.match == "Location match", "Employment", "No employment"),
+         pseo.participant = ifelse(pseo.participant == 1, "Yes", "No") )
+
+pseo.participant.grad.year.0.chart <- pseo.participant.grad.year.0 %>%
+  group_by(emp.match, geo, pseo.participant) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(pseo.participant, geo) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(emp.match == "Employment") %>%
+  mutate(pseo.participant = as.factor(pseo.participant),
+         data_id = as.character(seq(n())))
+
+pseo.participant.grad.year.0.plot <- ggplot(pseo.participant.grad.year.0.chart, aes(pseo.participant, pct)) +
+  facet_wrap(~geo, ncol = 2) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Geography of high school: ", geo, "\npseo enrollment: ", pseo.participant, "\nNumber of indiviuals with meaningful employment in that geography: ", comma(n), "\nProportion of individuals with meaningful employment in that geography: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5, position = position_dodge(width = .9)) +
+  annotate(geom = "text",
+           x = 2,
+           y = .2,
+           label = "Significantly larger\nproportion",
+           size = 5,
+           color = "red") +
+  annotate(geom = "segment",
+           x = 2,
+           xend = 1.5,
+           y = .18, 
+           yend = .14,
+           arrow = arrow(length = unit(.2, "cm")),
+           color = "red") +
+  labs(x="pseo enrollment", y = "", color="", title = "Proportion of individuals that had meaningful employment in same\ngeography as high school by their pseo enrollment", subtitle = "A larger proportion of individuals that were CTE concentrators, completors, or just\nparticipated in a CTE course consistently had a higher proportion of individuals with\nmeaningful employment in same geography as high school\n") + 
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = pseo.participant.grad.year.0.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+<div class = "row">
+<div class = "column">
+```{r xtab pseo enrollment grad year +0 county}
+pseo.participant.grad.year.0.county <- pseo.participant.grad.year.0 %>%
+  filter(geo == "County")
+
+pseo.participant.grad.year.0.edr <- pseo.participant.grad.year.0 %>%
+  filter(geo == "EDR")
+
+table_county <- tab_xtab(var.row = pseo.participant.grad.year.0.county$emp.match, var.col = pseo.participant.grad.year.0.county$pseo.participant, 
+         title = "County employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_edr <- tab_xtab(var.row = pseo.participant.grad.year.0.edr$emp.match, var.col = pseo.participant.grad.year.0.edr$pseo.participant, 
+         title = "EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_county
+
+```
+</div>
+
+<div class = "column">
+```{r xtab pseo enrollment grad year +0 edr}
+
+table_edr
+
+```
+
+</div>
+</div>
+
+<br>
+
+
+<div class = "row">
+<div class = "column">
+```{r xtab pseo enrollment grad year +0 any EDR}
+pseo.participant.grad.year.0.region <- pseo.participant.grad.year.0 %>%
+  filter(geo == "Any three EDRs")
+
+pseo.participant.grad.year.0.mn <- pseo.participant.grad.year.0 %>%
+  filter(geo == "MN")
+
+table_region <- tab_xtab(var.row = pseo.participant.grad.year.0.region$emp.match, var.col = pseo.participant.grad.year.0.region$pseo.participant, 
+         title = "Any three EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_mn <- tab_xtab(var.row = pseo.participant.grad.year.0.mn$emp.match, var.col = pseo.participant.grad.year.0.mn$pseo.participant, 
+         title = "MN employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_region
+
+```
+</div>
+
+<div class = "column">
+```{r xtab pseo enrollment grad year +0 mn}
+
+table_mn
+
+```
+
+</div>
+</div>
+
+
+<br>
+
+## Factors - post-secondary pathway{.tabset}
+
+**Attended post-secondary within first year after graduating high school**
+
+A significantly larger proportion of individuals that did not enroll in post-secondary within the first year of high school had meaningful employment the year they graduated high school.The percentage also increased for these individuals as the geography enlarged.
+
+<br>
+
+### Attended post-secondary within first year after graduating high school
+
+<br>
+
+```{r chart post-secondary within first year grad year +0}
+attended.ps.within.first.year.hsgrad.grad.year.0 <- master.grad.year.0 %>%
+  mutate(emp.match = ifelse(emp.match == "Location match", "Employment", "No employment"),
+         attended.ps.within.first.year.hsgrad = as.factor(attended.ps.within.first.year.hsgrad),
+         attended.ps.within.first.year.hsgrad = ifelse(attended.ps.within.first.year.hsgrad == "Attended first year after HS", "Yes", "No"))
+
+attended.ps.within.first.year.hsgrad.grad.year.0.chart <- attended.ps.within.first.year.hsgrad.grad.year.0 %>%
+  group_by(emp.match, geo, attended.ps.within.first.year.hsgrad) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(attended.ps.within.first.year.hsgrad, geo) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(emp.match == "Employment") %>%
+  mutate(attended.ps.within.first.year.hsgrad = as.factor(attended.ps.within.first.year.hsgrad),
+         data_id = as.character(seq(n())))
+
+attended.ps.within.first.year.hsgrad.grad.year.0.plot <- ggplot(attended.ps.within.first.year.hsgrad.grad.year.0.chart, aes(attended.ps.within.first.year.hsgrad, pct)) +
+  facet_wrap(~geo, ncol = 2) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Geography of high school: ", geo, "\nAttended post-secondary within first year of graduating high school: ", attended.ps.within.first.year.hsgrad, "\nNumber of indiviuals with meaningful employment in that geography: ", comma(n), "\nProportion of individuals with meaningful employment in that geography: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5, position = position_dodge(width = .9)) +
+  annotate(geom = "text",
+           x = 2,
+           y = .22,
+           label = "Significantly larger\nproportion",
+           size = 5,
+           color = "red") +
+  annotate(geom = "segment",
+           x = 2,
+           xend = 1.5,
+           y = .19,
+           yend = .175,
+           arrow = arrow(length = unit(.2, "cm")),
+           color = "red") +
+  labs(x="\nAttended post-secondary within first year", y = "", color="", title = "Proportion of individuals that had meaningful employment in same\ngeography as high school by whether they attended post-secondary\nwithin one year of graduating high school", subtitle = "A larger proportion of individuals that did not attend post-secondary within first year of\ngraduating high school had meaningful employment\n") + 
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = attended.ps.within.first.year.hsgrad.grad.year.0.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+<div class = "row">
+<div class = "column">
+```{r xtab Attended post-secondary within first year grad year +0 county}
+attended.ps.within.first.year.hsgrad.grad.year.0.county <- attended.ps.within.first.year.hsgrad.grad.year.0 %>%
+  filter(geo == "County")
+
+attended.ps.within.first.year.hsgrad.grad.year.0.edr <- attended.ps.within.first.year.hsgrad.grad.year.0 %>%
+  filter(geo == "EDR")
+
+table_county <- tab_xtab(var.row = attended.ps.within.first.year.hsgrad.grad.year.0.county$emp.match, var.col = attended.ps.within.first.year.hsgrad.grad.year.0.county$attended.ps.within.first.year.hsgrad, 
+         title = "County employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_edr <- tab_xtab(var.row = attended.ps.within.first.year.hsgrad.grad.year.0.edr$emp.match, var.col = attended.ps.within.first.year.hsgrad.grad.year.0.edr$attended.ps.within.first.year.hsgrad, 
+         title = "EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_county
+
+```
+</div>
+
+<div class = "column">
+```{r xtab Attended post-secondary within first year grad year +0 edr}
+
+table_edr
+
+```
+
+</div>
+</div>
+
+<br>
+
+
+<div class = "row">
+<div class = "column">
+```{r xtab Attended post-secondary within first year grad year +0 any EDR}
+attended.ps.within.first.year.hsgrad.grad.year.0.region <- attended.ps.within.first.year.hsgrad.grad.year.0 %>%
+  filter(geo == "Any three EDRs")
+
+attended.ps.within.first.year.hsgrad.grad.year.0.mn <- attended.ps.within.first.year.hsgrad.grad.year.0 %>%
+  filter(geo == "MN")
+
+table_region <- tab_xtab(var.row = attended.ps.within.first.year.hsgrad.grad.year.0.region$emp.match, var.col = attended.ps.within.first.year.hsgrad.grad.year.0.region$attended.ps.within.first.year.hsgrad, 
+         title = "Any three EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_mn <- tab_xtab(var.row = attended.ps.within.first.year.hsgrad.grad.year.0.mn$emp.match, var.col = attended.ps.within.first.year.hsgrad.grad.year.0.mn$attended.ps.within.first.year.hsgrad, 
+         title = "MN employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_region
+
+```
+</div>
+
+<div class = "column">
+```{r xtab Attended post-secondary within first year grad year +0 mn}
+
+table_mn
+
+```
+
+</div>
+</div>
+
+
+<br>
+
+## Factors - high school characteristics{.tabset}
+
+**High school county RUCA category**
+
+A significantly larger proportion of individuals that did not enroll in post-secondary within the first year of high school had meaningful employment the year they graduated high school.The percentage also increased for these individuals as the geography enlarged.
+
+<br>
+
+### High school county RUCA category
+
+<br>
+
+```{r chart Dem_Desc grad year +0}
+Dem_Desc.grad.year.0 <- master.grad.year.0 %>%
+  mutate(emp.match = ifelse(emp.match == "Location match", "Employment", "No employment"),
+         Dem_Desc = as.factor(Dem_Desc))
+
+Dem_Desc.grad.year.0.chart <- Dem_Desc.grad.year.0 %>%
+  group_by(emp.match, geo, Dem_Desc) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(Dem_Desc, geo) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(emp.match == "Employment") %>%
+  mutate(Dem_Desc = as.factor(Dem_Desc),
+         data_id = as.character(seq(n())))
+
+Dem_Desc.grad.year.0.plot <- ggplot(Dem_Desc.grad.year.0.chart, aes(Dem_Desc, pct)) +
+  facet_wrap(~geo, ncol = 2) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Geography of high school: ", geo, "\nRUCA category of high school county: ", Dem_Desc, "\nNumber of indiviuals with meaningful employment in that geography: ", comma(n), "\nProportion of individuals with meaningful employment in that geography: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5, position = position_dodge(width = .9)) +
+  annotate(geom = "text",
+           x = 2,
+           y = .27,
+           label = "Town/rural mix\nconsistently\nhigher",
+           size = 5,
+           color = "red") +
+  labs(x="\nRUCA category", y = "", color="", title = "Proportion of individuals that had meaningful employment in same\ngeography as high school by the high school RUCA category", subtitle = "A larger proportion of individuals that graduated from a town/rural mix high school had\nmeaningful employment") + 
+  scale_y_continuous(labels=scales::percent,
+                     limits = c(0 , .3))+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = .9))
+
+
+girafe(ggobj = Dem_Desc.grad.year.0.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+<div class = "row">
+<div class = "column">
+```{r xtab Dem_Desc grad year +0 county}
+Dem_Desc.grad.year.0.county <- Dem_Desc.grad.year.0 %>%
+  filter(geo == "County")
+
+Dem_Desc.grad.year.0.edr <- Dem_Desc.grad.year.0 %>%
+  filter(geo == "EDR")
+
+table_county <- tab_xtab(var.row = Dem_Desc.grad.year.0.county$emp.match, var.col = Dem_Desc.grad.year.0.county$Dem_Desc, 
+         title = "County employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_edr <- tab_xtab(var.row = Dem_Desc.grad.year.0.edr$emp.match, var.col = Dem_Desc.grad.year.0.edr$Dem_Desc, 
+         title = "EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_county
+
+```
+</div>
+
+<div class = "column">
+```{r xtab Dem_Desc grad year +0 edr}
+
+table_edr
+
+```
+
+</div>
+</div>
+
+<br>
+
+
+<div class = "row">
+<div class = "column">
+```{r xtab Dem_Desc grad year +0 any EDR}
+Dem_Desc.grad.year.0.region <- Dem_Desc.grad.year.0 %>%
+  filter(geo == "Any three EDRs")
+
+Dem_Desc.grad.year.0.mn <- Dem_Desc.grad.year.0 %>%
+  filter(geo == "MN")
+
+table_region <- tab_xtab(var.row = Dem_Desc.grad.year.0.region$emp.match, var.col = Dem_Desc.grad.year.0.region$Dem_Desc, 
+         title = "Any three EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_mn <- tab_xtab(var.row = Dem_Desc.grad.year.0.mn$emp.match, var.col = Dem_Desc.grad.year.0.mn$Dem_Desc, 
+         title = "MN employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_region
+
+```
+</div>
+
+<div class = "column">
+```{r xtab Dem_Desc grad year +0 mn}
+
+table_mn
+
+```
+
+</div>
+</div>
+
+
+<br>
+
+## Factors - demographic{.tabset}
+
+**Race and Ethnicity**
+
+A significantly larger proportion of individuals that did not enroll in post-secondary within the first year of high school had meaningful employment the year they graduated high school.The percentage also increased for these individuals as the geography enlarged.
+
+<br>
+
+### Race and ethnicity
+
+<br>
+
+```{r chart RaceEthnicity grad year +0}
+RaceEthnicity.grad.year.0 <- master.grad.year.0 %>%
+  filter(RaceEthnicity != "Unknown") %>%
+  droplevels() %>%
+  mutate(emp.match = ifelse(emp.match == "Location match", "Employment", "No employment"),
+         RaceEthnicity = as.factor(RaceEthnicity))
+
+RaceEthnicity.grad.year.0.chart <- RaceEthnicity.grad.year.0 %>%
+  group_by(emp.match, geo, RaceEthnicity) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(RaceEthnicity, geo) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(emp.match == "Employment") %>%
+  mutate(RaceEthnicity = as.factor(RaceEthnicity),
+         data_id = as.character(seq(n())))
+
+RaceEthnicity.grad.year.0.plot <- ggplot(RaceEthnicity.grad.year.0.chart, aes(RaceEthnicity, pct)) +
+  facet_wrap(~geo, ncol = 2) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Geography of high school: ", geo, "\nRace or ethnicity of individual: ", RaceEthnicity, "\nNumber of indiviuals with meaningful employment in that geography: ", comma(n), "\nProportion of individuals with meaningful employment in that geography: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5, position = position_dodge(width = .9)) +
+  geom_text(data = filter(RaceEthnicity.grad.year.0.chart, geo %in% c("County", "EDR")), aes(x = 3.5, y = .3, label = "Significantly larger\nproportion"), color = "red", size = 5) +
+  geom_text(data = filter(RaceEthnicity.grad.year.0.chart, geo %in% c("Any three EDRs", "MN")), aes(x = 3.5, y = .35, label = "Significantly larger\nproportion"), color = "red", size = 5) +
+  geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "County"), x = 3.5, xend = 3, y = .27, yend = .18, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+  geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "County"), x = 3.5, xend = 4, y = .27, yend = .22, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+   geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "EDR"), x = 3.5, xend = 3, y = .27, yend = .2, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+  geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "EDR"), x = 3.5, xend = 4, y = .27, yend = .24, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+  geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "Any three EDRs"), x = 3.5, xend = 3, y = .31, yend = .22, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+  geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "Any three EDRs"), x = 3.5, xend = 4, y = .31, yend = .26, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+  geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "MN"), x = 3.5, xend = 3, y = .31, yend = .26, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+  geom_segment(data = filter(RaceEthnicity.grad.year.0.chart, geo == "MN"), x = 3.5, xend = 4, y = .31, yend = .3, arrow = arrow(length = unit(.2, "cm")), color = "red") +
+  labs(x="\nRace or ethnicity", y = "", color="", title = "Proportion of individuals that had meaningful employment in same\ngeography as high school by race or ethnicity", subtitle = "A larger proportion of hispanic and black individuals had meaningful employment") + 
+  scale_y_continuous(labels=scales::percent,
+                     limits = c(0 , .38))+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = .9))
+
+
+girafe(ggobj = RaceEthnicity.grad.year.0.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+
+```
+
+<br>
+
+<div class = "row">
+<div class = "column">
+```{r xtab RaceEthnicity grad year +0 county}
+RaceEthnicity.grad.year.0.county <- RaceEthnicity.grad.year.0 %>%
+  filter(geo == "County")
+
+RaceEthnicity.grad.year.0.edr <- RaceEthnicity.grad.year.0 %>%
+  filter(geo == "EDR")
+
+table_county <- tab_xtab(var.row = RaceEthnicity.grad.year.0.county$emp.match, var.col = RaceEthnicity.grad.year.0.county$RaceEthnicity, 
+         title = "County employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_edr <- tab_xtab(var.row = RaceEthnicity.grad.year.0.edr$emp.match, var.col = RaceEthnicity.grad.year.0.edr$RaceEthnicity, 
+         title = "EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_county
+
+```
+</div>
+
+<div class = "column">
+```{r xtab RaceEthnicity grad year +0 edr}
+
+table_edr
+
+```
+
+</div>
+</div>
+
+<br>
+
+
+<div class = "row">
+<div class = "column">
+```{r xtab RaceEthnicity grad year +0 any EDR}
+RaceEthnicity.grad.year.0.region <- RaceEthnicity.grad.year.0 %>%
+  filter(geo == "Any three EDRs")
+
+RaceEthnicity.grad.year.0.mn <- RaceEthnicity.grad.year.0 %>%
+  filter(geo == "MN")
+
+table_region <- tab_xtab(var.row = RaceEthnicity.grad.year.0.region$emp.match, var.col = RaceEthnicity.grad.year.0.region$RaceEthnicity, 
+         title = "Any three EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_mn <- tab_xtab(var.row = RaceEthnicity.grad.year.0.mn$emp.match, var.col = RaceEthnicity.grad.year.0.mn$RaceEthnicity, 
+         title = "MN employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_region
+
+```
+</div>
+
+<div class = "column">
+```{r xtab RaceEthnicity time x +0 mn}
+
+table_mn
+
+```
+
+</div>
+</div>
+
+
+<br>
+
+
+# The factors at Time X = grad year +2
+
+The Classification and Regression Tree analysis concludes the following variables in our dataset as being important in predicting whether an individual has meaningful employment in the same regions as their high school the year of graduating high school.
+
+1. ps.grad.InstitutionSector
+2. avg.wages.pct.state
+3. cte.achievement
+4. ap.exam
+5. edr
+6. took.ACT
+7. RaceEthnicity
+8. pseo.participant
+9. Dem_Desc
+10. attended.ps.within.first.year.hsgrad
+
+The following list includes these variables, as well as other variables (indicated with asterisk) that the cross-tab analysis indicated as having significant differences and helped explain variation.
+
+1. Post-secondary pathway
+    a. ps.grad.InstitutionSector
+    b. highest cred level*
+    c. ps.grad*
+    d. attended.ps*
+2. High school characteristics
+    a. avg.wages.pct.mn
+    b. EDR
+    c. Dem_Desc
+3. High school accomplishments
+    a. cte.achievement
+    b. took.act
+    c. ap.exam
+4. High school enrollment
+    a. pseo.participant
+    b. non-english home*
+5. Demographic variables
+    a. Race/Ethnicity*
+    
+The charts below show the following;
+
+A statistically significantly larger proportion of individuals with the following attributes had meaningful employment in the same geography as their high school;
+
+    
+```{r master grad year +2}
+
+ind.var <- master %>%
+  select(-1:-13) %>%
+  names()
+
+master.grad.year.2 <- master %>%
+  select(hs.grad.year.2.county.match, hs.grad.year.2.edr.match, hs.grad.year.2.region.match, hs.grad.year.2.state.match, ind.var) %>%
+  gather(key = "grad.year", value = "emp.match", 1:4) %>%
+  filter(emp.match != "Unknown") %>%
+  filter(emp.match != "After 2019") %>%
+  mutate(geo = ifelse(str_detect(grad.year, "county"), "County",
+                      ifelse(str_detect(grad.year, "edr"), "EDR",
+                             ifelse(str_detect(grad.year, "region"), "Any three EDRs",
+                                    ifelse(str_detect(grad.year, "state"), "MN", grad.year)))),
+         geo = fct_relevel(geo, "County", "EDR", "Any three EDRs", "MN"),
+         grad.year = "grad year +2")
+
+```
+
+
+<br>
+
+## Factors - post-secondary pathway{.tabset}
+
+**Post-secondary institution sector graduated**
+
+A significantly larger proportion of individuals that graduated from a 2-year public college had meaningful employment in the same geography as their high school two years after graduation. The percentage also increased for these individuals as the geography enlarged.
+
+It's also worth mentioning that individuals that did not graduate or attend post-secondary had a larger proportion of individuals with meaningful employment, as well as individuals who graduated from multiple institution sectors.
+
+<br>
+
+### Post-secondary institution sector graduated
+
+<br>
+
+```{r chart ps institiution sector grad year +2}
+ps.grad.InstitutionSector.grad.year.2 <- master.grad.year.2 %>%
+  mutate(emp.match = ifelse(emp.match == "Location match", "Employment", "No employment"),
+         ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "1", "All 4-year",
+                                            ifelse(ps.grad.InstitutionSector == "2", "Private and for-profit 2-year or less",
+                                                   ifelse(ps.grad.InstitutionSector == "3", "Grad multiple sectors",
+                                                          ifelse(ps.grad.InstitutionSector == "4", "Public, 2-year", "Did not graduate or attend PS")))),
+         ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector),
+         ps.grad.InstitutionSector = fct_relevel(ps.grad.InstitutionSector, "Public, 2-year", "Did not graduate or attend PS", "Grad multiple sectors", "All 4-year", "Private and for-profit 2-year or less"))
+         
+ps.grad.InstitutionSector.grad.year.2.chart <- ps.grad.InstitutionSector.grad.year.2 %>%
+  group_by(emp.match, geo, ps.grad.InstitutionSector) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(ps.grad.InstitutionSector, geo) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  filter(emp.match == "Employment") %>%
+  mutate(ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector),
+         data_id = as.character(seq(n())))
+
+ps.grad.InstitutionSector.grad.year.2.plot <- ggplot(ps.grad.InstitutionSector.grad.year.2.chart, aes(ps.grad.InstitutionSector, pct)) +
+  facet_wrap(~geo, ncol = 2) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Geography of high school: ", geo, "\nPost-secondary institution sector: ", ps.grad.InstitutionSector, "\nNumber of indiviuals with meaningful employment in that geography: ", comma(n), "\nProportion of individuals with meaningful employment in that geography: ", percent(pct, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), size = 4) +
+  geom_label(aes(x = 2.5, y = .6, label = "Significantly larger\nproportion"), size = 5, color = "red") +
+  geom_segment(data = filter(ps.grad.InstitutionSector.grad.year.2, geo %in% c("County")), x = 2, xend = 1.5, y = .5, yend = .255, arrow = arrow(length = unit(.25, "cm"))) +
+  geom_segment(data = filter(ps.grad.InstitutionSector.grad.year.2, geo %in% c("EDR", "Any three EDRs")), x = 2, xend = 1.5, y = .51, yend = .34, arrow = arrow(length = unit(.25, "cm"))) +
+  geom_segment(data = filter(ps.grad.InstitutionSector.grad.year.2, geo %in% c("MN")), x = 1.5, xend = 1, y = .6, yend = .52, arrow = arrow(length = unit(.25, "cm"))) +
+  labs(x="\nPost-secondary institution sector", y = "", color="", title = "Proportion of individuals that had meaningful employment in same\ngeography as high school by the post-secondary institution sector\nfrom which they graduated", subtitle = "A larger proportion of individuals that graduated from a public 2-year college had\nmeaningful employment\n") + 
+  scale_y_continuous(labels=scales::percent,
+                     limits = c(0, .7))+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = .9))
+
+
+girafe(ggobj = ps.grad.InstitutionSector.grad.year.2.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+<div class = "row">
+<div class = "column">
+```{r xtab Post-secondary institution sector grad year +2 county}
+ps.grad.InstitutionSector.grad.year.2.county <- ps.grad.InstitutionSector.grad.year.2 %>%
+  filter(geo == "County")
+
+ps.grad.InstitutionSector.grad.year.2.edr <- ps.grad.InstitutionSector.grad.year.2 %>%
+  filter(geo == "EDR")
+
+table_county <- tab_xtab(var.row = ps.grad.InstitutionSector.grad.year.2.county$emp.match, var.col = ps.grad.InstitutionSector.grad.year.2.county$ps.grad.InstitutionSector, 
+         title = "County employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_edr <- tab_xtab(var.row = ps.grad.InstitutionSector.grad.year.2.edr$emp.match, var.col = ps.grad.InstitutionSector.grad.year.2.edr$ps.grad.InstitutionSector, 
+         title = "EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_county
+
+```
+</div>
+
+<div class = "column">
+```{r xtab Post-secondary institution sector grad year +2 edr}
+
+table_edr
+
+```
+
+</div>
+</div>
+
+<br>
+
+
+<div class = "row">
+<div class = "column">
+```{r xtab Post-secondary institution sector grad year +2 any EDR}
+ps.grad.InstitutionSector.grad.year.2.region <- ps.grad.InstitutionSector.grad.year.2 %>%
+  filter(geo == "Any three EDRs")
+
+ps.grad.InstitutionSector.grad.year.2.mn <- ps.grad.InstitutionSector.grad.year.2 %>%
+  filter(geo == "MN")
+
+table_region <- tab_xtab(var.row = ps.grad.InstitutionSector.grad.year.2.region$emp.match, var.col = ps.grad.InstitutionSector.grad.year.2.region$ps.grad.InstitutionSector, 
+         title = "Any three EDR employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+table_mn <- tab_xtab(var.row = ps.grad.InstitutionSector.grad.year.2.mn$emp.match, var.col = ps.grad.InstitutionSector.grad.year.2.mn$ps.grad.InstitutionSector, 
+         title = "MN employment match", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+  
+table_region
+
+```
+</div>
+
+<div class = "column">
+```{r xtab Post-secondary institution sector grad year +2 mn}
+
+table_mn
+
+```
+
+</div>
+</div>
+
+
+<br>
+
+
+
 
