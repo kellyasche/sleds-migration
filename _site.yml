@@ -32,6 +32,8 @@ navbar:
           href: nsccompletions.html
         - text: "Employment"
           href: employment.html
+        - text: "Dependent variable states each year"
+          href: dep_var_states.html
         - text: "Unemployment"
           href: unemployment.html
         - text: "Average wages"
@@ -41,6 +43,8 @@ navbar:
       menu:
         - text: "Analysis - multiple correspondence analysis"
           href: analysis_multiple_correspondence.html
+        - text: "Dependent variable states"
+          href: analysis_dep_var_states.html
         - text: "Local employment cross tabs"
           href: analysis_local_employment_ct.html
         - text: "The story"

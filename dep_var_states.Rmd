@@ -1,0 +1,573 @@
+---
+title: "Employment"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+runtime: shiny
+resource_files:
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.cpg
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.dbf
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.prj
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbn
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.sbx
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shp.xml
+- Data/Shapefiles/County shapefiles/MNCounties_MNDOT.shx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(sf)
+library(ggrepel)
+library(scales)
+library(shiny)
+library(shinycssloaders)
+library(ggiraph)
+library(kableExtra)
+library(rmapshaper)
+library(cowplot)
+library(DT)
+library(htmlwidgets)
+library(RColorBrewer)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(systemfonts)
+reset_font_cache()
+library(ggtext)
+library(gmodels)
+```
+
+```{r themes and join docs, include=FALSE}
+theme_bar <- theme_bw() +
+  theme(panel.grid.major = element_line(color = "grey70", size = 0.1),
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.key.size = unit(1, "lines"),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        text = element_text(family = "Arial") ,
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold"))
+
+theme_line <- theme_bw() +
+  theme(legend.background = element_rect(fill = "transparent", color = "transparent"),
+        legend.key = element_rect(fill = "transparent"),
+        legend.text = element_text(margin = margin(l = 2)),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(color = "grey70", size = 0.1),
+        axis.ticks = element_blank(),
+        axis.text = element_text(face = "bold"),
+        panel.border = element_blank(),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+theme_sf <- theme_bw() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        panel.background = element_blank(),
+        panel.grid.major = element_line(color = "white"),
+        panel.border = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_blank(),
+        legend.text = element_text(margin = margin(l = 2)),
+        legend.margin = margin(0,0,0,0),
+        legend.key.size = unit(1, "lines"),
+        text = element_text(family = "Arial"))
+
+mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp", quiet = TRUE) %>%
+  ms_simplify(keep = .01, keep_shapes = TRUE) %>%
+  rename(countyfp = FIPS_CODE)
+
+counties.regions <- read_csv("Data/Join docs/county_regions.csv") %>%
+  rename(mif = `MIF Region`) %>%
+  mutate(countyfp = formatC(countyfp, width = 3, flag = "0"),
+         Name = str_to_title(Name),
+         Name = str_replace(Name, "Q", "q"),
+         Name = str_replace(Name, "Of The", "of the"),
+         Name = str_replace(Name, "Mcleod", "McLeod"),
+         Dem_Desc = ifelse(Name == "Minnesota", "Minnesota", Dem_Desc) ,
+         edr = str_replace(edr, "  ", " "),
+         planning.region = str_replace(planning.region, " Minnesota", ""),
+         planning.region = fct_relevel(planning.region, "Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southwest", "Southeast"),
+         edr = fct_relevel(edr, "EDR 1 - Northwest", "EDR 2 - Headwaters", "EDR 3 - Arrowhead", "EDR 4 - West Central", "EDR 5 - North Central", "EDR 6E- Southwest Central", "EDR 6W- Upper Minnesota Valley", "EDR 7E- East Central", "EDR 7W- Central", "EDR 8 - Southwest", "EDR 9 - South Central", "EDR 10 - Southeast", "EDR 11 - 7 County Twin Cities", "Minnesota"),
+         mif = ifelse(is.na(mif), "TC", mif),
+         mif = as.factor(mif),
+         mif = fct_relevel(mif, "NW", "NE", "WC", "EC", "SW", "SE", "TC"))
+
+regions = counties.regions %>%
+  select(edr, planning.region) %>%
+  distinct(edr, .keep_all = TRUE)
+
+```
+
+<br>
+
+# Data prep
+
+Now I'm going to prep the employment data in order to join with the master dataset. So, let's import the original data.
+
+The dataset was exported as two separate spreadsheets due to the size. So I will import both and rbind them together.
+
+<br>
+
+```{r employment original}
+employment.original.1 <- read_csv("Data/SLEDS/Employment/Employment.csv") %>%
+  mutate(PersonID = as.integer(PersonID)) %>%
+  select(1:23)
+
+employment.original.2 <- read_csv("Data/SLEDS/Employment/Employment2a.csv") %>%
+  mutate(PersonID = as.integer(PersonID)) 
+
+employment.original <- employment.original.1 %>%
+  rbind(employment.original.2) %>%
+  drop_na(PersonID) %>%
+  select(1:23)
+
+head(employment.original)
+
+names(employment.original)
+```
+
+<br>
+
+In the original dataset we have `r employment.original %>% nrow()` rows and `r employment.original %>% ncol()` columns. Below is a description of each variable.
+
+* Empl_TimeID: Last day of fiscal quarter
+* CalendarYear: Year
+* CalendarQuarter: Quarter within the year in which the data applies. Quarters are;
+  + 1 = Jan - Mar
+  + 2 = Apr - Jun
+  + 3 = Jul - Sep
+  + 4 = Oct - Dec
+* EmploymentOrganizationID: An internal identification for each employer.
+* EmployeeQuarterlyHoursWorked: The total number of hours worked by an employee at an employer's location during a specific calendar quarter
+* EmployeeQuarterlyWages: The total wages earned by an employee at an employer's location during a specific calendar quarter
+* EmployeeTenure: The total number of quarters a worker has been employeed by an organization at a specific location, up to an including the current calendar quarter
+* IndustryID: Auto generated ID code for a record in the Industry dimension.
+* USIndustryCode: Six-digit North American Industrial Classification System (NAICS) code
+* GroupCode: Four-digit North American Industrial Classification System (NAICS) code
+* IndustryGroup: Definition of GroupCode variable, the 4-digit NAICS code
+* OwnershipCode: A classification system based upon the controlling interest of the establishment primarily designed to distinguish between governmental and non-governmental establishments
+  + 10 = Federal government
+  + 20 = State government
+  + 30 = Local government
+  + 50 = Private
+* EmployerLocationTotalWagesPaid: The total wages paid to all workers employeed by an organization at a specific location during a specific calendar quarter
+* QuarterlyAverageEmployment: The average number of workers employeed by an organization at a specific location during a specific calendar quarter
+* LocationID: ???
+* EconomicDevelopmentRegion: The 13 economic development regions within the state of Minnesota as defined by the Department of Employment and Economic Development (DEED).
+  + R01000	EDR 1 - Northwest		
+  + R02000	EDR 2 - Headwaters		
+  + R03000	EDR 3 - Arrowhead		
+  + R04000	EDR 4 - West Central		
+  + R05000	EDR 5 - North Central		
+  + R06E00	EDR 6E - Southwest Central		
+  + R06W00	EDR 6W - Upper Minnesota Valley		
+  + R07E00	EDR 7E - East Central		
+  + R07W00	EDR 7W - Central		
+  + R08000	EDR 8 - Southwest		
+  + R09000	EDR 9 - South Central		
+  + R10000	EDR 10 - Southeast
+  + R11000	EDR 11 - 7 County Twin Cities
+* EconomicDevelopmentRegionName: Name of EDR
+* County: Minnesota county code to which this institution belongs. This can be used as a foreign key into the Geography dimension on MNCounty.
+  + [Link to codes](https://sleds.mn.gov/dataDictionary/658)
+* CountyName: The name of the county corresponding to the County and MNCounty Codes for this Location.
+* MNCounty: County Code for this location as assigned by the state of Minnesota.
+  + [Link to codes](https://sleds.mn.gov/dataDictionary/663)
+City: All of the city data is NA
+
+<br>
+
+So all the previous datasets we structured and filtered so that each observation in the master dataset was an individual. We will want to continue to do the same. So we need to create an employment dataset with the following columns;
+
+1. PersonID
+2. High school graduation year
+3. Whether the individual had an employment record the year of, and each subsequent year, of high school graduation.
+4. How many years after graduation each employment check is (i.e. grad.year.1, grad.year.2,....etc.)
+
+## Who has an employment record and which years?
+
+
+<br>
+
+```{r mn employment record}
+
+grad.years <- read_csv("Data/SLEDS/Masters/Master-10.csv") %>%
+  select(PersonID, hs.grad.year)
+
+mn.emp.record.year <- employment.original %>%
+  select(PersonID, CalendarYear) %>%
+  distinct(PersonID, CalendarYear) %>%
+  mutate(mn.emp.record = "MN emp record") %>%
+  filter(CalendarYear > 2007) %>%
+  filter(CalendarYear < 2020) %>%
+  complete(PersonID, CalendarYear, fill = list(mn.emp.record = "No MN emp record")) 
+
+mn.emp.record <- grad.years %>%
+  left_join(mn.emp.record.year, by = c("PersonID")) %>%
+  mutate(CalendarYear = ifelse(is.na(CalendarYear), hs.grad.year, CalendarYear),
+         mn.emp.record = ifelse(is.na(mn.emp.record), "No MN emp record", mn.emp.record),
+         update = ifelse(CalendarYear < hs.grad.year, "Not graduated HS", "Graduated")) %>%
+filter(update == "Graduated") %>%
+  select(!update) %>%
+  group_by(PersonID) %>%
+  mutate(grad.year.seq = seq(n())) %>%
+  ungroup() %>%
+  complete(PersonID, grad.year.seq) %>%
+  group_by(PersonID) %>%
+  fill(hs.grad.year, .direction = "down") %>%
+  ungroup() %>%
+  mutate(CalendarYear = ifelse(is.na(CalendarYear), hs.grad.year + (grad.year.seq - 1), CalendarYear),
+         mn.emp.record = ifelse(CalendarYear > 2019, "After 2019", mn.emp.record),
+         mn.emp.record = ifelse(is.na(mn.emp.record), "No MN emp record", mn.emp.record),
+         grad.year = paste("grad.year.", grad.year.seq-1, sep = "")) %>%
+  select(-grad.year.seq)
+  
+names(mn.emp.record)
+
+head(mn.emp.record)
+```
+
+<br>
+
+The dataset above provides each unique PersonID from our master list along with each possible grad year and subsequent years (grad.year.0, grad.year.1, grad.year.2 ... grad.year.11). 
+
+Here is the logic;
+
+* grad.year.x > 2019: mn.emp.record == "After 2019",
+* if there's a MN employment record for the PersonID and the grad.year.x: mn.emp.record == "MN emp record"
+* if there's no MN employment record for the PersonID and the grad.year.x: mn.emp.record == "No MN emp record"
+
+There are `r comma(nrow(mn.emp.record))` rows in this dataset with `r comma(nrow(distinct(mn.emp.record, PersonID)))` individuals.
+
+<br>
+
+## Filter for "meaningful" employment
+
+The biggest issue is how do we get a meaningful indicator on whether they were employed in the region and whether they are employed in an industry that matches their CTE experience that wasn't just a "summer job". We need to filter out summer jobs between college years, as well as adapt to different paths that students take. 
+
+We will define "meaningful employment" as an employment experience in which an individual works for one particular employer for 1,000 hours worked in any given year.
+
+This will be a couple step process. First we will build a dataset that has each grad.year.x from each PersonID high school graduation year and match it with the MN employment records. We will end up with each PersonID having each grad.year.x along with wither they have a MN employment record, whether they had meaningful employment, whether grad.year.x is after 2019, or whether they have no MN employment record.
+
+
+
+<br>
+
+```{r prep filter meaningful employment step 1}
+meaningful.employer <- employment.original %>%
+  group_by(PersonID, EmploymentOrganizationID, CalendarYear) %>%
+  summarize(AnnualHoursWorked = sum(EmployeeQuarterlyHoursWorked)) %>%
+  ungroup() %>%
+  group_by(PersonID) %>%
+  ungroup() %>%
+  right_join(mn.emp.record, by = c("PersonID", "CalendarYear")) %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.0", "grad.year.1", "grad.year.2", "grad.year.3", "grad.year.4", "grad.year.5", "grad.year.6", "grad.year.7", "grad.year.8", "grad.year.9", "grad.year.10", "grad.year.11"),
+         new.mn.emp.record = ifelse(AnnualHoursWorked > 999, "Meaningful employment", mn.emp.record),
+         new.mn.emp.record = ifelse(CalendarYear > 2019, "After 2019", new.mn.emp.record),
+         new.mn.emp.record = ifelse(new.mn.emp.record == "MN emp record", "MN emp record - not meaningful", new.mn.emp.record),
+         new.mn.emp.record = ifelse(mn.emp.record == "No MN emp record", "No MN emp record", new.mn.emp.record),
+         meaningful.emp.code = ifelse(new.mn.emp.record == "Meaningful employment", 1, 0)) %>%
+  group_by(PersonID, CalendarYear) %>%
+  filter(meaningful.emp.code == max(meaningful.emp.code)) %>%
+  ungroup() %>%
+  distinct(PersonID, grad.year, meaningful.emp.code, .keep_all = TRUE)
+
+head(meaningful.employer)
+
+names(meaningful.employer)
+```
+
+<br>
+
+This dataset has `r comma(nrow(meaningful.employer))` rows where each row represents a grad.year.x and whether the PersonID had the following;
+
+* meaningful employment
+* mn employment record but not meaningful employment
+* employment calendar year was after 2019, and
+* had no MN employment record.
+
+Along with each of these is the Employment Organization ID which we can now join to see the lcoation of the meaningful employment.
+
+
+## Match meaningful employment and high school locations/regions.
+
+Now, we want to determine if the locations of meaningful employment match the counties and regions from which they graduated high school. To do this, we will import the latest master dataset so we can compare their high school locations with meaningful employment locations.
+
+<br>
+
+```{r match employment with hs regions}
+emp.original.locations <- employment.original %>%
+  select(PersonID, CalendarYear, EmploymentOrganizationID, EconomicDevelopmentRegionName, CountyName) %>%
+  distinct(PersonID, CalendarYear, EmploymentOrganizationID, EconomicDevelopmentRegionName, CountyName) %>%
+  rename(employment.county = CountyName,
+         emp.edr = EconomicDevelopmentRegionName) %>%
+  mutate(emp.edr = str_replace(emp.edr, "  ", " "),
+         emp.edr = as.factor(emp.edr),
+         employment.county = str_replace(employment.county, " County", ""),
+         employment.county = str_replace(employment.county, "City of Duluth", "St. Louis"),
+         employment.county = str_replace(employment.county, "Saint Louis", "St. Louis"),
+         employment.county = str_replace(employment.county, "City of Minneapolis", "Hennepin"),
+         employment.county = str_replace(employment.county, "City of St. Paul", "Ramsey"),
+         employment.county = str_replace(employment.county, "White Earth Tribal Counci", "Mahnomen"),
+         employment.county = as.factor(employment.county)) %>%
+  left_join(counties.regions[,c(2,4)], by = c("employment.county" = "Name")) %>%
+  rename(emp.Dem_Desc = Dem_Desc) 
+
+meaningful.emp.locations <- meaningful.employer %>%
+  left_join(emp.original.locations, by = c("PersonID", "CalendarYear", "EmploymentOrganizationID")) %>%
+  mutate(emp.edr = ifelse(employment.county == "Statewide (i.e. no fixed location)", "Unknown", as.character(emp.edr)),
+         emp.Dem_Desc = ifelse(employment.county == "Statewide (i.e. no fixed location)", "Unknown", emp.Dem_Desc),
+         emp.edr = ifelse(employment.county == "Hennepin", "EDR 11 - 7 County Twin Cities", emp.edr),
+         emp.edr = ifelse(employment.county == "Ramsey", "EDR 11 - 7 County Twin Cities", emp.edr),
+         emp.edr = ifelse(employment.county == "St. Louis", "EDR 3 - Arrowhead", emp.edr),
+         emp.edr = ifelse(employment.county == "Unknown", "Unknown", emp.edr),
+         emp.Dem_Desc = ifelse(employment.county == "Unknown", "Unknown", emp.Dem_Desc),
+         emp.Dem_Desc = ifelse(employment.county == "NULL", "NULL", emp.Dem_Desc),
+         emp.edr = ifelse(employment.county == "Mahnomen", "EDR 2 - Headwaters", emp.edr))
+
+grad.locations <- read_csv("Data/SLEDS/Masters/Master-10.csv") %>%
+  select(PersonID, county.name, Dem_Desc, edr) %>%
+  rename(hs.county.name = county.name,
+         hs.Dem_Desc = Dem_Desc,
+         hs.edr = edr)
+
+grad.emp.location.match <- grad.locations %>%
+  right_join(meaningful.emp.locations, by = "PersonID") %>%
+  mutate(county.match = new.mn.emp.record,
+         new.county.match = ifelse(county.match == "Meaningful employment" & employment.county == hs.county.name, "Meaningful emp - match", county.match),
+         new.county.match = ifelse(new.county.match == "Meaningful employment", "Meaningful emp - no match", new.county.match),
+         new.county.match = fct_relevel(new.county.match, "Meaningful emp - match", "Meaningful emp - no match", "MN emp record - not meaningful", "No MN emp record", "After 2019")) %>%
+  select(-county.match) %>%
+  rename(county.match = new.county.match) %>%
+  mutate(edr.match = new.mn.emp.record,
+         new.edr.match = ifelse(edr.match == "Meaningful employment" & emp.edr == hs.edr, "Meaningful emp - match", edr.match),
+         new.edr.match = ifelse(new.edr.match == "Meaningful employment", "Meaningful emp - no match", new.edr.match),
+         new.edr.match = fct_relevel(new.edr.match, "Meaningful emp - match", "Meaningful emp - no match", "MN emp record - not meaningful", "No MN emp record", "After 2019")) %>%
+  select(-edr.match) %>%
+  rename(edr.match = new.edr.match) %>%
+  mutate(region.match = new.mn.emp.record,
+         new.region.match = ifelse(region.match == "Meaningful employment" & emp.edr %in% c("EDR 6W- Upper Minnesota Valley", "EDR 6E- Southwest Central", "EDR 8 - Southwest"), "Meaningful emp - match", region.match),
+         new.region.match = ifelse(new.region.match == "Meaningful employment", "Meaningful emp - no match", new.region.match),
+         new.region.match = fct_relevel(new.region.match, "Meaningful emp - match", "Meaningful emp - no match", "MN emp record - not meaningful", "No MN emp record", "After 2019")) %>%
+  select(-region.match) %>%
+  rename(region.match = new.region.match) %>%
+  mutate(state.match = new.mn.emp.record,
+         new.state.match = ifelse(!is.na(emp.edr) & state.match == "Meaningful employment", "Meaningful emp - match",
+                                  ifelse(employment.county == "Statewide (i.e. no fixed location)" & state.match == "Meaningful employment", "Meaningful emp - match", state.match)),
+         new.state.match = fct_relevel(new.state.match, "Meaningful emp - match", "MN emp record - not meaningful", "No MN emp record", "After 2019")) %>%
+  select(-state.match) %>%
+  rename(state.match = new.state.match) %>%
+  mutate(Dem_Desc.match = new.mn.emp.record,
+         new.Dem_Desc.match = ifelse(Dem_Desc.match == "Meaningful employment" & hs.Dem_Desc == emp.Dem_Desc, "Meaningful emp - match", Dem_Desc.match),
+         new.Dem_Desc.match = ifelse(new.Dem_Desc.match == "Meaningful employment", "Meaningful emp - no match", new.Dem_Desc.match),
+         new.Dem_Desc.match = fct_relevel(new.Dem_Desc.match, "Meaningful emp - match", "Meaningful emp - no match", "MN emp record - not meaningful", "No MN emp record", "After 2019")) %>%
+  select(-Dem_Desc.match) %>%
+  rename(Dem_Desc.match = new.Dem_Desc.match) %>%
+  distinct(PersonID, EmploymentOrganizationID, grad.year, .keep_all = TRUE) %>%
+  select(PersonID, hs.grad.year, grad.year, county.match, edr.match, region.match, Dem_Desc.match, state.match) 
+
+
+names(grad.emp.location.match)
+
+head(grad.emp.location.match)
+
+  
+```
+
+<br>
+
+After significant road blocks, we finally have a dataset that provides each PersonID in the master list that had meaningful employment and confirmations on whether the employer location matches the high school county, EDR, research region, or is in Minnesota. This confirmation is for each x-time of graduation year - graduation year, one year after graduation, 2 years after graduation ... 11 years after graduation.
+
+The final dataset gives us `r comma(nrow(grad.emp.location.match))` rows and `r comma(ncol(grad.emp.location.match))` columns.
+
+<br>
+
+# Summary
+
+Summary here.
+
+<br>
+
+## Breakdown
+
+Summary here
+
+<br>
+
+### Matrix of states{.tabset}
+
+```{r matrix of states prep}
+matrix.states <- grad.emp.location.match %>%
+  select(-hs.grad.year) %>%
+  pivot_longer(names_to = "location", values_to = "match", 3:7) %>%
+  group_by(grad.year, location, match) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  filter(match != "After 2019") %>%
+  group_by(grad.year, location) %>%
+  mutate(total.state = sum(n),
+         pct.state = n / total.state) %>%
+  ungroup
+
+```
+
+<br>
+
+#### County match
+
+```{r county match matrix}
+
+county.match.matrix.plot <- ggplot(data = filter(matrix.states, location == "county.match"), aes(as.numeric(grad.year) - 1, pct.state, fill = match)) +
+  geom_area() +
+  labs(x="", y = "", color="", title = "Different employment states by subsequent years after high school\ngraduation")+
+  scale_y_continuous(labels=scales::percent)+
+  scale_x_continuous(breaks = seq(0, 11, 1)) +
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj =county.match.matrix.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+tags$br()
+
+tags$br()
+
+county.match.matrix.table <- matrix.states %>%
+  filter(location == "county.match") %>%
+  select(grad.year, match, pct.state) %>%
+  pivot_wider(names_from = grad.year, values_from = pct.state)
+
+datatable(county.match.matrix.table, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:12)))) %>%
+  formatPercentage(2:13)
+
+```
+
+<br>
+
+#### EDR match
+
+```{r edr match matrix}
+
+edr.match.matrix.plot <- ggplot(data = filter(matrix.states, location == "edr.match"), aes(as.numeric(grad.year) - 1, pct.state, fill = match)) +
+  geom_area() +
+  labs(x="", y = "", color="", title = "Different employment states by subsequent years after high school\ngraduation")+
+  scale_y_continuous(labels=scales::percent)+
+  scale_x_continuous(breaks = seq(0, 11, 1)) +
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj =edr.match.matrix.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+tags$br()
+
+tags$br()
+
+edr.match.matrix.table <- matrix.states %>%
+  filter(location == "edr.match") %>%
+  select(grad.year, match, pct.state) %>%
+  pivot_wider(names_from = grad.year, values_from = pct.state)
+
+datatable(edr.match.matrix.table, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:12)))) %>%
+  formatPercentage(2:13)
+
+```
+
+<br>
+
+#### SW Minnesota match
+
+```{r sw MN match matrix}
+
+region.match.matrix.plot <- ggplot(data = filter(matrix.states, location == "region.match"), aes(as.numeric(grad.year) - 1, pct.state, fill = match)) +
+  geom_area() +
+  labs(x="", y = "", color="", title = "Different employment states by subsequent years after high school\ngraduation")+
+  scale_y_continuous(labels=scales::percent)+
+  scale_x_continuous(breaks = seq(0, 11, 1)) +
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj =region.match.matrix.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+tags$br()
+
+tags$br()
+
+region.match.matrix.table <- matrix.states %>%
+  filter(location == "region.match") %>%
+  select(grad.year, match, pct.state) %>%
+  pivot_wider(names_from = grad.year, values_from = pct.state)
+
+datatable(region.match.matrix.table, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:12)))) %>%
+  formatPercentage(2:13)
+
+```
+
+<br>
+
+#### Minnesota match
+
+```{r MN match matrix}
+
+state.match.matrix.plot <- ggplot(data = filter(matrix.states, location == "state.match"), aes(as.numeric(grad.year) - 1, pct.state, fill = match)) +
+  geom_area() +
+  labs(x="", y = "", color="", title = "Different employment states by subsequent years after high school\ngraduation")+
+  scale_y_continuous(labels=scales::percent)+
+  scale_x_continuous(breaks = seq(0, 11, 1)) +
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj =state.match.matrix.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+tags$br()
+
+tags$br()
+
+state.match.matrix.table <- matrix.states %>%
+  filter(location == "state.match") %>%
+  select(grad.year, match, pct.state) %>%
+  pivot_wider(names_from = grad.year, values_from = pct.state)
+
+datatable(state.match.matrix.table, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:12)))) %>%
+  formatPercentage(2:13)
+
+```
+

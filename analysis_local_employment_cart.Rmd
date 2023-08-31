@@ -305,7 +305,7 @@ Next, we create a decision tree model by calling the rpart function. Let's first
 
 ```{r create decision tree grad year +0 county, echo=TRUE}
 #Base model
-grad.year.0.county.model <- rpart(hs.grad.year.county.match ~ ., data = train, method = "class", control = rpart.control(cp = 0))
+grad.year.0.county.model <- rpart(hs.grad.year.county.match ~ ., data = master.grad.year.county.path)
 
 ```
 
