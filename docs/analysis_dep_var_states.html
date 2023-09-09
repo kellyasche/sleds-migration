@@ -35,6 +35,14 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<script src="site_libs/d3-bundle-5.16.0/d3-bundle.min.js"></script>
+<script src="site_libs/d3-lasso-0.0.5/d3-lasso.min.js"></script>
+<script src="site_libs/save-svg-as-png-1.4.17/save-svg-as-png.min.js"></script>
+<script src="site_libs/flatbush-4.0.0/flatbush.min.js"></script>
+<link href="site_libs/ggiraphjs-0.4.6/ggiraphjs.min.css" rel="stylesheet" />
+<script src="site_libs/ggiraphjs-0.4.6/ggiraphjs.min.js"></script>
+<script src="site_libs/girafe-binding-0.8.7/girafe.js"></script>
 <link href="site_libs/font-awesome-6.4.0/css/all.min.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-6.4.0/css/v4-shims.min.css" rel="stylesheet" />
 
@@ -370,7 +378,7 @@ div.tocify {
       <a href="employment.html">Employment</a>
     </li>
     <li>
-      <a href="dep_var_states.html">Dependent variable states each year</a>
+      <a href="emp_states_each_year.html">Employment states each year</a>
     </li>
     <li>
       <a href="unemployment.html">Unemployment</a>
@@ -424,7 +432,345 @@ analysis</h1>
 </div>
 
 
+<p><br></p>
+<p>There are many paths in which an individual can take after graduating
+high school. What we are most concerned with is whether an individual
+has “meaningful” employment, when and where this employment takes place,
+and are there any variables that are associated with each of these
+pathways.</p>
+<p>The paths that we want to identify are the following;</p>
+<ol style="list-style-type: decimal">
+<li>Meaningful employment - same county as high school</li>
+<li>Meaningful employment - same EDR as high school, but not the same
+county</li>
+<li>Meaningful employment - in SW Minnesota, but not in the same EDR as
+their high school</li>
+<li>Meaningful employment - in Minnesota, but not in Southwest
+Minnesota</li>
+<li>Not meaningful employment or no MN Employment record - attending
+post-secondary</li>
+<li>Not meaningful employment - not attending post-secondary</li>
+<li>No MN employment record - not attending post-secondary</li>
+</ol>
+<p>We are going to assess each PersonID on which of those pathways they
+are at the time of their high school graduation, and each subsequent
+year up to 2019.</p>
+<p>We have already created the employment states for each year.</p>
+<p><br></p>
+<pre><code>## # A tibble: 6 × 8
+##   PersonID hs.grad.year grad.year   county.match          edr.match region.match
+##      &lt;dbl&gt;        &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;                 &lt;fct&gt;     &lt;fct&gt;       
+## 1      161         2009 grad.year.4 Meaningful emp - mat… Meaningf… Meaningful …
+## 2      161         2009 grad.year.5 Meaningful emp - mat… Meaningf… Meaningful …
+## 3      161         2009 grad.year.2 MN emp record - not … MN emp r… MN emp reco…
+## 4      161         2009 grad.year.3 MN emp record - not … MN emp r… MN emp reco…
+## 5      161         2009 grad.year.0 MN emp record - not … MN emp r… MN emp reco…
+## 6      161         2009 grad.year.1 MN emp record - not … MN emp r… MN emp reco…
+## # ℹ 2 more variables: Dem_Desc.match &lt;fct&gt;, state.match &lt;fct&gt;</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;       &quot;hs.grad.year&quot;   &quot;grad.year&quot;      &quot;county.match&quot;  
+## [5] &quot;edr.match&quot;      &quot;region.match&quot;   &quot;Dem_Desc.match&quot; &quot;state.match&quot;</code></pre>
+<p><br></p>
+<div id="section-employment-states" class="section level1">
+<h1>Employment states</h1>
+<p>The employment states dataset has 457,848 rows and 8 columns
+providing the year they graduated high school, the subsequent year title
+after graduating high school (grad.year.0, grad.year.1, grad.year.2 …..
+grad.year.x) and the employment state for each PersonID and grad.year.x.
+The employment states for each geography location and grad.year.x
+are;</p>
+<ul>
+<li>Meaningful employment - geography match</li>
+<li>Meaningful employment - no geographic match</li>
+<li>Has MN emp record - not meaningful employment</li>
+<li>Has no MN employment record</li>
+<li>the grad.year.x is after 2019.</li>
+</ul>
+<p>Ultimately we want a dataset that has this information paired
+together with whether the PersonID was attending a post-secondary
+institution at each grad.year.x. So let’s prep that data.</p>
+<p><br></p>
+</div>
+<div id="section-prep-post-secondary-data" class="section level1">
+<h1>Prep Post-secondary data</h1>
+<p>Okay, lets check out the National Student Clearinghouse enrollment
+data.</p>
+<p><br></p>
+<pre class="r"><code>nsc.enrollment.original &lt;- read_csv(&quot;Data/SLEDS/NSC/NSC_Enrollments.csv&quot;) %&gt;%
+  mutate(PersonID = as.integer(PersonID),
+         OPEID = str_pad(OPEID, width = 8, side = &quot;left&quot;, pad = &quot;0&quot;),
+         OPEID.6 = str_sub(OPEID, 1, 6)) %&gt;%
+  drop_na(PersonID) %&gt;%
+  drop_na(OPEID)
+  
+head(nsc.enrollment.original)</code></pre>
+<pre><code>## # A tibble: 6 × 7
+##   PersonID EnrollmentBeginTimeID EnrollmentEndTimeID OPEID    InstitutionName   
+##      &lt;int&gt;                 &lt;dbl&gt;               &lt;dbl&gt; &lt;chr&gt;    &lt;chr&gt;             
+## 1       68              20070820            20071214 00254700 Grace University  
+## 2       68              20080827            20081218 00237100 University of Nor…
+## 3       68              20090112            20090514 00237100 University of Nor…
+## 4       68              20090909            20091216 00346900 University of Sio…
+## 5       68              20110309            20110524 01258600 Metropolitan Comm…
+## 6       68              20110606            20110815 01258600 Metropolitan Comm…
+## # ℹ 2 more variables: EnrollmentStatus &lt;chr&gt;, OPEID.6 &lt;chr&gt;</code></pre>
+<pre class="r"><code>names(nsc.enrollment.original)</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;              &quot;EnrollmentBeginTimeID&quot; &quot;EnrollmentEndTimeID&quot;  
+## [4] &quot;OPEID&quot;                 &quot;InstitutionName&quot;       &quot;EnrollmentStatus&quot;     
+## [7] &quot;OPEID.6&quot;</code></pre>
+<p><br></p>
+<p>The dataset has 276,249 rows and 7 columns. Here are the columns and
+their definitions.</p>
+<ul>
+<li>EnrollmentBeginTimeID: Begin date for the student’s period of
+attendance.</li>
+<li>EnrollmentEndTimeID: End date for the student’s period of
+attendance.</li>
+<li>OPEID: Office of Postsecondary Education (OPE)/FICE code of the
+college that the student attended (Foreign Key to
+IPEDSCharacteristics).</li>
+<li>InstitutionName: Name of institution</li>
+<li>EnrollmentStatus: The last enrollment status reported for the
+student. This field will have ‘N/A’ or “NULL” if the reporting college
+has not defined the student’s enrollment status as directory
+information. Here are the code definitions;
+<ul>
+<li>F: Full-time</li>
+<li>Q: Three-quarter time</li>
+<li>H: Half-time</li>
+<li>L: Less than half-time</li>
+<li>A: Leave of absence</li>
+<li>W: Withdrawn</li>
+<li>D: Deceased</li>
+</ul></li>
+</ul>
+<p>Essentially, this dataset provides semester-based information - each
+observation is a semester/single period with the institutional
+information and beginning and end time of that single period (usually a
+semester). For example, if an individual attended South Dakota State
+University, attended in a “typical” fashion (fall and spring semesters),
+and graduated in 4 years, there would be 8 observations for that
+PersonID - one observation per semester.</p>
+<p>The primary pieces of information I want from this dataset is each
+year a PersonID was attending a post-secondary institution. So let’s
+shrink the dataset down to just the following columns;</p>
+<ul>
+<li>PersonID</li>
+<li>unique year attending a post-secondary institution</li>
+</ul>
+<p>The PersonID will be filtered using the EnrollmentStatus variable
+equaling full-time, three-quarter time, half-time, and less than
+half-time.</p>
+<p>For the unique year, it won’t matter how many semesters they were
+attending. If an individual attended half a year, then worked full-time,
+my meaningful employment definition should pick it up and transfer it
+into that category. Otherwise, they will be in the category - attending
+post-secondary with no meaningful employment or no MN employment
+record.</p>
+<p><br></p>
+<pre class="r"><code>ps.attend.year &lt;- nsc.enrollment.original %&gt;%
+  filter(EnrollmentStatus %in% c(&quot;F&quot;, &quot;H&quot;, &quot;Q&quot;, &quot;L&quot;, &quot;NULL&quot;)) %&gt;%
+  mutate(begin.year = str_sub(EnrollmentBeginTimeID, 1,4),
+         end.year = str_sub(EnrollmentEndTimeID, 1, 4)) %&gt;%
+  select(PersonID, begin.year, end.year) %&gt;%
+  gather(key = &quot;BeginOrEnd&quot;, value = &quot;year&quot;, 2:3) %&gt;%
+  mutate(year = as.numeric(year)) %&gt;%
+  distinct(PersonID, year) %&gt;%
+  rename(ps.attend.year = year) %&gt;%
+  mutate(ps.attend = &quot;ps.attend&quot;)
 
+head(ps.attend.year)</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   PersonID ps.attend.year ps.attend
+##      &lt;int&gt;          &lt;dbl&gt; &lt;chr&gt;    
+## 1       68           2007 ps.attend
+## 2       68           2008 ps.attend
+## 3       68           2009 ps.attend
+## 4       68           2011 ps.attend
+## 5       68           2012 ps.attend
+## 6       68           2013 ps.attend</code></pre>
+<pre class="r"><code>names(ps.attend.year)</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;       &quot;ps.attend.year&quot; &quot;ps.attend&quot;</code></pre>
+<p><br></p>
+<p>After filtering and simplifying the attendance year we have 148,918
+rows and 3 columns.</p>
+<p>Now we want to filter out any PersonID that are not in our primary
+dataset and to align the the years they attended post-secondary with the
+grad.year.x variable.</p>
+<p><br></p>
+<pre class="r"><code>ps.grad.year &lt;- master.emp.states.yearly %&gt;%
+  select(PersonID, hs.grad.year, grad.year) %&gt;%
+  arrange(grad.year, PersonID) %&gt;%
+  group_by(PersonID) %&gt;%
+  mutate(add = seq(n()) - 1,
+         year = hs.grad.year + add) %&gt;%
+  ungroup() %&gt;%
+  left_join(ps.attend.year, by = c(&quot;PersonID&quot;, &quot;year&quot; = &quot;ps.attend.year&quot;)) %&gt;%
+  mutate(ps.attend = ifelse(is.na(ps.attend), &quot;ps.not.attend&quot;, ps.attend)) %&gt;%
+  select(PersonID, grad.year, ps.attend)
+  
+head(ps.grad.year)</code></pre>
+<pre><code>## # A tibble: 6 × 3
+##   PersonID grad.year   ps.attend    
+##      &lt;dbl&gt; &lt;fct&gt;       &lt;chr&gt;        
+## 1      161 grad.year.0 ps.attend    
+## 2      641 grad.year.0 ps.not.attend
+## 3      676 grad.year.0 ps.not.attend
+## 4      786 grad.year.0 ps.attend    
+## 5     1162 grad.year.0 ps.not.attend
+## 6     2292 grad.year.0 ps.attend</code></pre>
+<pre class="r"><code>names(ps.grad.year)</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;  &quot;grad.year&quot; &quot;ps.attend&quot;</code></pre>
+<p><br></p>
+<p>We now have a dataset with 457,848 rows and 3 columns. We also have
+38,154 unique individuals.</p>
+<p>Now we can join this together with the employment states dataset.</p>
+<p><br></p>
+<pre class="r"><code>ps.emp.states &lt;- master.emp.states.yearly %&gt;%
+  left_join(ps.grad.year, by = c(&quot;PersonID&quot;, &quot;grad.year&quot;))
+
+head(ps.emp.states)</code></pre>
+<pre><code>## # A tibble: 6 × 9
+##   PersonID hs.grad.year grad.year   county.match          edr.match region.match
+##      &lt;dbl&gt;        &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;                 &lt;fct&gt;     &lt;fct&gt;       
+## 1      161         2009 grad.year.4 Meaningful emp - mat… Meaningf… Meaningful …
+## 2      161         2009 grad.year.5 Meaningful emp - mat… Meaningf… Meaningful …
+## 3      161         2009 grad.year.2 MN emp record - not … MN emp r… MN emp reco…
+## 4      161         2009 grad.year.3 MN emp record - not … MN emp r… MN emp reco…
+## 5      161         2009 grad.year.0 MN emp record - not … MN emp r… MN emp reco…
+## 6      161         2009 grad.year.1 MN emp record - not … MN emp r… MN emp reco…
+## # ℹ 3 more variables: Dem_Desc.match &lt;fct&gt;, state.match &lt;fct&gt;, ps.attend &lt;chr&gt;</code></pre>
+<pre class="r"><code>names(ps.emp.states)</code></pre>
+<pre><code>## [1] &quot;PersonID&quot;       &quot;hs.grad.year&quot;   &quot;grad.year&quot;      &quot;county.match&quot;  
+## [5] &quot;edr.match&quot;      &quot;region.match&quot;   &quot;Dem_Desc.match&quot; &quot;state.match&quot;   
+## [9] &quot;ps.attend&quot;</code></pre>
+<p><br></p>
+<p>We now have a dataset that provides the employment state and a
+confirmation on post-secondary attendance for each PersonID and
+grad.year.x.</p>
+<p>Let’s analyze.</p>
+<p><br></p>
+</div>
+<div id="section-proportion-of-individuals-per-path-by-grad.year.x"
+class="section level1">
+<h1>Proportion of individuals per path by grad.year.x</h1>
+<p>Next we want to figure out the different paths that these group of
+individuals take. The paths that we are most interested in are the
+following;</p>
+<ol start="0" style="list-style-type: decimal">
+<li>After 2019</li>
+<li>Has meaningful employment in same county as high school</li>
+<li>Has meaningful employment in same EDR as high school, but not same
+county</li>
+<li>Has meaningful employment in Southwest Minnesota, but not in same
+EDR as high school.</li>
+<li>Has meaningful employment in Minnesota, but not in Southwest
+Minnesota.</li>
+<li>Does not have meaningful employment or a MN employment record, but
+is attending post-secondary</li>
+<li>Does not have meaningful employment and is not attending
+post-secondary.</li>
+<li>Does not have a MN employment record and is not attending
+post-secondary.</li>
+</ol>
+<p>Let’s first build a new dataset where each PersonID has one of these
+seven states for each grad.year.x.</p>
+<p><br></p>
+<pre class="r"><code>seven.states &lt;- ps.emp.states %&gt;%
+  mutate(states = ifelse(county.match == &quot;Meaningful emp - match&quot;, 1, 99),
+         states = ifelse(edr.match == &quot;Meaningful emp - match&quot; &amp; county.match != &quot;Meaningful emp - match&quot;, 2, states),
+         states = ifelse(region.match == &quot;Meaningful emp - match&quot; &amp; county.match != &quot;Meaningful emp - match&quot; &amp; edr.match != &quot;Meaningful emp - match&quot;, 3, states),
+         states = ifelse(state.match == &quot;Meaningful emp - match&quot; &amp; county.match != &quot;Meaningful emp - match&quot; &amp; edr.match != &quot;Meaningful emp - match&quot; &amp; region.match != &quot;Meaningful emp - match&quot;, 4, states),
+         states = ifelse(state.match == &quot;After 2019&quot;, 0, states),
+         states = ifelse(ps.attend == &quot;ps.attend&quot; &amp; !(states %in% c(0,1,2,3,4)), 5, states),
+         states = ifelse(ps.attend == &quot;ps.not.attend&quot; &amp; state.match == &quot;MN emp record - not meaningful&quot;, 6, states),
+         states = ifelse(ps.attend == &quot;ps.not.attend&quot; &amp; state.match == &quot;No MN emp record&quot;, 7, states),
+         states = ifelse(states == 0, &quot;After 2019&quot;, states),
+         states = ifelse(states == &quot;1&quot;, &quot;Meaningful emp County&quot;, states),
+         states = ifelse(states == &quot;2&quot;, &quot;Meaningful emp EDR&quot;, states),
+         states = ifelse(states == &quot;3&quot;, &quot;Meaningful emp SW&quot;, states),
+         states = ifelse(states == &quot;4&quot;, &quot;Meaningful emp MN&quot;, states),
+         states = ifelse(states == &quot;5&quot;, &quot;Attending ps&quot;, states),
+         states = ifelse(states == &quot;6&quot;, &quot;Not meaningful, not attending ps&quot;, states),
+         states = ifelse(states == &quot;7&quot;, &quot;No MN emp record, not attending ps&quot;, states),
+         states = as.factor(states),
+         states = fct_relevel(states, &quot;Meaningful emp County&quot;, &quot;Meaningful emp EDR&quot;, &quot;Meaningful emp SW&quot;, &quot;Meaningful emp MN&quot;, &quot;Attending ps&quot;, &quot;Not meaningful, not attending ps&quot;, &quot;No MN emp record, not attending ps&quot;, &quot;After 2019&quot;))
+
+head(seven.states)</code></pre>
+<pre><code>## # A tibble: 6 × 10
+##   PersonID hs.grad.year grad.year   county.match          edr.match region.match
+##      &lt;dbl&gt;        &lt;dbl&gt; &lt;fct&gt;       &lt;fct&gt;                 &lt;fct&gt;     &lt;fct&gt;       
+## 1      161         2009 grad.year.4 Meaningful emp - mat… Meaningf… Meaningful …
+## 2      161         2009 grad.year.5 Meaningful emp - mat… Meaningf… Meaningful …
+## 3      161         2009 grad.year.2 MN emp record - not … MN emp r… MN emp reco…
+## 4      161         2009 grad.year.3 MN emp record - not … MN emp r… MN emp reco…
+## 5      161         2009 grad.year.0 MN emp record - not … MN emp r… MN emp reco…
+## 6      161         2009 grad.year.1 MN emp record - not … MN emp r… MN emp reco…
+## # ℹ 4 more variables: Dem_Desc.match &lt;fct&gt;, state.match &lt;fct&gt;, ps.attend &lt;chr&gt;,
+## #   states &lt;fct&gt;</code></pre>
+<pre class="r"><code>names(seven.states)</code></pre>
+<pre><code>##  [1] &quot;PersonID&quot;       &quot;hs.grad.year&quot;   &quot;grad.year&quot;      &quot;county.match&quot;  
+##  [5] &quot;edr.match&quot;      &quot;region.match&quot;   &quot;Dem_Desc.match&quot; &quot;state.match&quot;   
+##  [9] &quot;ps.attend&quot;      &quot;states&quot;</code></pre>
+<p><br></p>
+<p>The new dataset has 457,848 rows and 10 with 38,154 unique
+individuals. The seven states are labeled as the following;</p>
+<ol style="list-style-type: decimal">
+<li>Meaningful emp County: means they have worked 1,000 hours or more
+for one employer located in the same county as their high school.</li>
+<li>Meaningful emp EDR: means that have worked 1,000 hours or more for
+one employer located in the same EDR as their high school, but not in
+the same county.</li>
+<li>Meaningful emp SW: means they have worked 1,000 hours or more for
+one employer located in Southwest Minnesota, but not in the same EDR or
+county as their high school.</li>
+<li>Meaningful emp MN - means they have worked 1,000 hours or more for
+one employer located in Minnesota, but not in Southwest Minnesota.</li>
+<li>Attending ps: Means the individuals either has a MN employment
+record but it isn’t meaningful OR they do not have a MN employment
+record, but they are attending post-secondary.</li>
+<li>Not meaningful, not attending ps: this means they do have a MN
+employment record, but it isn’t meaningful and they are not attending
+post-secondary.</li>
+<li>No MN emp record - not attending ps: this means they do not have a
+MN employment record nor are they attending a post-secondary
+institution.</li>
+</ol>
+<p>The other designation is “After 2019” which will be filtered out
+whenever I analyze the dataset.</p>
+<p>Let’s first take a look at the proportion of individuals that are in
+each state at each grad.year.x.</p>
+<p>The chart below shows the proportion of individuals in the dataset
+that are in each “state/path” for each grad.year.x. There are a couple
+of things to highlight.</p>
+<ol style="list-style-type: decimal">
+<li>The percentage of individuals that have meaningful employment is
+highest when looking at the county level in the early years after high
+school graduation. However, by 6 years after graduating, the percentage
+of individuals that graduated from a Southwest high school that have
+meaningful employment in Minnesota, but outside of the Southwest region
+balloons to nearly 21%, dwarfing all other meaningful employment within
+the Southwest region.</li>
+<li>Not surprisingly, a very large majority of individuals (62%) attend
+post-secondary education the year they graduate high school and that
+declines steadily over the following 4 to 6 years.</li>
+<li>The proportion of individuals that are employed but not meaningful,
+and are not attending post-secondary remains steady throughout the
+grad.year.x; ~15%.</li>
+<li>The proportion of individuals that do not have a MN employment
+record and are not attending a post-secondary institution increases
+significantly by 4 years after graduation. By 11 years after graduation,
+over 36% of the individuals are in this category.</li>
+</ol>
+<p><br></p>
+<div class="girafe html-widget html-fill-item-overflow-hidden html-fill-item" id="htmlwidget-39a1a6701e479774112b" style="width:672px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-39a1a6701e479774112b">{"x":{"html":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' class='ggiraph-svg' role='img' id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367' viewBox='0 0 720 720'>\n <defs id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_defs'>\n  <clipPath id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_c1'>\n   <rect x='0' y='0' width='720' height='720'/>\n  <\/clipPath>\n  <clipPath id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_c2'>\n   <rect x='66.65' y='30.97' width='647.87' height='577.31'/>\n  <\/clipPath>\n <\/defs>\n <g id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_rootg' class='ggiraph-svg-rootg'>\n  <g clip-path='url(#svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_c1)'>\n   <rect x='0' y='0' width='720' height='720' fill='#FFFFFF' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='0.75' stroke-linejoin='round' stroke-linecap='round' class='ggiraph-svg-bg'/>\n   <rect x='0' y='0' width='720' height='720' fill='#FFFFFF' fill-opacity='1' stroke='#FFFFFF' stroke-opacity='1' stroke-width='1.07' stroke-linejoin='round' stroke-linecap='round'/>\n  <\/g>\n  <g clip-path='url(#svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_c2)'>\n   <rect x='66.65' y='30.97' width='647.87' height='577.31' fill='#FFFFFF' fill-opacity='1' stroke='none'/>\n   <polyline points='66.65,582.04 714.52,582.04' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='66.65,450.83 714.52,450.83' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='66.65,319.62 714.52,319.62' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='66.65,188.42 714.52,188.42' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='66.65,57.21 714.52,57.21' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='96.68,608.28 96.68,30.97' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='203.56,608.28 203.56,30.97' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='310.43,608.28 310.43,30.97' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='417.30,608.28 417.30,30.97' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='524.17,608.28 524.17,30.97' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polyline points='631.05,608.28 631.05,30.97' fill='none' stroke='#B3B3B3' stroke-opacity='1' stroke-width='0.21' stroke-linejoin='round' stroke-linecap='butt'/>\n   <polygon id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e1' points='96.10,582.04 96.68,57.21 97.27,57.21 149.53,57.21 150.12,57.21 150.71,57.21 202.97,57.21 203.56,57.21 204.14,57.21 256.40,57.21 256.99,57.21 257.58,57.21 309.84,57.21 310.43,57.21 311.02,57.21 363.28,57.21 363.87,57.21 364.45,57.21 416.71,57.21 417.30,57.21 417.89,57.21 470.15,57.21 470.74,57.21 471.33,57.21 523.59,57.21 524.17,57.21 524.76,57.21 577.02,57.21 577.61,57.21 578.20,57.36 630.46,57.21 631.05,57.21 631.64,57.21 683.90,57.21 684.48,57.21 685.07,582.04 685.07,582.04 684.48,134.52 683.90,134.53 631.64,135.43 631.05,135.44 630.46,135.46 578.20,136.80 577.61,136.66 577.02,136.65 524.76,135.95 524.17,135.94 523.59,135.95 471.33,136.88 470.74,136.89 470.15,136.89 417.89,137.03 417.30,137.03 416.71,137.00 364.45,133.60 363.87,133.57 363.28,133.49 311.02,126.27 310.43,126.19 309.84,126.11 257.58,119.37 256.99,119.29 256.40,119.19 204.14,110.69 203.56,110.60 202.97,110.48 150.71,100.00 150.12,99.88 149.53,99.67 97.27,81.32 96.68,81.12 96.10,582.04' fill='#D73027' fill-opacity='1' stroke='none' data-id='1' title='State: Meaningful emp County&amp;lt;br/&amp;gt;4.6%'/>\n   <polyline id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e2' points='96.10,582.04 96.68,57.21 97.27,57.21 149.53,57.21 150.12,57.21 150.71,57.21 202.97,57.21 203.56,57.21 204.14,57.21 256.40,57.21 256.99,57.21 257.58,57.21 309.84,57.21 310.43,57.21 311.02,57.21 363.28,57.21 363.87,57.21 364.45,57.21 416.71,57.21 417.30,57.21 417.89,57.21 470.15,57.21 470.74,57.21 471.33,57.21 523.59,57.21 524.17,57.21 524.76,57.21 577.02,57.21 577.61,57.21 578.20,57.36 630.46,57.21 631.05,57.21 631.64,57.21 683.90,57.21 684.48,57.21 685.07,582.04' fill='none' stroke='none' data-id='1' title='State: Meaningful emp County&amp;lt;br/&amp;gt;4.6%'/>\n   <polygon id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e3' points='96.10,582.04 96.68,81.12 97.27,81.32 149.53,99.67 150.12,99.88 150.71,100.00 202.97,110.48 203.56,110.60 204.14,110.69 256.40,119.19 256.99,119.29 257.58,119.37 309.84,126.11 310.43,126.19 311.02,126.27 363.28,133.49 363.87,133.57 364.45,133.60 416.71,137.00 417.30,137.03 417.89,137.03 470.15,136.89 470.74,136.89 471.33,136.88 523.59,135.95 524.17,135.94 524.76,135.95 577.02,136.65 577.61,136.66 578.20,136.80 630.46,135.46 631.05,135.44 631.64,135.43 683.90,134.53 684.48,134.52 685.07,582.04 685.07,582.04 684.48,167.16 683.90,167.18 631.64,169.42 631.05,169.45 630.46,169.47 578.20,171.09 577.61,170.95 577.02,170.94 524.76,169.72 524.17,169.71 523.59,169.71 471.33,170.36 470.74,170.36 470.15,170.35 417.89,168.90 417.30,168.88 416.71,168.82 364.45,163.20 363.87,163.13 363.28,163.01 311.02,151.82 310.43,151.69 309.84,151.57 257.58,140.91 256.99,140.79 256.40,140.65 204.14,128.50 203.56,128.36 202.97,128.18 150.71,112.40 150.12,112.22 149.53,111.93 97.27,85.92 96.68,85.63 96.10,582.04' fill='#FC8D59' fill-opacity='1' stroke='none' data-id='2' title='State: Meaningful emp EDR&amp;lt;br/&amp;gt;0.9%'/>\n   <polyline id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e4' points='96.10,582.04 96.68,81.12 97.27,81.32 149.53,99.67 150.12,99.88 150.71,100.00 202.97,110.48 203.56,110.60 204.14,110.69 256.40,119.19 256.99,119.29 257.58,119.37 309.84,126.11 310.43,126.19 311.02,126.27 363.28,133.49 363.87,133.57 364.45,133.60 416.71,137.00 417.30,137.03 417.89,137.03 470.15,136.89 470.74,136.89 471.33,136.88 523.59,135.95 524.17,135.94 524.76,135.95 577.02,136.65 577.61,136.66 578.20,136.80 630.46,135.46 631.05,135.44 631.64,135.43 683.90,134.53 684.48,134.52 685.07,582.04' fill='none' stroke='none' data-id='2' title='State: Meaningful emp EDR&amp;lt;br/&amp;gt;0.9%'/>\n   <polygon id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e5' points='96.10,582.04 96.68,85.63 97.27,85.92 149.53,111.93 150.12,112.22 150.71,112.40 202.97,128.18 203.56,128.36 204.14,128.50 256.40,140.65 256.99,140.79 257.58,140.91 309.84,151.57 310.43,151.69 311.02,151.82 363.28,163.01 363.87,163.13 364.45,163.20 416.71,168.82 417.30,168.88 417.89,168.90 470.15,170.35 470.74,170.36 471.33,170.36 523.59,169.71 524.17,169.71 524.76,169.72 577.02,170.94 577.61,170.95 578.20,171.09 630.46,169.47 631.05,169.45 631.64,169.42 683.90,167.18 684.48,167.16 685.07,582.04 685.07,582.04 684.48,187.34 683.90,187.36 631.64,188.80 631.05,188.82 630.46,188.84 578.20,190.53 577.61,190.39 577.02,190.39 524.76,190.19 524.17,190.19 523.59,190.19 471.33,190.31 470.74,190.31 470.15,190.30 417.89,188.71 417.30,188.69 416.71,188.60 364.45,180.63 363.87,180.54 363.28,180.39 311.02,166.77 310.43,166.62 309.84,166.48 257.58,153.91 256.99,153.77 256.40,153.61 204.14,138.80 203.56,138.63 202.97,138.41 150.71,119.29 150.12,119.08 149.53,118.74 97.27,88.66 96.68,88.32 96.10,582.04' fill='#FEE090' fill-opacity='1' stroke='none' data-id='3' title='State: Meaningful emp SW&amp;lt;br/&amp;gt;0.5%'/>\n   <polyline id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e6' points='96.10,582.04 96.68,85.63 97.27,85.92 149.53,111.93 150.12,112.22 150.71,112.40 202.97,128.18 203.56,128.36 204.14,128.50 256.40,140.65 256.99,140.79 257.58,140.91 309.84,151.57 310.43,151.69 311.02,151.82 363.28,163.01 363.87,163.13 364.45,163.20 416.71,168.82 417.30,168.88 417.89,168.90 470.15,170.35 470.74,170.36 471.33,170.36 523.59,169.71 524.17,169.71 524.76,169.72 577.02,170.94 577.61,170.95 578.20,171.09 630.46,169.47 631.05,169.45 631.64,169.42 683.90,167.18 684.48,167.16 685.07,582.04' fill='none' stroke='none' data-id='3' title='State: Meaningful emp SW&amp;lt;br/&amp;gt;0.5%'/>\n   <polygon id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e7' points='96.10,582.04 96.68,88.32 97.27,88.66 149.53,118.74 150.12,119.08 150.71,119.29 202.97,138.41 203.56,138.63 204.14,138.80 256.40,153.61 256.99,153.77 257.58,153.91 309.84,166.48 310.43,166.62 311.02,166.77 363.28,180.39 363.87,180.54 364.45,180.63 416.71,188.60 417.30,188.69 417.89,188.71 470.15,190.30 470.74,190.31 471.33,190.31 523.59,190.19 524.17,190.19 524.76,190.19 577.02,190.39 577.61,190.39 578.20,190.53 630.46,188.84 631.05,188.82 631.64,188.80 683.90,187.36 684.48,187.34 685.07,582.04 685.07,582.04 684.48,314.47 683.90,314.50 631.64,316.74 631.05,316.76 630.46,316.75 578.20,315.08 577.61,314.90 577.02,314.87 524.76,311.73 524.17,311.69 523.59,311.61 471.33,304.52 470.74,304.44 470.15,304.36 417.89,296.87 417.30,296.79 416.71,296.57 364.45,276.72 363.87,276.49 363.28,276.04 311.02,235.41 310.43,234.95 309.84,234.59 257.58,202.79 256.99,202.43 256.40,202.11 204.14,173.31 203.56,172.99 202.97,172.62 150.71,139.95 150.12,139.58 149.53,139.09 97.27,95.39 96.68,94.90 96.10,582.04' fill='#FFFFBF' fill-opacity='1' stroke='none' data-id='4' title='State: Meaningful emp MN&amp;lt;br/&amp;gt;1.3%'/>\n   <polyline id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e8' points='96.10,582.04 96.68,88.32 97.27,88.66 149.53,118.74 150.12,119.08 150.71,119.29 202.97,138.41 203.56,138.63 204.14,138.80 256.40,153.61 256.99,153.77 257.58,153.91 309.84,166.48 310.43,166.62 311.02,166.77 363.28,180.39 363.87,180.54 364.45,180.63 416.71,188.60 417.30,188.69 417.89,188.71 470.15,190.30 470.74,190.31 471.33,190.31 523.59,190.19 524.17,190.19 524.76,190.19 577.02,190.39 577.61,190.39 578.20,190.53 630.46,188.84 631.05,188.82 631.64,188.80 683.90,187.36 684.48,187.34 685.07,582.04' fill='none' stroke='none' data-id='4' title='State: Meaningful emp MN&amp;lt;br/&amp;gt;1.3%'/>\n   <polygon id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e9' points='96.10,582.04 96.68,94.90 97.27,95.39 149.53,139.09 150.12,139.58 150.71,139.95 202.97,172.62 203.56,172.99 204.14,173.31 256.40,202.11 256.99,202.43 257.58,202.79 309.84,234.59 310.43,234.95 311.02,235.41 363.28,276.04 363.87,276.49 364.45,276.72 416.71,296.57 417.30,296.79 417.89,296.87 470.15,304.36 470.74,304.44 471.33,304.52 523.59,311.61 524.17,311.69 524.76,311.73 577.02,314.87 577.61,314.90 578.20,315.08 578.20,315.08 577.61,315.06 577.02,315.41 524.76,347.22 524.17,347.58 523.59,347.68 471.33,356.82 470.74,356.92 470.15,357.02 417.89,365.71 417.30,365.81 416.71,365.92 364.45,375.45 363.87,375.56 363.28,376.04 311.02,419.25 310.43,419.73 309.84,419.86 257.58,431.20 256.99,431.33 256.40,431.48 204.14,444.79 203.56,444.94 202.97,445.06 150.71,456.55 150.12,456.68 149.53,456.31 97.27,423.01 96.68,422.64 96.10,582.04' fill='#E0F3F8' fill-opacity='1' stroke='none' data-id='5' title='State: Attending ps&amp;lt;br/&amp;gt;62.4%'/>\n   <polyline id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e10' points='96.10,582.04 96.68,94.90 97.27,95.39 149.53,139.09 150.12,139.58 150.71,139.95 202.97,172.62 203.56,172.99 204.14,173.31 256.40,202.11 256.99,202.43 257.58,202.79 309.84,234.59 310.43,234.95 311.02,235.41 363.28,276.04 363.87,276.49 364.45,276.72 416.71,296.57 417.30,296.79 417.89,296.87 470.15,304.36 470.74,304.44 471.33,304.52 523.59,311.61 524.17,311.69 524.76,311.73 577.02,314.87 577.61,314.90 578.20,315.08' fill='none' stroke='none' data-id='5' title='State: Attending ps&amp;lt;br/&amp;gt;62.4%'/>\n   <polygon id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e11' points='96.10,582.04 96.68,422.64 97.27,423.01 149.53,456.31 150.12,456.68 150.71,456.55 202.97,445.06 203.56,444.94 204.14,444.79 256.40,431.48 256.99,431.33 257.58,431.20 309.84,419.86 310.43,419.73 311.02,419.25 363.28,376.04 363.87,375.56 364.45,375.45 416.71,365.92 417.30,365.81 417.89,365.71 470.15,357.02 470.74,356.92 471.33,356.82 523.59,347.68 524.17,347.58 524.76,347.22 577.02,315.41 577.61,315.06 578.20,315.08 630.46,316.75 631.05,316.76 631.64,316.74 683.90,314.50 684.48,314.47 685.07,582.04 685.07,582.04 684.48,391.49 683.90,391.52 631.64,394.36 631.05,394.39 630.46,394.44 578.20,399.10 577.61,399.15 577.02,399.41 524.76,422.20 524.17,422.46 523.59,422.60 471.33,435.52 470.74,435.66 470.15,435.80 417.89,448.09 417.30,448.23 416.71,448.42 364.45,465.17 363.87,465.36 363.28,465.72 311.02,497.61 310.43,497.97 309.84,498.11 257.58,510.55 256.99,510.69 256.40,510.83 204.14,523.80 203.56,523.94 202.97,524.03 150.71,531.97 150.12,532.06 149.53,532.07 97.27,532.88 96.68,532.89 96.10,582.04' fill='#91BFDB' fill-opacity='1' stroke='none' data-id='6' title='State: Not meaningful, not attending ps&amp;lt;br/&amp;gt;21.0%'/>\n   <polyline id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e12' points='96.10,582.04 96.68,422.64 97.27,423.01 149.53,456.31 150.12,456.68 150.71,456.55 202.97,445.06 203.56,444.94 204.14,444.79 256.40,431.48 256.99,431.33 257.58,431.20 309.84,419.86 310.43,419.73 311.02,419.25 363.28,376.04 363.87,375.56 364.45,375.45 416.71,365.92 417.30,365.81 417.89,365.71 470.15,357.02 470.74,356.92 471.33,356.82 523.59,347.68 524.17,347.58 524.76,347.22 577.02,315.41 577.61,315.06 578.20,315.08 630.46,316.75 631.05,316.76 631.64,316.74 683.90,314.50 684.48,314.47 685.07,582.04' fill='none' stroke='none' data-id='6' title='State: Not meaningful, not attending ps&amp;lt;br/&amp;gt;21.0%'/>\n   <polygon id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e13' points='96.10,582.04 96.68,532.89 97.27,532.88 149.53,532.07 150.12,532.06 150.71,531.97 202.97,524.03 203.56,523.94 204.14,523.80 256.40,510.83 256.99,510.69 257.58,510.55 309.84,498.11 310.43,497.97 311.02,497.61 363.28,465.72 363.87,465.36 364.45,465.17 416.71,448.42 417.30,448.23 417.89,448.09 470.15,435.80 470.74,435.66 471.33,435.52 523.59,422.60 524.17,422.46 524.76,422.20 577.02,399.41 577.61,399.15 578.20,399.10 630.46,394.44 631.05,394.39 631.64,394.36 683.90,391.52 684.48,391.49 685.07,582.04 685.07,582.04 684.48,582.04 683.90,582.04 631.64,582.04 631.05,582.04 630.46,582.04 578.20,582.04 577.61,582.04 577.02,582.04 524.76,582.04 524.17,582.04 523.59,582.04 471.33,582.04 470.74,582.04 470.15,582.04 417.89,582.04 417.30,582.04 416.71,582.04 364.45,582.04 363.87,582.04 363.28,582.04 311.02,582.04 310.43,582.04 309.84,582.04 257.58,582.04 256.99,582.04 256.40,582.04 204.14,582.04 203.56,582.04 202.97,582.04 150.71,582.04 150.12,582.04 149.53,582.04 97.27,582.04 96.68,582.04 96.10,582.04' fill='#4575B4' fill-opacity='1' stroke='none' data-id='7' title='State: No MN emp record, not attending ps&amp;lt;br/&amp;gt;9.4%'/>\n   <polyline id='svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_e14' points='96.10,582.04 96.68,532.89 97.27,532.88 149.53,532.07 150.12,532.06 150.71,531.97 202.97,524.03 203.56,523.94 204.14,523.80 256.40,510.83 256.99,510.69 257.58,510.55 309.84,498.11 310.43,497.97 311.02,497.61 363.28,465.72 363.87,465.36 364.45,465.17 416.71,448.42 417.30,448.23 417.89,448.09 470.15,435.80 470.74,435.66 471.33,435.52 523.59,422.60 524.17,422.46 524.76,422.20 577.02,399.41 577.61,399.15 578.20,399.10 630.46,394.44 631.05,394.39 631.64,394.36 683.90,391.52 684.48,391.49 685.07,582.04' fill='none' stroke='none' data-id='7' title='State: No MN emp record, not attending ps&amp;lt;br/&amp;gt;9.4%'/>\n   <line x1='112.99' y1='146.29' x2='96.97' y2='88.02' stroke='#000000' stroke-opacity='1' stroke-width='1.07' stroke-linejoin='round' stroke-linecap='round'/>\n   <line x1='143.34' y1='88.26' x2='97.89' y2='83.5' stroke='#000000' stroke-opacity='1' stroke-width='1.07' stroke-linejoin='round' stroke-linecap='round'/>\n   <line x1='100.51' y1='61.62' x2='97.18' y2='68.18' stroke='#000000' stroke-opacity='1' stroke-width='1.07' stroke-linejoin='round' stroke-linecap='round'/>\n   <polygon points='90.82,552.83 152.57,552.83 152.48,552.83 152.83,552.82 153.17,552.75 153.50,552.62 153.80,552.45 154.07,552.23 154.30,551.97 154.48,551.68 154.62,551.36 154.70,551.02 154.73,550.67 154.73,550.67 154.73,523.98 154.73,523.98 154.70,523.64 154.62,523.30 154.48,522.98 154.30,522.68 154.07,522.42 153.80,522.20 153.50,522.03 153.17,521.91 152.83,521.84 152.57,521.82 90.82,521.82 91.08,521.84 90.74,521.82 90.39,521.87 90.06,521.96 89.74,522.11 89.46,522.31 89.21,522.55 89.00,522.83 88.84,523.14 88.72,523.47 88.67,523.81 88.66,523.98 88.66,550.67 88.67,550.50 88.67,550.85 88.72,551.19 88.84,551.52 89.00,551.83 89.21,552.10 89.46,552.35 89.74,552.54 90.06,552.69 90.39,552.79 90.74,552.83' fill='#4575B4' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='92.26' y='533.34' font-size='8.28pt' font-family='Helvetica'>grad.year.0 <\/text>\n   <text x='107.59' y='549.23' font-size='8.28pt' font-family='Helvetica'> 9.4%<\/text>\n   <polygon points='363.78,550.81 425.53,550.81 425.44,550.81 425.79,550.80 426.13,550.73 426.46,550.61 426.76,550.43 427.03,550.21 427.26,549.95 427.44,549.66 427.58,549.34 427.66,549.00 427.69,548.65 427.69,548.65 427.69,521.96 427.69,521.96 427.66,521.62 427.58,521.28 427.44,520.96 427.26,520.67 427.03,520.41 426.76,520.19 426.46,520.01 426.13,519.89 425.79,519.82 425.53,519.80 363.78,519.80 364.04,519.82 363.70,519.81 363.35,519.85 363.02,519.95 362.70,520.09 362.42,520.29 362.17,520.53 361.96,520.81 361.80,521.12 361.69,521.45 361.63,521.79 361.62,521.96 361.62,548.65 361.63,548.48 361.63,548.83 361.69,549.17 361.80,549.50 361.96,549.81 362.17,550.09 362.42,550.33 362.70,550.53 363.02,550.67 363.35,550.77 363.70,550.81' fill='#4575B4' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='365.22' y='531.32' font-size='8.28pt' font-family='Helvetica'>grad.year.6 <\/text>\n   <text x='377.49' y='547.21' font-size='8.28pt' font-family='Helvetica'> 25.5%<\/text>\n   <polygon points='609.61,497.42 677.49,497.42 677.40,497.42 677.75,497.40 678.09,497.33 678.42,497.21 678.72,497.04 678.99,496.82 679.22,496.56 679.40,496.26 679.54,495.94 679.62,495.61 679.65,495.26 679.65,495.26 679.65,468.57 679.65,468.57 679.62,468.22 679.54,467.88 679.40,467.57 679.22,467.27 678.99,467.01 678.72,466.79 678.42,466.62 678.09,466.49 677.75,466.42 677.49,466.41 609.61,466.41 609.87,466.42 609.52,466.41 609.18,466.45 608.84,466.55 608.53,466.70 608.24,466.90 607.99,467.14 607.78,467.41 607.62,467.72 607.51,468.05 607.46,468.40 607.45,468.57 607.45,495.26 607.46,495.08 607.46,495.43 607.51,495.78 607.62,496.11 607.78,496.41 607.99,496.69 608.24,496.93 608.53,497.13 608.84,497.28 609.18,497.38 609.52,497.42' fill='#4575B4' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='611.05' y='477.92' font-size='8.28pt' font-family='Helvetica'>grad.year.11 <\/text>\n   <text x='626.38' y='493.82' font-size='8.28pt' font-family='Helvetica'> 36.3%<\/text>\n   <polygon points='96.01,513.39 157.76,513.39 157.67,513.39 158.02,513.38 158.36,513.31 158.68,513.18 158.98,513.01 159.25,512.79 159.48,512.53 159.67,512.24 159.81,511.92 159.89,511.58 159.92,511.23 159.92,511.23 159.92,484.54 159.92,484.54 159.89,484.20 159.81,483.86 159.67,483.54 159.48,483.24 159.25,482.98 158.98,482.76 158.68,482.59 158.36,482.47 158.02,482.40 157.76,482.38 96.01,482.38 96.27,482.40 95.92,482.38 95.58,482.43 95.24,482.52 94.93,482.67 94.64,482.87 94.39,483.11 94.18,483.39 94.02,483.70 93.91,484.03 93.86,484.37 93.85,484.54 93.85,511.23 93.86,511.06 93.86,511.41 93.91,511.75 94.02,512.08 94.18,512.39 94.39,512.66 94.64,512.91 94.93,513.10 95.24,513.25 95.58,513.35 95.92,513.39' fill='#91BFDB' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='97.45' y='493.9' font-size='8.28pt' font-family='Helvetica'>grad.year.0 <\/text>\n   <text x='109.71' y='509.79' font-size='8.28pt' font-family='Helvetica'> 21.0%<\/text>\n   <polygon points='363.78,442.70 425.53,442.70 425.44,442.70 425.79,442.69 426.13,442.62 426.45,442.49 426.76,442.32 427.03,442.10 427.26,441.84 427.44,441.55 427.58,441.23 427.66,440.89 427.69,440.54 427.69,440.54 427.69,413.85 427.69,413.85 427.66,413.51 427.58,413.17 427.44,412.85 427.26,412.55 427.03,412.29 426.76,412.07 426.45,411.90 426.13,411.78 425.79,411.71 425.53,411.69 363.78,411.69 364.04,411.71 363.69,411.69 363.35,411.74 363.02,411.83 362.70,411.98 362.42,412.18 362.16,412.42 361.96,412.70 361.79,413.00 361.68,413.33 361.63,413.68 361.62,413.85 361.62,440.54 361.63,440.37 361.63,440.72 361.68,441.06 361.79,441.39 361.96,441.70 362.16,441.97 362.42,442.21 362.70,442.41 363.02,442.56 363.35,442.66 363.69,442.70' fill='#91BFDB' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='365.22' y='423.2' font-size='8.28pt' font-family='Helvetica'>grad.year.6 <\/text>\n   <text x='377.48' y='439.1' font-size='8.28pt' font-family='Helvetica'> 15.7%<\/text>\n   <polygon points='609.71,367.13 677.59,367.13 677.51,367.12 677.85,367.11 678.19,367.04 678.52,366.92 678.82,366.74 679.09,366.52 679.32,366.26 679.51,365.97 679.64,365.65 679.73,365.31 679.75,364.97 679.75,364.97 679.75,338.28 679.75,338.28 679.73,337.93 679.64,337.59 679.51,337.27 679.32,336.98 679.09,336.72 678.82,336.50 678.52,336.32 678.19,336.20 677.85,336.13 677.59,336.12 609.71,336.12 609.97,336.13 609.62,336.12 609.28,336.16 608.95,336.26 608.63,336.40 608.35,336.60 608.10,336.84 607.89,337.12 607.72,337.43 607.61,337.76 607.56,338.10 607.55,338.28 607.55,364.97 607.56,364.79 607.56,365.14 607.61,365.48 607.72,365.81 607.89,366.12 608.10,366.40 608.35,366.64 608.63,366.84 608.95,366.99 609.28,367.08 609.62,367.12' fill='#91BFDB' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='611.15' y='347.63' font-size='8.28pt' font-family='Helvetica'>grad.year.11 <\/text>\n   <text x='626.48' y='363.53' font-size='8.28pt' font-family='Helvetica'> 14.7%<\/text>\n   <polygon points='103.54,286.39 165.29,286.39 165.20,286.39 165.55,286.37 165.89,286.30 166.22,286.18 166.52,286.01 166.79,285.79 167.02,285.53 167.20,285.23 167.34,284.91 167.42,284.58 167.45,284.23 167.45,284.23 167.45,257.54 167.45,257.54 167.42,257.19 167.34,256.86 167.20,256.54 167.02,256.24 166.79,255.98 166.52,255.76 166.22,255.59 165.89,255.47 165.55,255.40 165.29,255.38 103.54,255.38 103.81,255.40 103.46,255.38 103.11,255.42 102.78,255.52 102.46,255.67 102.18,255.87 101.93,256.11 101.72,256.39 101.56,256.69 101.45,257.02 101.39,257.37 101.38,257.54 101.38,284.23 101.39,284.06 101.39,284.40 101.45,284.75 101.56,285.08 101.72,285.38 101.93,285.66 102.18,285.90 102.46,286.10 102.78,286.25 103.11,286.35 103.46,286.39' fill='#E0F3F8' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='104.98' y='266.89' font-size='8.28pt' font-family='Helvetica'>grad.year.0 <\/text>\n   <text x='117.25' y='282.79' font-size='8.28pt' font-family='Helvetica'> 62.4%<\/text>\n   <polygon points='363.81,366.95 425.56,366.95 425.47,366.95 425.82,366.93 426.16,366.86 426.49,366.74 426.79,366.57 427.06,366.35 427.29,366.09 427.47,365.79 427.61,365.47 427.69,365.14 427.72,364.79 427.72,364.79 427.72,338.10 427.72,338.10 427.69,337.75 427.61,337.41 427.47,337.10 427.29,336.80 427.06,336.54 426.79,336.32 426.49,336.15 426.16,336.02 425.82,335.95 425.56,335.94 363.81,335.94 364.07,335.95 363.73,335.94 363.38,335.98 363.05,336.08 362.73,336.23 362.45,336.43 362.20,336.67 361.99,336.94 361.83,337.25 361.72,337.58 361.66,337.93 361.65,338.10 361.65,364.79 361.66,364.61 361.66,364.96 361.72,365.31 361.83,365.64 361.99,365.94 362.20,366.22 362.45,366.46 362.73,366.66 363.05,366.81 363.38,366.91 363.73,366.95' fill='#E0F3F8' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='365.25' y='347.45' font-size='8.28pt' font-family='Helvetica'>grad.year.6 <\/text>\n   <text x='377.51' y='363.35' font-size='8.28pt' font-family='Helvetica'> 13.2%<\/text>\n   <polygon points='72.41,127.29 134.15,127.29 134.07,127.29 134.41,127.27 134.75,127.20 135.08,127.08 135.38,126.91 135.65,126.69 135.88,126.43 136.07,126.13 136.20,125.81 136.29,125.47 136.31,125.13 136.31,125.13 136.31,98.44 136.31,98.44 136.29,98.09 136.20,97.75 136.07,97.43 135.88,97.14 135.65,96.88 135.38,96.66 135.08,96.49 134.75,96.36 134.41,96.29 134.15,96.28 72.41,96.28 72.67,96.29 72.32,96.28 71.97,96.32 71.64,96.42 71.33,96.57 71.04,96.77 70.79,97.01 70.58,97.28 70.42,97.59 70.31,97.92 70.25,98.26 70.25,98.44 70.25,125.13 70.25,124.95 70.25,125.30 70.31,125.65 70.42,125.97 70.58,126.28 70.79,126.56 71.04,126.80 71.33,127.00 71.64,127.15 71.97,127.24 72.32,127.29' fill='#FFFFBF' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='73.85' y='107.79' font-size='8.28pt' font-family='Helvetica'>grad.year.0 <\/text>\n   <text x='89.18' y='123.69' font-size='8.28pt' font-family='Helvetica'> 1.3%<\/text>\n   <polygon points='424.22,252.71 485.96,252.71 485.88,252.71 486.23,252.69 486.57,252.62 486.89,252.50 487.19,252.32 487.46,252.10 487.69,251.84 487.88,251.55 488.01,251.23 488.10,250.89 488.12,250.55 488.12,250.55 488.12,223.86 488.12,223.86 488.10,223.51 488.01,223.17 487.88,222.85 487.69,222.56 487.46,222.30 487.19,222.08 486.89,221.91 486.57,221.78 486.23,221.71 485.96,221.70 424.22,221.70 424.48,221.71 424.13,221.70 423.79,221.74 423.45,221.84 423.14,221.99 422.85,222.18 422.60,222.42 422.39,222.70 422.23,223.01 422.12,223.34 422.06,223.68 422.06,223.86 422.06,250.55 422.06,250.37 422.06,250.72 422.12,251.06 422.23,251.39 422.39,251.70 422.60,251.98 422.85,252.22 423.14,252.42 423.45,252.57 423.79,252.66 424.13,252.71' fill='#FFFFBF' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='425.66' y='233.21' font-size='8.28pt' font-family='Helvetica'>grad.year.6 <\/text>\n   <text x='437.92' y='249.11' font-size='8.28pt' font-family='Helvetica'> 20.6%<\/text>\n   <polygon points='609.64,270.45 677.53,270.45 677.44,270.45 677.79,270.43 678.13,270.36 678.45,270.24 678.75,270.06 679.02,269.84 679.25,269.58 679.44,269.29 679.57,268.97 679.66,268.63 679.69,268.29 679.69,268.29 679.69,241.60 679.69,241.60 679.66,241.25 679.57,240.91 679.44,240.59 679.25,240.30 679.02,240.04 678.75,239.82 678.45,239.65 678.13,239.52 677.79,239.45 677.53,239.44 609.64,239.44 609.90,239.45 609.56,239.44 609.21,239.48 608.88,239.58 608.56,239.73 608.28,239.92 608.03,240.16 607.82,240.44 607.66,240.75 607.55,241.08 607.49,241.42 607.48,241.60 607.48,268.29 607.49,268.11 607.49,268.46 607.55,268.80 607.66,269.13 607.82,269.44 608.03,269.72 608.28,269.96 608.56,270.16 608.88,270.31 609.21,270.40 609.56,270.45' fill='#FFFFBF' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='611.08' y='250.95' font-size='8.28pt' font-family='Helvetica'>grad.year.11 <\/text>\n   <text x='626.41' y='266.85' font-size='8.28pt' font-family='Helvetica'> 24.2%<\/text>\n   <polygon points='115.15,165.39 176.90,165.39 176.81,165.39 177.16,165.37 177.50,165.30 177.82,165.18 178.12,165.01 178.39,164.79 178.62,164.53 178.81,164.23 178.95,163.91 179.03,163.58 179.06,163.23 179.06,163.23 179.06,136.54 179.06,136.54 179.03,136.19 178.95,135.86 178.81,135.54 178.62,135.24 178.39,134.98 178.12,134.76 177.82,134.59 177.50,134.46 177.16,134.40 176.90,134.38 115.15,134.38 115.41,134.40 115.06,134.38 114.72,134.42 114.38,134.52 114.07,134.67 113.78,134.87 113.53,135.11 113.32,135.39 113.16,135.69 113.05,136.02 113.00,136.37 112.99,136.54 112.99,163.23 113.00,163.06 113.00,163.40 113.05,163.75 113.16,164.08 113.32,164.38 113.53,164.66 113.78,164.90 114.07,165.10 114.38,165.25 114.72,165.35 115.06,165.39' fill='#FEE090' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='116.59' y='145.89' font-size='8.28pt' font-family='Helvetica'>grad.year.0 <\/text>\n   <text x='131.92' y='161.79' font-size='8.28pt' font-family='Helvetica'> 0.5%<\/text>\n   <polygon points='363.87,214.42 425.62,214.42 425.53,214.42 425.88,214.41 426.22,214.34 426.54,214.21 426.84,214.04 427.11,213.82 427.34,213.56 427.53,213.27 427.66,212.95 427.75,212.61 427.78,212.26 427.78,212.26 427.78,185.57 427.78,185.57 427.75,185.23 427.66,184.89 427.53,184.57 427.34,184.27 427.11,184.01 426.84,183.79 426.54,183.62 426.22,183.50 425.88,183.43 425.62,183.41 363.87,183.41 364.13,183.43 363.78,183.41 363.44,183.46 363.10,183.55 362.79,183.70 362.50,183.90 362.25,184.14 362.04,184.42 361.88,184.72 361.77,185.05 361.72,185.40 361.71,185.57 361.71,212.26 361.72,212.09 361.72,212.44 361.77,212.78 361.88,213.11 362.04,213.42 362.25,213.69 362.50,213.93 362.79,214.13 363.10,214.28 363.44,214.38 363.78,214.42' fill='#FEE090' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='365.31' y='194.92' font-size='8.28pt' font-family='Helvetica'>grad.year.6 <\/text>\n   <text x='380.64' y='210.82' font-size='8.28pt' font-family='Helvetica'> 3.8%<\/text>\n   <polygon points='627.91,212.92 695.79,212.92 695.70,212.92 696.05,212.91 696.39,212.84 696.71,212.72 697.01,212.54 697.28,212.32 697.51,212.06 697.70,211.77 697.84,211.45 697.92,211.11 697.95,210.76 697.95,210.76 697.95,184.07 697.95,184.07 697.92,183.73 697.84,183.39 697.70,183.07 697.51,182.78 697.28,182.52 697.01,182.30 696.71,182.12 696.39,182.00 696.05,181.93 695.79,181.91 627.91,181.91 628.17,181.93 627.82,181.92 627.47,181.96 627.14,182.05 626.83,182.20 626.54,182.40 626.29,182.64 626.08,182.92 625.92,183.23 625.81,183.56 625.75,183.90 625.75,184.07 625.75,210.76 625.75,210.59 625.75,210.94 625.81,211.28 625.92,211.61 626.08,211.92 626.29,212.20 626.54,212.44 626.83,212.64 627.14,212.78 627.47,212.88 627.82,212.92' fill='#FEE090' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='629.35' y='193.43' font-size='8.28pt' font-family='Helvetica'>grad.year.11 <\/text>\n   <text x='647.74' y='209.32' font-size='8.28pt' font-family='Helvetica'> 3.8%<\/text>\n   <polygon points='145.50,103.80 207.24,103.80 207.16,103.80 207.50,103.78 207.84,103.71 208.17,103.59 208.47,103.41 208.74,103.19 208.97,102.93 209.16,102.64 209.29,102.32 209.38,101.98 209.40,101.64 209.40,101.64 209.40,74.95 209.40,74.95 209.38,74.60 209.29,74.26 209.16,73.94 208.97,73.65 208.74,73.39 208.47,73.17 208.17,73.00 207.84,72.87 207.50,72.80 207.24,72.79 145.50,72.79 145.76,72.80 145.41,72.79 145.06,72.83 144.73,72.93 144.42,73.08 144.13,73.27 143.88,73.51 143.67,73.79 143.51,74.10 143.40,74.43 143.34,74.77 143.34,74.95 143.34,101.64 143.34,101.46 143.34,101.81 143.40,102.15 143.51,102.48 143.67,102.79 143.88,103.07 144.13,103.31 144.42,103.51 144.73,103.66 145.06,103.75 145.41,103.80' fill='#FC8D59' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='146.94' y='84.3' font-size='8.28pt' font-family='Helvetica'>grad.year.0 <\/text>\n   <text x='162.27' y='100.2' font-size='8.28pt' font-family='Helvetica'> 0.9%<\/text>\n   <polygon points='409.10,148.24 470.85,148.24 470.76,148.24 471.11,148.22 471.45,148.15 471.77,148.03 472.08,147.86 472.34,147.64 472.58,147.38 472.76,147.08 472.90,146.76 472.98,146.42 473.01,146.08 473.01,146.08 473.01,119.39 473.01,119.39 472.98,119.04 472.90,118.70 472.76,118.38 472.58,118.09 472.34,117.83 472.08,117.61 471.77,117.44 471.45,117.31 471.11,117.24 470.85,117.23 409.10,117.23 409.36,117.24 409.01,117.23 408.67,117.27 408.34,117.37 408.02,117.52 407.74,117.71 407.48,117.96 407.28,118.23 407.11,118.54 407.00,118.87 406.95,119.21 406.94,119.39 406.94,146.08 406.95,145.90 406.95,146.25 407.00,146.59 407.11,146.92 407.28,147.23 407.48,147.51 407.74,147.75 408.02,147.95 408.34,148.10 408.67,148.19 409.01,148.24' fill='#FC8D59' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='410.54' y='128.74' font-size='8.28pt' font-family='Helvetica'>grad.year.6 <\/text>\n   <text x='425.87' y='144.64' font-size='8.28pt' font-family='Helvetica'> 6.1%<\/text>\n   <polygon points='627.92,146.19 695.80,146.19 695.71,146.19 696.06,146.17 696.40,146.11 696.73,145.98 697.03,145.81 697.30,145.59 697.53,145.33 697.71,145.03 697.85,144.71 697.93,144.38 697.96,144.03 697.96,144.03 697.96,117.34 697.96,117.34 697.93,116.99 697.85,116.66 697.71,116.34 697.53,116.04 697.30,115.78 697.03,115.56 696.73,115.39 696.40,115.27 696.06,115.20 695.80,115.18 627.92,115.18 628.18,115.20 627.83,115.18 627.49,115.22 627.15,115.32 626.84,115.47 626.55,115.67 626.30,115.91 626.09,116.19 625.93,116.49 625.82,116.82 625.77,117.17 625.76,117.34 625.76,144.03 625.77,143.86 625.77,144.20 625.82,144.55 625.93,144.88 626.09,145.19 626.30,145.46 626.55,145.70 626.84,145.90 627.15,146.05 627.49,146.15 627.83,146.19' fill='#FC8D59' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='629.36' y='126.69' font-size='8.28pt' font-family='Helvetica'>grad.year.11 <\/text>\n   <text x='647.76' y='142.59' font-size='8.28pt' font-family='Helvetica'> 6.2%<\/text>\n   <polygon points='102.67,65.58 164.41,65.58 164.33,65.58 164.67,65.56 165.02,65.49 165.34,65.37 165.64,65.20 165.91,64.98 166.14,64.72 166.33,64.42 166.46,64.10 166.55,63.76 166.57,63.42 166.57,63.42 166.57,36.73 166.57,36.73 166.55,36.38 166.46,36.04 166.33,35.72 166.14,35.43 165.91,35.17 165.64,34.95 165.34,34.78 165.02,34.65 164.67,34.58 164.41,34.57 102.67,34.57 102.93,34.58 102.58,34.57 102.24,34.61 101.90,34.71 101.59,34.86 101.30,35.05 101.05,35.30 100.84,35.57 100.68,35.88 100.57,36.21 100.51,36.55 100.51,36.73 100.51,63.42 100.51,63.24 100.51,63.59 100.57,63.93 100.68,64.26 100.84,64.57 101.05,64.85 101.30,65.09 101.59,65.29 101.90,65.44 102.24,65.53 102.58,65.58' fill='#D73027' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='104.11' y='46.08' font-size='8.28pt' font-family='Helvetica'>grad.year.0 <\/text>\n   <text x='119.44' y='61.98' font-size='8.28pt' font-family='Helvetica'> 4.6%<\/text>\n   <polygon points='363.83,92.48 425.58,92.48 425.49,92.48 425.84,92.46 426.18,92.39 426.51,92.27 426.81,92.10 427.08,91.88 427.31,91.62 427.49,91.32 427.63,91.00 427.71,90.67 427.74,90.32 427.74,90.32 427.74,63.63 427.74,63.63 427.71,63.28 427.63,62.94 427.49,62.62 427.31,62.33 427.08,62.07 426.81,61.85 426.51,61.68 426.18,61.55 425.84,61.48 425.58,61.47 363.83,61.47 364.09,61.48 363.75,61.47 363.40,61.51 363.07,61.61 362.75,61.76 362.47,61.96 362.22,62.20 362.01,62.47 361.85,62.78 361.74,63.11 361.68,63.45 361.67,63.63 361.67,90.32 361.68,90.14 361.68,90.49 361.74,90.84 361.85,91.17 362.01,91.47 362.22,91.75 362.47,91.99 362.75,92.19 363.07,92.34 363.40,92.44 363.75,92.48' fill='#D73027' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='365.27' y='72.98' font-size='8.28pt' font-family='Helvetica'>grad.year.6 <\/text>\n   <text x='377.54' y='88.88' font-size='8.28pt' font-family='Helvetica'> 15.2%<\/text>\n   <polygon points='627.93,91.22 695.81,91.22 695.72,91.22 696.07,91.20 696.41,91.13 696.74,91.01 697.04,90.84 697.31,90.62 697.54,90.36 697.72,90.06 697.86,89.74 697.94,89.41 697.97,89.06 697.97,89.06 697.97,62.37 697.97,62.37 697.94,62.02 697.86,61.69 697.72,61.37 697.54,61.07 697.31,60.81 697.04,60.59 696.74,60.42 696.41,60.29 696.07,60.23 695.81,60.21 627.93,60.21 628.19,60.23 627.84,60.21 627.50,60.25 627.16,60.35 626.85,60.50 626.56,60.70 626.31,60.94 626.10,61.22 625.94,61.52 625.83,61.85 625.78,62.20 625.77,62.37 625.77,89.06 625.78,88.89 625.78,89.23 625.83,89.58 625.94,89.91 626.10,90.21 626.31,90.49 626.56,90.73 626.85,90.93 627.16,91.08 627.50,91.18 627.84,91.22' fill='#D73027' fill-opacity='1' stroke='#000000' stroke-opacity='1' stroke-width='0.53' stroke-linejoin='round' stroke-linecap='round'/>\n   <text x='629.37' y='71.72' font-size='8.28pt' font-family='Helvetica'>grad.year.11 <\/text>\n   <text x='644.7' y='87.62' font-size='8.28pt' font-family='Helvetica'> 14.7%<\/text>\n  <\/g>\n  <g clip-path='url(#svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367_c1)'>\n   <text x='40.91' y='587.19' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>0%<\/text>\n   <text x='32.91' y='455.98' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>25%<\/text>\n   <text x='32.91' y='324.78' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>50%<\/text>\n   <text x='32.91' y='193.57' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>75%<\/text>\n   <text x='24.9' y='62.36' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>100%<\/text>\n   <text x='92.68' y='623.52' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>0<\/text>\n   <text x='199.55' y='623.52' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>2<\/text>\n   <text x='306.43' y='623.52' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>4<\/text>\n   <text x='413.3' y='623.52' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>6<\/text>\n   <text x='520.17' y='623.52' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>8<\/text>\n   <text x='623.04' y='623.52' font-size='10.8pt' font-weight='bold' font-family='Arial' fill='#4D4D4D' fill-opacity='1'>10<\/text>\n   <text x='350.05' y='642.17' font-size='13.5pt' font-family='Arial'>Grad Year<\/text>\n   <text transform='translate(18.37,415.67) rotate(-90.00)' font-size='13.5pt' font-family='Arial'>Proportion of individuals<\/text>\n   <rect x='164.24' y='656.92' width='452.68' height='57.6' fill='none' stroke='none'/>\n   <rect x='173.21' y='656.92' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='173.92' y='657.63' width='12.98' height='12.98' fill='#D73027' fill-opacity='1' stroke='none'/>\n   <rect x='173.21' y='671.32' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='173.92' y='672.03' width='12.98' height='12.98' fill='#FC8D59' fill-opacity='1' stroke='none'/>\n   <rect x='173.21' y='685.72' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='173.92' y='686.43' width='12.98' height='12.98' fill='#FEE090' fill-opacity='1' stroke='none'/>\n   <rect x='173.21' y='700.12' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='173.92' y='700.83' width='12.98' height='12.98' fill='#FFFFBF' fill-opacity='1' stroke='none'/>\n   <rect x='359.55' y='656.92' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='360.26' y='657.63' width='12.98' height='12.98' fill='#E0F3F8' fill-opacity='1' stroke='none'/>\n   <rect x='359.55' y='671.32' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='360.26' y='672.03' width='12.98' height='12.98' fill='#91BFDB' fill-opacity='1' stroke='none'/>\n   <rect x='359.55' y='685.72' width='14.4' height='14.4' fill='none' stroke='none'/>\n   <rect x='360.26' y='686.43' width='12.98' height='12.98' fill='#4575B4' fill-opacity='1' stroke='none'/>\n   <text x='198.57' y='669.27' font-size='10.8pt' font-family='Arial'>Meaningful emp County<\/text>\n   <text x='198.57' y='683.67' font-size='10.8pt' font-family='Arial'>Meaningful emp EDR<\/text>\n   <text x='198.57' y='698.07' font-size='10.8pt' font-family='Arial'>Meaningful emp SW<\/text>\n   <text x='198.57' y='712.47' font-size='10.8pt' font-family='Arial'>Meaningful emp MN<\/text>\n   <text x='384.91' y='669.27' font-size='10.8pt' font-family='Arial'>Attending ps<\/text>\n   <text x='384.91' y='683.67' font-size='10.8pt' font-family='Arial'>Not meaningful, not attending ps<\/text>\n   <text x='384.91' y='698.07' font-size='10.8pt' font-family='Arial'>No MN emp record, not attending ps<\/text>\n   <text x='5.48' y='20.94' font-size='16.2pt' font-weight='bold' font-family='Arial'>Percent share of path by grad year X<\/text>\n  <\/g>\n <\/g>\n<\/svg>","js":null,"uid":"svg_9d0dbe3f_abbe_4c4a_be96_ffb354758367","ratio":1,"settings":{"tooltip":{"css":".tooltip_SVGID_ { padding:5px;background:black;color:white;border-radius:2px;text-align:left; ; position:absolute;pointer-events:none;z-index:999;}","placement":"doc","opacity":0.9,"offx":10,"offy":10,"use_cursor_pos":true,"use_fill":false,"use_stroke":false,"delay_over":200,"delay_out":500},"hover":{"css":".hover_data_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_data_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_data_SVGID_ { fill:orange;stroke:black; }\nline.hover_data_SVGID_, polyline.hover_data_SVGID_ { fill:none;stroke:orange; }\nrect.hover_data_SVGID_, polygon.hover_data_SVGID_, path.hover_data_SVGID_ { fill:orange;stroke:none; }\nimage.hover_data_SVGID_ { stroke:orange; }","reactive":true,"nearest_distance":null},"hover_inv":{"css":""},"hover_key":{"css":".hover_key_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_key_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_key_SVGID_ { fill:orange;stroke:black; }\nline.hover_key_SVGID_, polyline.hover_key_SVGID_ { fill:none;stroke:orange; }\nrect.hover_key_SVGID_, polygon.hover_key_SVGID_, path.hover_key_SVGID_ { fill:orange;stroke:none; }\nimage.hover_key_SVGID_ { stroke:orange; }","reactive":true},"hover_theme":{"css":".hover_theme_SVGID_ { fill:orange;stroke:black;cursor:pointer; }\ntext.hover_theme_SVGID_ { stroke:none;fill:orange; }\ncircle.hover_theme_SVGID_ { fill:orange;stroke:black; }\nline.hover_theme_SVGID_, polyline.hover_theme_SVGID_ { fill:none;stroke:orange; }\nrect.hover_theme_SVGID_, polygon.hover_theme_SVGID_, path.hover_theme_SVGID_ { fill:orange;stroke:none; }\nimage.hover_theme_SVGID_ { stroke:orange; }","reactive":true},"select":{"css":".select_data_SVGID_ { fill:red;stroke:gray; }","type":"none","only_shiny":true,"selected":[]},"select_inv":{"css":""},"select_key":{"css":".select_key_SVGID_ { fill:red;stroke:black;cursor:pointer; }\ntext.select_key_SVGID_ { stroke:none;fill:red; }\ncircle.select_key_SVGID_ { fill:red;stroke:black; }\nline.select_key_SVGID_, polyline.select_key_SVGID_ { fill:none;stroke:red; }\nrect.select_key_SVGID_, polygon.select_key_SVGID_, path.select_key_SVGID_ { fill:red;stroke:none; }\nimage.select_key_SVGID_ { stroke:red; }","type":"single","only_shiny":true,"selected":[]},"select_theme":{"css":".select_theme_SVGID_ { fill:red;stroke:black;cursor:pointer; }\ntext.select_theme_SVGID_ { stroke:none;fill:red; }\ncircle.select_theme_SVGID_ { fill:red;stroke:black; }\nline.select_theme_SVGID_, polyline.select_theme_SVGID_ { fill:none;stroke:red; }\nrect.select_theme_SVGID_, polygon.select_theme_SVGID_, path.select_theme_SVGID_ { fill:red;stroke:none; }\nimage.select_theme_SVGID_ { stroke:red; }","type":"single","only_shiny":true,"selected":[]},"zoom":{"min":1,"max":1,"duration":300},"toolbar":{"position":"topright","pngname":"diagram","tooltips":null,"hidden":[],"delay_over":200,"delay_out":500},"sizing":{"rescale":false,"width":1}}},"evals":[],"jsHooks":[]}</script>
+<p><br></p>
+<p>From this I think there are 3 primary time.x that we should
+consider;</p>
+<p>grad.year.1 = one year after graduating high school grad.year.5 = six
+years after graduating high school grad.year.10 = eleven years after
+graduating</p>
+</div>
 
 
 

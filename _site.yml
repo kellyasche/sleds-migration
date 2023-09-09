@@ -32,8 +32,8 @@ navbar:
           href: nsccompletions.html
         - text: "Employment"
           href: employment.html
-        - text: "Dependent variable states each year"
-          href: dep_var_states.html
+        - text: "Employment states each year"
+          href: emp_states_each_year.html
         - text: "Unemployment"
           href: unemployment.html
         - text: "Average wages"

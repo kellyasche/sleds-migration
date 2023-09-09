@@ -364,14 +364,34 @@ master.ind.qua.var.write <- ind.qual.var %>%
 
 <br>
 
-# MCA analysis
+# Demographics
 
-Let's check MCA. 
+<br>
 
-```{r MCA}
-mca <- MCA(master.ind.qual.var, graph = TRUE)
+Below are the variables that are categorized as "demographics". When I initially did this analysis, the category "Unknown" in the RaceEthnicity variable was throwing off the analysis. So we will filter out those individuals for which there are only `r comma(nrow(filter(master.ind.qual.var, RaceEthnicity == "Unknown")))` individuals.
 
-mca
+```{r demographics prep, echo=TRUE}
+demographics <- master.ind.qual.var %>%
+  select(Gender, RaceEthnicity) %>%
+  filter(RaceEthnicity != "Unknown")
+
+head(demographics)
+
+names(demographics)
+```
+
+<br>
+
+After filtering out the "Unknown" RaceEthnicity category, we have `r comma(nrow(demographics))` individuals in the dataset.
+
+
+## MCA analysis
+
+The charts below show that the variable RaceEthnicity and hs.grad.year may have significantly more differentiation among them than Gender.
+
+
+```{r MCA, echo=TRUE}
+demographics.mca <- MCA(demographics, graph = TRUE)
 ```
 
 <br>
@@ -381,30 +401,22 @@ mca
 
 The eigenvalues measure the amount of variation retained by each principle component. This will help us determine how many principle components to be considered.
 
-The values below indicate that the first dimension explains just over 10% of the variation with the next few dimensions explaining an additional 5%. After about dimension 4, each subsequent dimension explains an additional 2% to 4% of the variable until about dimension 32 where each dimension explains additional 1% of the variance.
+The values below indicate that the first dimension explains nearly 21% of the variation with each subsequent dimension explaining an additional 20%. It takes only 4 dimensions to explain over 75%.
 
-```{r eigenvalues}
-eig.val <- get_eigenvalue(mca)
+```{r demographics eigenvalues}
+eig.val <- get_eigenvalue(demographics.mca)
 
 eig.val
 ```
 
 <br>
 
-A visualization of variation explained by each dimension is below. 
-
-```{r eignevalues scree}
-fviz_eig(mca, addlabels = TRUE, ncp = 50)
-```
-
-<br>
-
 ## Correlation between variables and principle dimensions
 
-Let's take a look to see which variables are going to be important. The chart below shows that the variables related to post-secondary education are highly correlated with the first dimension while the variables related to race/ethnicity and whether english is spoken is correlated with dimension 2. 
+Let's take a look to see which variables are going to be important. The chart below shows that the variables related to the graduation years and race/ethnicity are highly correlated with the first dimension while the Gender variable is correlated with dimension 2. 
 
-```{r mca correlation between variables}
-fviz_mca_var(mca, 
+```{r demogrpahics mca correlation between variables}
+fviz_mca_var(demographics.mca, 
              choice = "mca.cor",
              ggtheme = theme_minimal())
 
@@ -412,15 +424,89 @@ fviz_mca_var(mca,
 
 <br>
 
-## Coordinates of variable categories
+## Quality of representation
 
-This is too busy to interpret well, but there are a few things worth mentioning. The race/ethnicy and english language variables continue to stand out. Having limited english proficiency as well as being an englih learner, and being non-white all have opposing impacts to their related categories for each variable. Regarding post-secondary education variables, having limited no or limited post-secondary experience is in an opposing quadrant to it's related categories. For example, never attending post-secondary is in opposition to attended post-secondary. As well as having earned a masters or bachelor's degree.
+From the chart below, we can see that the variables related to race and ethnicity have categories that are very different from each other - in particular black and Asian/PI. White and American Indian don'e differentiate themselves very much. As expected, Male and Female are opposite of each other.
 
-```{r mca coordinates of variable categories}
-fviz_mca_var(mca,
-             repel = TRUE,
-             col.var = "black")
 
+```{r demographics quality of representation}
+fviz_mca_var(demographics.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+Let's turn this into a bar plot to better visualize all of these. Since we know, according to the eigenvalues, that the first few dimensions only represent 20% of the variance, and each subsequent dimension only explains a bit more variance, it's likely that it will take numerous dimensions to explain a sufficient amount of our variance. Therefore, we will graph visualize the quality of representation up to the max number of dimensions allowed - 5. 
+
+This shows that the RaceEthnicity categories and the gender categories have the highest Cos2.
+
+
+```{r visualize quality of representation}
+fviz_cos2(demographics.mca, choice = "var", axes = 1:2)
+
+```
+
+<br>
+
+For demographics, it seems that RaceEthnicity and Gender are worth keeping around.
+
+<br>
+
+# High school characteristics
+
+<br>
+
+Below are the variables that are categorized as "high school characteristics". 
+
+```{r hs characteristics prep, echo=TRUE}
+hs.character <- master.ind.qual.var %>%
+  select(Dem_Desc, edr) 
+
+head(hs.character)
+
+names(hs.character)
+```
+
+<br>
+
+
+## MCA analysis
+
+The charts below show that the Economic Development Region the high school is located in and the RUCA category of the high school county may have significant differentiation among them.
+
+
+```{r hs character MCA, echo=TRUE}
+hs.character.mca <- MCA(hs.character, graph = TRUE)
+```
+
+<br>
+
+
+## Eigenvalues
+
+The eigenvalues measure the amount of variation retained by each principle component. This will help us determine how many principle components to be considered.
+
+The values below indicate that the first dimension explains nearly 34% of the variation and the second dimension explaining another nearl 30%. It only takes 3 dimensions to rise above the 75% threshold.
+
+```{r hs character eigenvalues}
+eig.val <- get_eigenvalue(hs.character.mca)
+
+eig.val
+```
+
+<br>
+
+## Correlation between variables and principle dimensions
+
+Let's take a look to see which variables are going to be important. The chart below shows that the variables related to the EDR and and RUCA category of the high school are related to both dimensions equally. 
+
+```{r hs character mca correlation between variables}
+fviz_mca_var(hs.character.mca, 
+             choice = "mca.cor",
+             ggtheme = theme_minimal())
 
 ```
 
@@ -430,24 +516,11 @@ fviz_mca_var(mca,
 
 So far, we've only looked at the first two dimensions which only explain 15% of the variance. The quality of representation will help us assess the degree of association between variable categories and a particular axis. If the variable is well represented by two dimensions, the sum of COS2 is close to one. For some of the row items, more than 2 dimensions are required to perfectly represent the data.
 
-Due to the high number of varaiable categories present in the data, I will use color to help decipher which ones have high cos2.
-
-* variable categories with low cos2 values will be colored in “white”
-* variable categories with mid cos2 values will be colored in “blue”
-* variable categories with high cos2 values will be colored in “red”
-
-From the table below, we can see that the variable categories with high cos2 are;
-
-* non.english.home
-* Less than Associate Degree
-* ps_grad
-* attended.ps.within.first.year.hsgrad
-* english.learner
-* Bachelor degree
+From the table below, we can see that the variables make a lot of sense in terms of how they are related. The entirely rural Dem_Desc category is very much related to the EDR that is most rural - EDR 6W. The more metro based EDR - EDR 6E - is more closely aligned with Urban/town/rural mix RUCA categories and EDR 8 is more closely aligned with the town/rural mix RUCA category. This indicates that we could likely use just one of the variables.
 
 
-```{r quality of representation}
-fviz_mca_var(mca, col.var = "cos2",
+```{r hs character quality of representation}
+fviz_mca_var(hs.character.mca, col.var = "cos2",
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
              repel = TRUE, # Avoid text overlapping
              ggtheme = theme_minimal())
@@ -456,213 +529,327 @@ fviz_mca_var(mca, col.var = "cos2",
 
 <br>
 
-Let's turn this into a bar plot to better visualize all of these. Since we know, according to the eigenvalues, that the first few dimensions only represent 20% of the variance, and each subsequent dimension adds only explains a bit more variance, it's likely that it will take numerous dimensions to explain a sufficient amount of our variance. Therefore, we will graph visualize the quality of representation up to the max number of dimensions allowed - 5. 
+Since it takes 3 dimensions to reach the 75% threshold, the chart below provides the Cos2 quality of representation for those three dimensions. It's close, but this shows that the RUCA categories might be a bit more telling, especially with those first two dimensions. But it's close and I think using either the Dem_Desc or the EDR alone would be fine.
 
-The following variables and their respective categories are identified by the following Cos2 grouping;
 
-**Above 75%**
-
-* ps.grad: 
-    + 1
-    + 0
-* highest.cred.level
-    + Bachelor degree
-* attended.ps
-    + Yes
-    + No
-* ps.grad.InstitutionSector
-    + Never attended ps
-
-```{r visualize quality of representation}
-fviz_cos2(mca, choice = "var", axes = 1:5)
+```{r hs character visualize quality of representation}
+fviz_cos2(hs.character.mca, choice = "var", axes = 1:3)
 
 ```
 
 <br>
 
-Let's check the contributions to dimensions 1 through 5.
+For high school characteristics, it seems that using just the EDR variable might be enough.
 
-The following variable categories contribute the most to dimension 1.
+<br>
 
-* ps.grad.InstitutionSector
-    + never attended ps
-    + 1
-* attended.ps
-    + No
-* highest.cred.level
-    + Bachelor's degree
-    + Less than associate degree
-* ps.grad
-    + Yes
-    + No
-* attended.ps.within.first.year.hsgrad
-    + Attended within first year
-    + Never attended PS
-* took.ACT
-    + No
-* non.english.home
-    + 1
-* english.learner
-    + 1
+# High school enrollment
 
+<br>
 
-```{r contributions dimension 1}
-fviz_contrib(mca, choice = "var", axes = 1, xtickslab.rt = 90)
+Below are the variables that are categorized as "high school enrollment". 
+
+```{r hs enroll prep, echo=TRUE}
+hs.enroll <- master.ind.qual.var %>%
+  select(LimitedEnglishProficiencyIndicator, economic.status, pseo.participant, SpecialEdStatus, non.english.home, english.learner) 
+
+head(hs.enroll)
+
+names(hs.enroll)
 
 ```
 
 <br>
 
-The largest contributors to dimension 2 are;
 
-* non.english.home
-    + 1
+## MCA analysis
+
+The charts below show that the one grouping related to english speaking proficiency that might be closely aligned to each other - the variables LimitedEnglishProficiencyIndicator, non.english.home, and english learner.
+
+
+```{r hs enroll MCA, echo=TRUE}
+hs.enroll.mca <- MCA(hs.enroll, graph = TRUE)
+```
+
+<br>
+
+
+## Eigenvalues
+
+The eigenvalues measure the amount of variation retained by each principle component. This will help us determine how many principle components to be considered.
+
+The values below indicate that the first dimension explains nearly 37% of the variation and the second dimension explaining another 20%. It only takes 4 dimensions to rise above the 75% threshold.
+
+```{r hs enroll eigenvalues}
+eig.val <- get_eigenvalue(hs.enroll.mca)
+
+eig.val
+```
+
+<br>
+
+## Correlation between variables and principle dimensions
+
+Let's take a look to see which variables are going to be important. The chart below shows that the variables related to english speaking and economic status are more related to dimension 1 while pseo participantion and special ed status are more aligned with the second dimension.
+
+```{r hs enroll mca correlation between variables}
+fviz_mca_var(hs.enroll.mca, 
+             choice = "mca.cor",
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+## Quality of representation
+
+So far, we've only looked at the first two dimensions which only explain 15% of the variance. The quality of representation will help us assess the degree of association between variable categories and a particular axis. If the variable is well represented by two dimensions, the sum of COS2 is close to one. For some of the row items, more than 2 dimensions are required to perfectly represent the data.
+
+From the chart below, we can see that the variables make a lot of sense in terms of how they are related. The higheset Cos2 are all related to the english proficiency variable. Economic status has a relativly lower Cos2. Special education status was also a bit higher.
+
+
+```{r hs enroll quality of representation}
+fviz_mca_var(hs.enroll.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+From the english proficiency group, it seems that the LimitedEnglishProficencyIndicator might be the best to use in terms of that group, while it is good to probably keep Economic status and special ed status.
+
+
+```{r hs enroll visualize quality of representation}
+fviz_cos2(hs.enroll.mca, choice = "var", axes = 1:3)
+
+```
+
+<br>
+
+For high school enrollment, it seems that using the following variables would be best;
+
 * LimitedEnglishProficiencyIndicator
-    + Yes
-* english.learner
-    + 1
-* Race/Ethnicity
-    + Hispanic
-    + Asian/PI
+* SpecialEdStatus
+* PSEO Participant
+* Economic status
 
-```{r contributions dimension 2}
-fviz_contrib(mca, choice = "var", axes = 2, xtickslab.rt = 90)
+<br>
+
+# High school accomplishments
+
+<br>
+
+Below are the variables that are categorized as "high school accomplishments". 
+
+```{r hs accom prep, echo=TRUE}
+hs.accom <- master.ind.qual.var %>%
+  select(took.ACT, ap.exam, cte.achievement) 
+
+head(hs.accom)
+
+names(hs.accom)
 
 ```
 
 <br>
 
-For dimension 3, the largest contributors are;
 
-* ps.grad.InstitutionSector
-    + 4
-    + Did not grad
-* highest.cred.level
-    + Associate degree
-* ap.exam
-    + 1
-* ps.grad
-    + 1
-    + 0
-* pseo.participant
-    + 1
-* took.act
-    + No
+## MCA analysis
+
+The charts below show that the one grouping related to whether the ACT and ap were taken might be closely aligned to each other.
+
+
+```{r hs accom MCA, echo=TRUE}
+hs.accom.mca <- MCA(hs.accom, graph = TRUE)
+```
+
+<br>
+
+
+## Eigenvalues
+
+The eigenvalues measure the amount of variation retained by each principle component. This will help us determine how many principle components to be considered.
+
+The values below indicate that the first dimension explains nearly 33% of the variation and the second dimension explaining another 25%. It only takes 3 dimensions to rise above the 75% threshold.
+
+```{r hs accom eigenvalues}
+eig.val <- get_eigenvalue(hs.accom.mca)
+
+eig.val
+```
+
+<br>
+
+## Correlation between variables and principle dimensions
+
+Let's take a look to see which variables are going to be important. The chart below shows that the variables related to english speaking and economic status are more related to dimension 1 while pseo participantion and special ed status are more aligned with the second dimension.
+
+```{r hs accom mca correlation between variables}
+fviz_mca_var(hs.accom.mca, 
+             choice = "mca.cor",
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+## Quality of representation
+
+So far, we've only looked at the first two dimensions which only explain 15% of the variance. The quality of representation will help us assess the degree of association between variable categories and a particular axis. If the variable is well represented by two dimensions, the sum of COS2 is close to one. For some of the row items, more than 2 dimensions are required to perfectly represent the data.
+
+From the chart below, we can see that the variables make a lot of sense in terms of how they are related. The higheset Cos2 are all related to the CTE achievement variable, and they are spread very far apart meaning lots of differentiation there. The CTE Concentrator or completor was also much more aligned with not taking the ACT or AP exam. Not suprisingly, the designation on whether an individual took the AP exam and the ACT are closely aligned with individuals that took the ACT were more aligned with individuals that also took the AP exam. However, the ACT variable is much stronger.
+
+```{r hs accom quality of representation}
+fviz_mca_var(hs.accom.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+Judging by the Cos2 values, it seems that using the ACT variable instaed of the AP exam would be just fine.
+
+
+```{r hs accom visualize quality of representation}
+fviz_cos2(hs.accom.mca, choice = "var", axes = 1:3)
+
+```
+
+<br>
+
+For high school accomplishments, it seems that using the following variables would be best;
+
 * cte.achievement
-    + Concentrator or completor
-    + No CTE
+* took.ACT
 
-```{r contributions dimension 3}
-fviz_contrib(mca, choice = "var", axes = 3, xtickslab.rt = 90)
+<br>
+
+# Post-secondary
+
+<br>
+
+Below are the variables that are categorized as "post-secondary". 
+
+```{r post secondary prep, echo=TRUE}
+ps <- master.ind.qual.var %>%
+  select(attended.ps.within.first.year.hsgrad, attended.ps, ps.grad, ps.grad.InstitutionSector, highest.cred.level) 
+
+head(ps)
+
+names(ps)
 
 ```
 
 <br>
 
-The largest contributors to dimension 4 are;
+
+## MCA analysis
+
+The charts below show that the following variables form a bit of a group - attended.ps.within.first.year.hsgrad, ps.grad, attended.ps.
+
+```{r ps MCA, echo=TRUE}
+ps.mca <- MCA(ps, graph = TRUE)
+```
+
+<br>
+
+
+## Eigenvalues
+
+The eigenvalues measure the amount of variation retained by each principle component. This will help us determine how many principle components to be considered.
+
+The values below indicate that the first dimension explains nearly 27% of the variation and the second dimension explaining another 14%. It only takes 6 dimensions to rise above the 75% threshold.
+
+```{r ps eigenvalues}
+eig.val <- get_eigenvalue(ps.mca)
+
+eig.val
+```
+
+<br>
+
+## Correlation between variables and principle dimensions
+
+Let's take a look to see which variables are going to be important. The chart below shows that the variables related t whather they attended post-seconary form a group.
+
+```{r ps mca correlation between variables}
+fviz_mca_var(ps.mca, 
+             choice = "mca.cor",
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+## Quality of representation
+
+So far, we've only looked at the first two dimensions which only explain 15% of the variance. The quality of representation will help us assess the degree of association between variable categories and a particular axis. If the variable is well represented by two dimensions, the sum of COS2 is close to one. For some of the row items, more than 2 dimensions are required to perfectly represent the data.
+
+From the chart below, we can see that the variables make a lot of sense in terms of how they are related. The categories indicating whether someone attended post-secondary are all in the same spot - top left corner. The categories indicating whether they graduated post-secondary are all group together in the bottom left corner.
+
+```{r ps quality of representation}
+fviz_mca_var(ps.mca, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE, # Avoid text overlapping
+             ggtheme = theme_minimal())
+
+```
+
+<br>
+
+Judging by the Cos2 values, it seems that using the ps.grad.InstitutionSector variable will do a fine job at covering attending post-secondary and atteded within first year of high school graduation. 
+
+
+```{r ps visualize quality of representation}
+fviz_cos2(ps.mca, choice = "var", axes = 1:5)
+
+```
+
+<br>
+
+For post-secondary, it seems that using the following variables would be best;
 
 * ps.grad.InstitutionSector
-    + Did not grad
-    + Never attended ps
-    + 1
-    + 4
-* attended.ps
-    + No
 * highest.cred.level
-    + Bachelors degree
-    + Associate degree
-
-
-```{r contributions dimension 4}
-fviz_contrib(mca, choice = "var", axes = 4, xtickslab.rt = 90)
-
-```
 
 <br>
 
-The largets contributor sto dimension 5 are;
+# Variables to consider keeping and eliminating
 
-* Dem_Desc
-    + Urban/town/rural mix
-* EDR
-    + EDR 6W
-    + EDR 6E
-* highest cred.level
-    + Associate degree
-* ps.grad.InstitutionSector
-    + 1
+The analysis above shows that the following variables would likely provide high quality representation without muddying up the analysis with so many variables.
 
-```{r contributions dimension 5}
-fviz_contrib(mca, choice = "var", axes = 5, xtickslab.rt = 90)
+*Demographics
+  * Gender
+  * RaceEthnicity
+* High school characteristics
+  * EDR
+* High school enrollment
+  * LimitedEnglishProficiency
+  * SpecialEdStatus
+  * Economic.status
+  * PSEO participant
+* High school accomplishments
+  * cte.achievement
+  * took.act
+* Post-secondary
+  * ps.grad.InstitutionSector
+  * highest.cred.level
+  
+  
+This means we will eliminate the following variables
 
-```
-
-## Summary
-
-So out of all this, it seems the following variables are the most important regarding the amount of variation explained;
-
-1. ps.grad.InstitutionSector
-    a. never attended ps
-    b. 1 - Public, 4-year or above
-    c. 4 - Public, 2-year
-    d. did not grad
-2. attended.ps
-    a. No
-3. attended.ps.within.first.year.hsgrad
-    a. Attended PS within first year
-    b. Never attended PS
-4. highest.cred.level
-    a. Bachelor's degree
-    b. Less than associate degree
-    c. associate degree
-5. ps.grad
-    a. Yes
-    b. No
-6. took.ACT
-    a. No
-7. non.english.home
-    a. 1 - yes
-8. english.learner
-    a. 1 - yes
-9. LimitedEnglishProficiencyIndicator
-    a. Yes
-10. Race/Ethnicity
-    a. hispanic
-    b. Asian/PI
-11. ap.exam
-    a. 1 - yes
-12. pseo.participant
-    a. 1 - yes
-13. cte.achievement
-    a. Concentrator or completor
-    b. No CTE
-14. Dem_Desc
-    a. Urban/town/rural mix
-15. edr
-    a. EDR 6E
-    b. EDR 6W
-
-
-## Color individuals by group
-
-Below is the individuals. Not sure how to interpret this.
-
-```{r individuals}
-fviz_mca_ind(mca, 
-             geom.ind = "point",
-             col.ind = ind.qual.var$ps.grad.InstitutionSector,
-             palette = brewer.pal(n = 11, "RdYlBu"),
-             addEllipses = TRUE,
-             ggtheme = theme_minimal()) 
-
-
-```
-
-<br>
+* High school characteristics: Dem_Desc
+* High school enrollment: non.english.home & english.learner
+* High school accomplishments: ap.exam
+* Post-secondary: attended.ps.within.first.year.hsgrad & attended.ps & ps.grad
 
 ```{r final master}
 master.final.after.mca <- master.ind.qua.var.write %>%
-  select(-hs.grad.year, -Gender, -economic.status, -SpecialEdStatus)
+  select(-hs.grad.year, -Dem_Desc, -non.english.home, -english.learner, -ap.exam, -attended.ps.within.first.year.hsgrad, -attended.ps, -ps.grad)
 
 write_csv(master.final.after.mca, "Data/SLEDS/Masters/Master-final-after-mca.csv")
 
