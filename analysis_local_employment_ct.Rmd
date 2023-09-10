@@ -1594,11 +1594,23 @@ The p-values indicate a significant difference across categories for each Time X
   + A significantly higher proportion of white individuals were attending post-secondary.
 * Five years after graduating.
   + By year fives, the differences between white and hispanic and black having meaningful employment in southwest disappears. 
-  + 
+  + Hispanic individuals have a higher proportion of individuals without meaningful employment and not attending post-secondary, and without a MN employment record. 
+* Ten years after graduating
+  + Hispanics have a significantly higher proportion without meaningful employmnt, not attending pos-secondary, or without a MN employment record.
 
 **EDR**
 
-Summary here
+P-values indicate a significant difference across categories for all Time X, and they get stronger over time.
+
+* One year after graduating
+  + EDR 6E has a higher proportion of individuals that have meaningful employment in Southwest meaningful employment in Minnesota, not having meaningful employment and not attending post-secondary.
+  + EDR 8 has a higher proportion of individuals attending post-secondary, and individuals that do not have a MN employment record and are not attending post-secondary.
+* Five years after graduating
+  + EDR 6E has a significantly higher proportion of individuals with meaningful employment in Minnesota, but not Southwest. 
+  + EDR 8 has a significantly higher proportion of individuals with meaningful employment in SW while having a significantly lower proportion with meaningful employment in Minnesota. It also has a significantly higher proportion of individuals with no MN employment record.
+* Ten years after graduation
+  + EDR 6E has significantly higher proportion of individuals with meaningful employment outside of Southwest Minnesota.
+  + EDR 8 has a significantly higher proportion of individuals with meaningful employment in Southwest. And has a HUGE proportion of individuals with no MN employment record.
 
 <br>
 
@@ -1903,6 +1915,68 @@ data <- meaningful.emp.sw %>%
   droplevels()
 
 tab_xtab(var.row = data$grad.year.10, var.col = data$RaceEthnicity, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+
+```
+
+<br>
+
+### EDR{.tabset}
+
+#### One year after graduating
+
+<br>
+
+```{r ct edr grad year 1 meaningful emp SW}
+data <- meaningful.emp.sw %>%
+  select(grad.year.1, edr) %>%
+  filter(grad.year.1 != "After 2019") %>%
+  droplevels()
+
+tab_xtab(var.row = data$grad.year.1, var.col = data$edr, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+
+```
+
+<br>
+
+#### Five years after graduating
+
+<br>
+
+```{r ct edr grad year 5 meaningful emp SW}
+data <- meaningful.emp.sw %>%
+  select(grad.year.5, edr) %>%
+  filter(grad.year.5 != "After 2019") %>%
+  droplevels()
+
+tab_xtab(var.row = data$grad.year.5, var.col = data$edr, 
+         title = "Test", 
+         show.exp = TRUE,
+         show.col.prc = TRUE)
+
+
+```
+
+<br>
+
+#### Ten years after graduating
+
+<br>
+
+```{r ct edr grad year 10 meaningful emp SW}
+data <- meaningful.emp.sw %>%
+  select(grad.year.10, edr) %>%
+  filter(grad.year.10 != "After 2019") %>%
+  droplevels()
+
+tab_xtab(var.row = data$grad.year.10, var.col = data$edr, 
          title = "Test", 
          show.exp = TRUE,
          show.col.prc = TRUE)
