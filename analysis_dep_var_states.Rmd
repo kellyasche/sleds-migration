@@ -160,7 +160,7 @@ We have already created the employment states for each year.
 <br>
 
 ```{r master employment states each year, include=TRUE}
-master.emp.states.yearly <- read_csv("Data/SLEDS/Masters/Master-emp-states-each-year.csv") %>%
+master.emp.states.yearly <- read_csv("Data/SLEDS/Masters/States/Master-emp-states-each-year.csv") %>%
   mutate(grad.year = fct_relevel(grad.year, "grad.year.0", "grad.year.1", "grad.year.2", "grad.year.3", "grad.year.4", "grad.year.5", "grad.year.6", "grad.year.7", "grad.year.8", "grad.year.9", "grad.year.10", "grad.year.11"),
          county.match = fct_relevel(county.match, "Meaningful emp - match", "Meaningful emp - no match", "MN emp record - not meaningful", "No MN emp record", "After 2019"),
          edr.match = fct_relevel(edr.match, "Meaningful emp - match", "Meaningful emp - no match", "MN emp record - not meaningful", "No MN emp record", "After 2019"),
@@ -348,6 +348,9 @@ seven.states <- ps.emp.states %>%
 head(seven.states)
 
 names(seven.states)
+
+
+write_csv(seven.states, "Data/SLEDS/Masters/States/annual-seven-states.csv")
 ```
 
 <br>

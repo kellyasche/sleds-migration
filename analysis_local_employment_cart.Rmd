@@ -139,9 +139,9 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 ```{r master dataset}
 master.original <- read_csv("Data/SLEDS/Masters/Master-updated-1.csv")
 
-master.qual.names <- read_csv("Data/SLEDS/Masters/Master-final-after-mca.csv") 
+master.qual.names <- read_csv("Data/SLEDS/Masters/After analysis/Master-final-after-mca.csv") 
 
-master.states <- read_csv("Data/SLEDS/Masters/Master-states.csv")
+master.states <- read_csv("Data/SLEDS/Masters/States/Master-states.csv")
 
 ```
 
@@ -225,7 +225,8 @@ In addition to eliminating those variables, we will also simplify the ps.grad.In
     + Private for-profit, less-than 2-year (9, 11)
 * 3 = graduated from multiple institution sectors (10)
 * 4 = graduated from a public, 2-year institution (4,4)
-* 5 = Did not graduate or attend a post-secondary institution
+* 5 = some college, never graduated
+* 6 = Did not attend college
 
 
 ```{r updating master}
@@ -233,7 +234,8 @@ updated.master <- master %>%
   mutate(ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c(1,2,3), 1,
                                             ifelse(ps.grad.InstitutionSector == 11, 2,
                                                    ifelse(ps.grad.InstitutionSector == 10, 3,
-                                                          ifelse(ps.grad.InstitutionSector == 4, 4, 5)))))
+                                                          ifelse(ps.grad.InstitutionSector == 4, 4,
+                                                                 ifelse(ps.grad.InstitutionSector == "Did not grad", 5, 6))))))
 
 names(updated.master)
 
@@ -268,20 +270,23 @@ First, let's re-categorize the dependent variables so that they are binary.
 ```{r prep meaningful emp in sw, echo=TRUE}
 meaningful.emp.sw <- updated.master %>%
   mutate(grad.year.1 = ifelse(grad.year.1 %in% c("Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW"), "Meaningful emp SW", 
-                              ifelse(grad.year.1 %in% c("Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps"), "No meaningful emp SW",
-                                     ifelse(grad.year.1 == "After 2019", "After 2019", as.character(grad.year.1)))),
-         grad.year.5 = as.factor(grad.year.1),
+                              ifelse(grad.year.1 %in% c("Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps"), "No meaningful emp SW",
+                                     ifelse(grad.year.1 == "After 2019", "After 2019",
+                                            ifelse(grad.year.1 == "Attending ps", "Attending ps", as.character(grad.year.1))))),
+         grad.year.1 = as.factor(grad.year.1),
          grad.year.5 = ifelse(grad.year.5 %in% c("Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW"), "Meaningful emp SW", 
-                              ifelse(grad.year.5 %in% c("Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps"), "No meaningful emp SW",
-                                     ifelse(grad.year.5 == "After 2019", "After 2019", as.character(grad.year.5)))),
+                              ifelse(grad.year.5 %in% c("Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps"), "No meaningful emp SW",
+                                     ifelse(grad.year.5 == "After 2019", "After 2019",
+                                            ifelse(grad.year.5 == "Attending ps", "Attending ps", as.character(grad.year.5))))),
          grad.year.5 = as.factor(grad.year.5),
          grad.year.10 = ifelse(grad.year.10 %in% c("Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW"), "Meaningful emp SW", 
-                              ifelse(grad.year.10 %in% c("Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps"), "No meaningful emp SW",
-                                     ifelse(grad.year.10 == "After 2019", "After 2019", as.character(grad.year.10)))),
+                              ifelse(grad.year.10 %in% c("Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps"), "No meaningful emp SW",
+                                     ifelse(grad.year.10 == "After 2019", "After 2019",
+                                            ifelse(grad.year.10 == "Attending ps", "Attending ps", as.character(grad.year.10))))),
          grad.year.10 = as.factor(grad.year.10),
-         grad.year.1 = fct_relevel(grad.year.1, "Meaningful emp SW", "No meaningful emp SW", "After 2019"),
-         grad.year.5 = fct_relevel(grad.year.5, "Meaningful emp SW", "No meaningful emp SW", "After 2019"),
-         grad.year.10 = fct_relevel(grad.year.10, "Meaningful emp SW", "No meaningful emp SW", "After 2019"))
+         grad.year.1 = fct_relevel(grad.year.1, "Meaningful emp SW", "No meaningful emp SW", "Attending ps", "After 2019"),
+         grad.year.5 = fct_relevel(grad.year.5, "Meaningful emp SW", "No meaningful emp SW", "Attending ps", "After 2019"),
+         grad.year.10 = fct_relevel(grad.year.10, "Meaningful emp SW", "No meaningful emp SW", "Attending ps", "After 2019"))
 
 ```
 
@@ -294,6 +299,7 @@ Since our dependent variable includes a state in which someone is attending post
 ```{r prep meaningful emp SW grad year 1}
 meaningful.emp.sw.grad.year.1 <- meaningful.emp.sw %>%
   filter(grad.year.1 != "After 2019") %>%
+  filter(grad.year.1 != "Attending ps") %>%
   select(-PersonID, -grad.year.5, -grad.year.10, -ps.grad.InstitutionSector, -highest.cred.level)
 
 names(meaningful.emp.sw.grad.year.1)
@@ -420,7 +426,7 @@ Next, let's try postpruning. The idea here is to allow the decision tree to grow
 ```{r postpruning meaningful emp SW grad year 1, echo=TRUE}
 
 # Prune the hr_base_model based on the optimal cp value
-meaningful.emp.sw.grad.year.1.model.postprune <- prune(meaningful.emp.sw.grad.year.1.model, cp = .00052929)
+meaningful.emp.sw.grad.year.1.model.postprune <- prune(meaningful.emp.sw.grad.year.1.model, cp = .0011165)
 
 #Summary
 summary(meaningful.emp.sw.grad.year.1.model.postprune)
@@ -483,6 +489,7 @@ Next we will look at the variables importance at five years after graduation. At
 ```{r prep meaningful emp SW grad year 5}
 meaningful.emp.sw.grad.year.5 <- meaningful.emp.sw %>%
   filter(grad.year.5 != "After 2019") %>%
+  filter(grad.year.5 != "Attending ps") %>%
   select(-PersonID, -grad.year.1, -grad.year.10)
 
 names(meaningful.emp.sw.grad.year.5)
@@ -565,7 +572,7 @@ Next, we need to prune. We can either pre-prune or post-prune. We will start wit
 ```{r pre pruning  meaningful emp SW grad year 5, echo=TRUE}
 # Grow a tree with minsplit of 40 and max depth of 10
 meaningful.emp.sw.grad.year.5.model.preprune <- rpart(grad.year.5 ~ ., data = train, method = "class", 
-                   control = rpart.control(cp = 0, maxdepth = 10, minsplit = 40))
+                   control = rpart.control(cp = 0, maxdepth = 5, minsplit = 10))
 
 ```
 
@@ -612,7 +619,7 @@ Next, let's try postpruning. The idea here is to allow the decision tree to grow
 ```{r postpruning meaningful emp SW grad year 5, echo=TRUE}
 
 # Prune the hr_base_model based on the optimal cp value
-meaningful.emp.sw.grad.year.5.model.postprune <- prune(meaningful.emp.sw.grad.year.5.model, cp = .00030875)
+meaningful.emp.sw.grad.year.5.model.postprune <- prune(meaningful.emp.sw.grad.year.5.model, cp = .0011202)
 
 #Summary
 summary(meaningful.emp.sw.grad.year.5.model.postprune)
@@ -670,6 +677,7 @@ Next we will look at the variables importance at five years after graduation. At
 ```{r prep meaningful emp SW grad year 10}
 meaningful.emp.sw.grad.year.10 <- meaningful.emp.sw %>%
   filter(grad.year.10 != "After 2019") %>%
+  filter(grad.year.10 != "Attending ps") %>%
   select(-PersonID, -grad.year.1, -grad.year.5)
 
 names(meaningful.emp.sw.grad.year.10)
@@ -799,7 +807,7 @@ Next, let's try postpruning. The idea here is to allow the decision tree to grow
 ```{r postpruning meaningful emp SW grad year 10, echo=TRUE}
 
 # Prune the hr_base_model based on the optimal cp value
-meaningful.emp.sw.grad.year.10.model.postprune <- prune(meaningful.emp.sw.grad.year.10.model, cp = 0.00134844)
+meaningful.emp.sw.grad.year.10.model.postprune <- prune(meaningful.emp.sw.grad.year.10.model, cp = 0.00101133)
 
 #Summary
 summary(meaningful.emp.sw.grad.year.10.model.postprune)
@@ -873,5 +881,56 @@ Overall, the variables that were the most consistently important throughout the 
   + MCA - reading score
   + Average wages as a percent of state average
   + Highest credentials earned
+  
+<br>
+
+```{r variable importance rankings}
+var.rank <- read_xlsx("Data/SLEDS/Masters/variable importance.xlsx") %>%
+  pivot_longer(names_to = "model", values_to = "score", 2:4) %>%
+  mutate(score = ifelse(is.na(score), 0, score)) %>%
+  group_by(grad.year, model) %>%
+  mutate(pct.score = score / sum(score)) %>%
+  ungroup() %>%
+  group_by(Category, grad.year) %>%
+  mutate(average.pct.score = mean(pct.score)) %>%
+  ungroup() 
+
+rank <- var.rank %>%
+  distinct(Category, grad.year, .keep_all = TRUE) %>%
+  select(Category, grad.year, average.pct.score) %>%
+  mutate(data_id = seq(n()),
+         grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10"))
+
+names(rank)
+
+plot <- ggplot(rank, aes(grad.year, average.pct.score, color = Category)) +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_point_interactive(size = 5, aes(data_id = Category, tooltip = paste("Years after graduation: ", grad.year, "\nCategory: ", Category, "\nAverage score: ", percent(average.pct.score, accuracy = 1), sep = ""))) +
+  labs(x="", y = "", color="", title = "Average percent of total score across models")+
+  geom_label_repel(aes(label = Category), show.legend = FALSE) +
+  scale_y_continuous(labels=scales::percent)+
+  scale_color_discrete(guide = guide_legend(ncol = 3)) +
+  theme_line+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 7) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_toolbar(saveaspng = FALSE),
+                 opts_sizing(rescale = FALSE))
+
+table <- rank %>%
+  select(Category, grad.year, average.pct.score) %>%
+  group_by(Category) %>%
+  mutate(avg.total = mean(average.pct.score)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = grad.year, values_from = average.pct.score) %>%
+  select(Category, grad.year.1, grad.year.5, grad.year.10, avg.total)
+
+datatable(table, class = "cell-border stripe", filter = "top", rownames = FALSE,
+          options = list(columnDefs = list(list(className = "dt-center", targets = 1:4)))) %>%
+  formatPercentage(2:5)
+
+```
   
 

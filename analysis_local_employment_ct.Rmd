@@ -139,12 +139,13 @@ mn_counties <- st_read("Data/Shapefiles/county shapefiles/MNCounties_MNDOT.shp",
 ```{r master dataset}
 master.original <- read_csv("Data/SLEDS/Masters/Master-updated-1.csv")
 
-master.qual.names <- read_csv("Data/SLEDS/Masters/Master-final-after-mca.csv") 
+master.qual.names <- read_csv("Data/SLEDS/Masters/After analysis/Master-final-after-mca.csv") 
 
-master.states <- read_csv("Data/SLEDS/Masters/Master-states.csv")
+master.states <- read_csv("Data/SLEDS/Masters/States/Master-states.csv")
 
 master <- master.states %>%
   left_join(master.qual.names, by = "PersonID")
+
 ```
 
 ```{r independent and dependent variables}
@@ -170,8 +171,13 @@ updated.master <- master.original %>%
          ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector),
          grad.year.1 = fct_relevel(grad.year.1, "Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW", "Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps"),
          grad.year.5 = fct_relevel(grad.year.5, "Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW", "Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps"),
-         grad.year.10 = fct_relevel(grad.year.10, "Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW", "Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+         grad.year.10 = fct_relevel(grad.year.10, "Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW", "Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps"),
+         highest.cred.level = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", as.character(highest.cred.level)),
+         highest.cred.level = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", as.character(highest.cred.level)),
+         highest.cred.level = as.factor(highest.cred.level)) %>%
   droplevels()
+
+names(updated.master)
 
 ```
 
@@ -269,7 +275,10 @@ meaningful.emp.sw <- updated.master %>%
          grad.year.5 = fct_relevel(grad.year.5, "Meaningful emp SW", "Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps", "After 2019"),
          grad.year.10 = ifelse(grad.year.10 %in% c("Meaningful emp County", "Meaningful emp EDR", "Meaningful emp SW"), "Meaningful emp SW", as.character(grad.year.10)),
          grad.year.10 = as_factor(grad.year.10),
-         grad.year.10 = fct_relevel(grad.year.10, "Meaningful emp SW", "Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps", "After 2019"))
+         grad.year.10 = fct_relevel(grad.year.10, "Meaningful emp SW", "Meaningful emp MN", "Attending ps", "Not meaningful, not attending ps", "No MN emp record, not attending ps", "After 2019"),
+         highest.cred.level = fct_relevel(highest.cred.level, "No college", "Some college", "Less than associate degree", "Associate degree", "Bachelor degree", "Master degree or higher"))
+
+write_csv(meaningful.emp.sw, "Data/SLEDS/Masters/After analysis/Master-meaningful-emp-sw.csv")
 ```
 
 Let's first take a look at proportion of states in each of the time.X. The chart below shows that a majority of individuals are attending post-secondary one year after graduating high school. However, as the percentage of attendance drops, the two primary states that increase are individuals with meaningful employment in Minnesota, but no Southwest, and individuals with no MN employment record and are not attending post-secondary.
@@ -363,7 +372,7 @@ All three cross-tabs indicate that there are differences in the group state and 
 
 ### Average CTE intensity{.tabset}
 
-No boxplot necessary. No significant differences to show.
+No boxplot necessary. No significant differences to show. 
 
 #### One year after graduating
 
@@ -373,6 +382,7 @@ No boxplot necessary. No significant differences to show.
 data <- meaningful.emp.sw %>%
   select(grad.year.1, avg.cte.intensity) %>%
   filter(grad.year.1 != "After 2019") %>%
+  filter(grad.year.1 != "Attending ps") %>%
   drop_na()
 
 summary <- aov(avg.cte.intensity ~ grad.year.1, data = data)
@@ -393,6 +403,7 @@ TukeyHSD(summary)
 data <- meaningful.emp.sw %>%
   select(grad.year.5, avg.cte.intensity) %>%
   filter(grad.year.5 != "After 2019") %>%
+  filter(grad.year.5 != "Attending ps") %>%
   drop_na()
 
 summary <- aov(avg.cte.intensity ~ grad.year.5, data = data)
@@ -415,7 +426,9 @@ TukeyHSD(summary)
 data <- meaningful.emp.sw %>%
   select(grad.year.10, avg.cte.intensity) %>%
   filter(grad.year.10 != "After 2019") %>%
-  drop_na()
+  filter(grad.year.10 != "Attending ps") %>%
+  drop_na() %>%
+  droplevels()
 
 summary <- aov(avg.cte.intensity ~ grad.year.10, data = data)
 
@@ -439,6 +452,7 @@ There are significant differences across all three time.x and is definitely wort
 data <- meaningful.emp.sw %>%
   select(grad.year.1, total.cte.courses.taken) %>%
   filter(grad.year.1 != "After 2019") %>%
+  filter(grad.year.1 != "Attending ps") %>%
   drop_na() %>%
   group_by(grad.year.1) %>%
   mutate(q1 = quantile(total.cte.courses.taken, .25),
@@ -497,6 +511,7 @@ TukeyHSD(summary)
 data <- meaningful.emp.sw %>%
   select(grad.year.5, total.cte.courses.taken) %>%
   filter(grad.year.5 != "After 2019") %>%
+  filter(grad.year.5 != "Attending ps") %>%
   drop_na() %>%
   group_by(grad.year.5) %>%
   mutate(q1 = quantile(total.cte.courses.taken, .25),
@@ -685,6 +700,7 @@ In addition to eliminating those variables, we will also simplify the ps.grad.In
   + Private for-profit, less-than 2-year (9, 11)
 * "Multiple" = graduated from multiple institution sectors (10)
 * "2-year, public" = graduated from a public, 2-year institution (4,4)
+* "Some" = Attended college but never graduated
 * "None" = Did not graduate or attend a post-secondary institution
 
 ```{r prep post secondary institution recode}
@@ -695,8 +711,9 @@ meaningful.emp.sw.ps.recode <- meaningful.emp.sw %>%
          new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "11", "2-year, not public", as.character(new.ps.grad.InstitutionSector)),
          new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "4", "2-year, public", as.character(new.ps.grad.InstitutionSector)),
          new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "10", "Multiple", as.character(new.ps.grad.InstitutionSector)),
-         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("Did not grad", "Never attended ps"), "None", as.character(new.ps.grad.InstitutionSector)),
-         new.ps.grad.InstitutionSector = fct_relevel(new.ps.grad.InstitutionSector, "2-year, public", "2-year, not public", "4-year, any", "Multiple", "None"))
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "Never attended ps", "Never attended", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", new.ps.grad.InstitutionSector),
+         new.ps.grad.InstitutionSector = fct_relevel(new.ps.grad.InstitutionSector, "2-year, public", "2-year, not public", "4-year, any", "Multiple", "Some college", "Never attended"))
 
 
 ```
