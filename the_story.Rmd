@@ -1501,7 +1501,973 @@ girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
 
 ### MCA scores
 
-The last 
+Another factor that came up consistently in relation to whether an individual had meaningful workforce participation was MCA scores. Analysis showed that the higher the scores, the more likely they didn't have meaningful workforce participation in Southwest.
+
+First, let's take a look at the distribution of scores for each test. The MCA Math test has the most even distribution with about a quarter of the students in receiving each score. The highest percentage of 4 scores are in MCA reading, while the lowest percentage is in science.
+
+<br>
+
+```{r mca score distribution}
+data <- master %>%
+  select(PersonID, grad.year.1, MCA.R, MCA.M, MCA.S) %>%
+  filter(grad.year.1 != "After 2019") %>%
+  drop_na() %>%
+  pivot_longer(names_to = "MCA.test", values_to = "MCA.score", 3:5) %>%
+  group_by(MCA.test, MCA.score) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(MCA.test) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup()
+
+plot <- ggplot(data, aes(x = MCA.test, y = pct, fill = as.factor(MCA.score), group = MCA.score)) +
+    geom_col(position = "dodge") +
+    geom_label(aes(label = percent(pct, accuracy = 1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  labs(x="\nMCA Test Score", y = "", color="", title = "Test scores for MCA tests") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = brewer.pal(n = 5, "PuBu")) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+
+```
+
+<br>
+
+#### {.unnumbered .unlisted .toc-ignore .tabset}
+
+Analysis shows that the proportion of individuals within each test score varied significantly in whether they had meaningful workforce participation in Southwest.
+
+For all subjects, there is consistently a higher proportion of individuals with meaningful workforce participation that also had lower test scores (typically a score of 1 or 2). Across all the grad years, typically a third or more of individuals that had a test score of 1 or 2 had meaningful workforce participation in Southwest one, five, and ten years after high school.
+
+<br>
+
+##### MCA - Reading
+
+```{r mca  reading scores and meaningful workforce participatin in SW}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, MCA.R) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, MCA.R, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, MCA.R) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, MCA.R) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "Meaningful emp SW"])) / 2) + sum(prop[states != "Meaningful emp SW"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "Meaningful emp SW") 
+  
+plot <- ggplot(data = data, aes(MCA.R, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals within each MCA - reading test score that\nhave meaningful workforce participation in Southwest", subtitle = "A higher proportion of individuals with lower test scores have meaningful workforce\nparticipation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+```
+
+<br>
+
+##### MCA - Match
+
+```{r mca math scores and meaningful workforce participatin in SW}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, MCA.M) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, MCA.M, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, MCA.M) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, MCA.M) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "Meaningful emp SW"])) / 2) + sum(prop[states != "Meaningful emp SW"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "Meaningful emp SW") 
+  
+plot <- ggplot(data = data, aes(MCA.M, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals within each MCA - math test score that\nhave meaningful workforce participation in Southwest", subtitle = "A higher proportion of individuals with lower test scores have meaningful workforce\nparticipation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+```
+
+<br>
+
+##### MCA - Science
+
+```{r mca  science scores and meaningful workforce participatin in SW}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, MCA.S) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, MCA.S, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, MCA.S) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, MCA.S) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "Meaningful emp SW"])) / 2) + sum(prop[states != "Meaningful emp SW"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "Meaningful emp SW") 
+  
+plot <- ggplot(data = data, aes(MCA.S, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals within each MCA - science test score that\nhave meaningful workforce participation in Southwest", subtitle = "A higher proportion of individuals with lower test scores have meaningful workforce\nparticipation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+```
+
+<br>
+
+### {.unnumbered .unlisted .toc-ignore .tabset}
+
+
+And again, this is also related to their post-high school paths. Like CTE engagement and taking the ACT, MCA scores are associated with the type of college they graduate from and degree they attain. However, unlike those, MCA scores are also related to whether someone attends college at all. In particular, lower MCA scores typically had higher proportions of individuals that;
+
+* attained an Associate degree or less, and/or
+* graduated from a 2-year college.
+
+The chart below provides the proportion of individuals within each MCA reading score and their post-high school pathway. It shows that a significantly higher proportion of individuals that received a 1, 2, or 3 score on their reading attained an associate degree or less, and/or graduated from a 2-year college. Both of these pathways are associated with higher proportions of individuals that have menaingful workforce participation in Southwest Minnesota.
+
+Although the chart is only using MCA reading scores, this pattern emerges for all three MCA tests (reading, match and science).
+
+<br>
+
+```{r mca scores and post high school path higher}
+data <- master %>%
+  filter(grad.year.5 != "Attending ps") %>%
+  filter(grad.year.5 != "After 2019") %>%
+  mutate(highest.cred.level = str_replace(highest.cred.level, "Bachelor degree", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Master degree or higher", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Associate degree", "Associate degree or less"),
+         highest.cred.level = str_replace(highest.cred.level, "Less than Associate Degree", "Associate degree or less")) %>%
+  mutate(ps.loc = ifelse(ps.pr == "Southwest", "Southwest", ps.pr),
+         ps.loc = ifelse(ps.pr != "Southwest" & ps.state == "MN", "MN, outside SW", ps.loc),
+         ps.loc = ifelse(ps.state %in% c("SD", "ND", "IA"), "Border state", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", ps.loc),
+         ps.loc = ifelse(!ps.state %in% c("MN", "SD", "ND", "IA") & !is.na(ps.state), "Far far away", ps.loc)) %>%
+  mutate(ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("1", "2", "3"), "4-year", as.character(ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("4", "11"), "2-year", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "10", "Multiple", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("Never attended ps"), "No college", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = str_replace(new.ps.grad.InstitutionSector, "Did not grad", "Some college")) %>%
+  filter(new.ps.grad.InstitutionSector != "Multiple") %>%
+  mutate(new.ps.grad.InstitutionSector = fct_relevel(new.ps.grad.InstitutionSector, "No college", "Some college", "2-year", "4-year", "Multiple")) %>%
+  select(MCA.R, highest.cred.level, new.ps.grad.InstitutionSector, ps.loc) %>%
+  drop_na(MCA.R) %>%
+  pivot_longer(names_to = "ps.path", values_to = "Category", 2:4) %>%
+  group_by(MCA.R, ps.path, Category) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(MCA.R, ps.path) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(Category = str_replace(Category, "2-year", "Grad from 2-year college"),
+         Category = str_replace(Category, "Southwest", "Grad from SW college")) %>%
+  filter(Category %in% c("Associate degree or less", "Grad from 2-year college")) %>%
+  mutate(data_id = seq(n()),
+         Category = fct_relevel(Category, "Associate degree or less", "Grad from 2-year college", "Grad from SW college"))
+
+plot <- ggplot(data = data, aes(Category, pct, fill = as.factor(MCA.R), group = as.factor(MCA.R))) +
+  geom_col_interactive(position = "dodge") +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  geom_label(aes(x = .95, y = .15, label = "Significantly higher\nproportion"), show.legend = FALSE , fill = "transparent", color = "white") +
+  geom_label(aes(x = 1.95, y = .15, label = "Significantly higher\nproportion"), show.legend = FALSE , fill = "transparent", color = "white") +
+  labs(x="", y = "", color="", title = "Proportion of MCA - Reading test scores by different post-high\nschool paths 5 years after graduating high school", subtitle = "Higher proportions of individuals with lower MCA scores have an associate degree or\ngraduate from a 2-year college\n") +
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+  
+
+```
+
+<br>
+
+There's also the ways in which lower MCA scores are related to post-high school paths that can lead to higher proportions of individuals without meaningful workforce participation in Southwest. Lower MCA test scores mean that there were lower proportions of individuals that;
+
+* graduate with a bachelor degree or higher,
+* graduate from a 4-year college,
+* graduate from a college located in SD, ND, or IA, and
+* graduate from a college in MN, but not located in SW.
+
+All of these paths had significantly lower proportions of individuals with meaningful workforce participation in Southwest.
+
+<br>
+
+```{r MCA scores lesser by ps path}
+data <- master %>%
+  filter(grad.year.5 != "Attending ps") %>%
+  filter(grad.year.5 != "After 2019") %>%
+  mutate(highest.cred.level = str_replace(highest.cred.level, "Bachelor degree", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Master degree or higher", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Associate degree", "Associate degree or less"),
+         highest.cred.level = str_replace(highest.cred.level, "Less than Associate Degree", "Associate degree or less")) %>%
+  mutate(ps.loc = ifelse(ps.pr == "Southwest", "Southwest", ps.pr),
+         ps.loc = ifelse(ps.pr != "Southwest" & ps.state == "MN", "MN, outside SW", ps.loc),
+         ps.loc = ifelse(ps.state %in% c("SD", "ND", "IA"), "Border state", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", ps.loc),
+         ps.loc = ifelse(!ps.state %in% c("MN", "SD", "ND", "IA") & !is.na(ps.state), "Far far away", ps.loc)) %>%
+  mutate(ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("1", "2", "3"), "4-year", as.character(ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("4", "11"), "2-year", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "10", "Multiple", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("Never attended ps"), "No college", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = str_replace(new.ps.grad.InstitutionSector, "Did not grad", "Some college")) %>%
+  filter(new.ps.grad.InstitutionSector != "Multiple") %>%
+  mutate(new.ps.grad.InstitutionSector = fct_relevel(new.ps.grad.InstitutionSector, "No college", "Some college", "2-year", "4-year", "Multiple")) %>%
+  select(MCA.R, highest.cred.level, new.ps.grad.InstitutionSector, ps.loc) %>%
+  drop_na(MCA.R) %>%
+  pivot_longer(names_to = "ps.path", values_to = "Category", 2:4) %>%
+  group_by(MCA.R, ps.path, Category) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(MCA.R, ps.path) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(Category = str_replace(Category, "4-year", "Grad from 4-year college"),
+         Category = str_replace(Category, "MN, outside SW", "Grad from MN but not SW college"),
+         Category = str_replace(Category, "Border state", "Grad from SD, ND or IA"),
+         Category = str_replace(Category, "Far far away", "Grad from another state and not border")) %>%
+  filter(Category %in% c("Bachelor degree or higher", "Grad from 4-year college", "Grad from SD, ND or IA", "Grad from MN but not SW college")) %>%
+  mutate(data_id = seq(n()),
+         Category = fct_relevel(Category, "Bachelor degree or higher", "Grad from 4-year college", "Grad from SD, ND or IA", "Grad from another state and not border", "Grad from MN but not SW college"))
+
+plot <- ggplot(data = data, aes(Category, pct, fill = as.factor(MCA.R), group = as.factor(MCA.R))) +
+  geom_col_interactive(position = "dodge") +
+  geom_label(position = position_dodge(width = .9), aes(label = percent(pct, accuracy = 1)), show.legend = FALSE) +
+  geom_label(aes(x = 1.25, y = .2, label = "Significantly\nlarger\nproportion"), show.legend = FALSE, fill = "transparent") +
+  geom_label(aes(x = 2.25, y = .2, label = "Significantly\nlarger\nproportion"), show.legend = FALSE, fill = "transparent") +
+  geom_label(aes(x = 3.25, y = .07, label = "Significantly\nlarger\nproportion"), show.legend = FALSE, fill = "transparent") +
+  geom_label(aes(x = 4.25, y = .07, label = "Significantly\nlarger\nproportion"), show.legend = FALSE, fill = "transparent") +
+  labs(x="", y = "", color="", title = "Proportion of MCA - Reading test scores by post-high school path 5\nyears after graduating high school", subtitle = "Higher MCA scores lead to post-high school paths that lead to lower proportion of\nindividuals with meaningful workforce participation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+  
+
+```
+
+<br>
+
+### Fringe variables
+
+There are other variables that analysis confirmed a relationship to having meaningful workforce participation in Southwest, but only for a brief time. For example, a significantly larger proportion of males had meaningful workforce participation in Southwest vs. females, but only for a few years after graduating high school. By five years after graduating high school it was even and there was little difference.
+
+<br>
+
+# Having meaningful workforce participation in Minnesota, but not Southwest
+
+The chart below shows the proportion of individuals for each grad year +X that had meaningful workforce participation in Minnesota,  but not Southwest. The proportion of individuals for each year after graduating high school grows significantly at four years after graduating high school and continues to grow until about seven years after graduating high school.
+
+<br>
+
+```{r prop meaningful workforce participation in MN but not SW}
+meaningful.emp.mn.not.sw.prop <- prop.states %>%
+  filter(five.states == "Meaningful workforce MN")
+
+plot <- ggplot(meaningful.emp.mn.not.sw.prop, aes(x = as.numeric(grad.year) - 1, pct)) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Grad year +X: ", grad.year, "\nEmployment state: ", five.states, "\nNumber in this employment state: ", comma(n), "\nProportion of individuals in this employment state: ", percent(pct, accuracy = .1), sep = "")), fill = "#d73027") +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9), fill = "#d73027") +
+  geom_text(aes(y = pct / 2, label = paste("N = \n", comma(n), sep = "")), show.legend = FALSE) +
+  labs(x="\nYears after graduating high school", y = "", color="", title = "Percent share of individuals in each year after graduating high\nschool with meaningful workforce participation in Minnesota, not\nSouthwest", subtitle = "The proportion grows significantly four years after graduating high school\n")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+## Factors
+
+The primary factors are variables/characteristics of the individual that may lead them to more likely have meaningful employment for an employer located in Southwest Minnesota. This isn't necessarily where they live.
+
+Analysis shows that these individuals are more likely to;
+
+* have attained a 4-year degree or less;
+* have taken less CTE courses and involvement in CTE programming; and
+* have taken college prep classes and tests in high school such as the ACT.
+
+Let's look at each of these themes in order of significance.
+
+<br>
+
+### Post-secondary attendance and location
+
+Whether an individual attended a post-secondary institution, the types of institution attended, the location of the post-secondary institution, and the highest credential earned are all strongly related to whether an individual has meaningful employment in Minnesota but not Southwest throughout their years after graduating high school.
+
+<br>
+
+#### Highest credential earned
+
+When looking at the highest credential earned, there is a significantly larger proportion of individuals with an associate degree or less of a credential with meaningful workforce participation in Southwest Minnesota. 
+
+The highest credential earned is categorized by the following;
+
+* No college: never attended a post-secondary institution.
+* Some college: attended college but never graduated with a credential
+* Less than Associate Degree: individuals that received a certificate or other credential but isn't an Associate degree or higher.
+* Associate Degree: this category includes all individuals that earned only an Associate degree.
+* Bachelor degree or higher: this includes all individuals that earned either a bachelor degree, masters or post-doctoral degree.
+
+<br>
+
+The chart below shows the proportion of individuals that have meaningful employment in  Minnesota but not Southwest by their highest credentials earned in post-secondary. It clearly shows that there is a significantly larger proportion of individuals that have earned a bachelor degree or higher. By five years after graduating high school, 34% of individuals with had meaningful workforce participation in Minnesota but not Southwest compared to only 22% for individuals with an Associate degree, 13% of individuals with no college, and 20% with some college but no credential. The percentages stay relatively the same 10 years after graduating high school.
+
+<br>
+
+```{r highest credential earned and meaningful emp mn not sw}
+data <- master %>%
+  select(grad.year.5, grad.year.10, highest.cred.level) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  mutate(highest.cred.level = str_replace(highest.cred.level, "Bachelor degree", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Master degree or higher", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Associate degree", "Associate degree or less"),
+         highest.cred.level = str_replace(highest.cred.level, "Less than Associate Degree", "Associate degree or less")) %>%
+  group_by(grad.year, highest.cred.level, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, states) %>%
+  group_by(grad.year, highest.cred.level) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = fct_relevel(grad.year, "5 years after hs grad", "10 years after hs grad"),
+         highest.cred.level = fct_relevel(highest.cred.level, "No college", "Some college", "Associate degree or less", "Bachelor degree or higher")) %>%
+  filter(states == "Meaningful emp MN")
+  
+plot <- ggplot(data = data, aes(highest.cred.level, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = .1)), show.legend = FALSE, color= "white", size = 5) +
+  geom_label(aes(y = prop / 2, label = paste("N = ", comma(n))), show.legend = FALSE) +
+  geom_label(aes(x = 2.5, y = .3, label = "Significantly larger\nproportion"), show.legend = FALSE, fill = "white") +
+  geom_segment(x = 3.1, xend = 4, y = .3, yend = .3, arrow = arrow(length = unit(.25, "cm"))) +
+  labs(x="", y = "", title = "Proportion of individuals with meaningful workforce participation in\nMinnesota but not Southwest by highest credential earned", subtitle = "A significantly larger proportion of individuals with bachelor degree or higher have\nmeaningful worforce participation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "none",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 15, hjust = 1))
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+Not only is this group have the highest proportion of individuals with meaningful workforce participation in Minnesota but not Southwest, they are also the largest contributors. Individuals with an Bachelor degree or higher made up 1,557 of the 4,156 individuals with meaningful workforce participation in Southwest - nearly 38%. The lowest was the group with no college who made up 634 of the individuals with meaningful workforce participation in Minnesota but not Southwest.
+
+<br>
+
+```{r highest cred earned meaningful emp mn not sw flow}
+flow.5 <- master %>%
+  filter(grad.year.5 != "After 2019") %>%
+  filter(grad.year.5 != "Attending ps") %>%
+  mutate(highest.cred.level = str_replace(highest.cred.level, "Bachelor degree", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Master degree or higher", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Associate degree", "Associate degree or less"),
+         highest.cred.level = str_replace(highest.cred.level, "Less than Associate Degree", "Associate degree or less")) %>%
+    group_by(grad.year.5, highest.cred.level) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(grad.year.5 = str_replace(grad.year.5, "Meaningful emp SW", "Meaningful workforce SW"),
+         grad.year.5 = str_replace(grad.year.5, "Meaningful emp MN", "Meaningful workforce MN"),
+         grad.year.5 = str_replace(grad.year.5, "No MN emp record, not attending ps", "No MN emp record"),
+         grad.year.5 = str_replace(grad.year.5, "Not meaningful, not attending ps", "Not meaningful workforce"),
+         grad.year.5 = fct_relevel(grad.year.5, "Meaningful workforce SW", "Meaningful workforce MN", "Not meaningful workforce", "No MN emp record"),
+         highest.cred.level = fct_relevel(highest.cred.level, "No college", "Some college", "Associate degree or less", "Bachelor degree or higher"))
+
+plot <- ggplot(data = flow.5, aes(axis1 = highest.cred.level, axis2 = grad.year.5, y = n)) +
+  geom_alluvium(aes(fill = grad.year.5)) +
+  geom_stratum(aes(fill = grad.year.5)) +
+  geom_text(stat = "stratum", 
+            aes(label = paste(after_stat(stratum), "\nN = ", comma(after_stat(count)), sep = ""))) +
+  geom_text(stat = "flow", aes(label = comma(n), color = grad.year.5), nudge_x = -.2) +
+  labs(x="", y = "", color="", title = "Flow from highest credential earned to different states of employment", subtitle = "The largest contributor to meaningful workforce participation is from the Associate Degree\nor less group")+
+  scale_y_continuous(labels=scales::comma)+
+  theme_bar+
+  theme_void() +
+  scale_fill_manual(values = c("#d73027", "grey75", "grey75", "grey75", "grey75", "grey75")) +
+  scale_color_manual(values = c("black", "grey75", "grey75", "grey75", "grey75", "grey75")) +
+  theme(legend.position = "none",
+        text = element_text(size = 18, family = "Calibri"),
+        plot.title = element_text(face = "bold"))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))       
+
+```
+
+<br>
+
+#### Type of post-secondary institution attended
+
+Very similar to highest credentials earned, the type of institution that an individual graduated from is highly associated with whether someone is likely to have meaningful employment in Southwest Minnesota.
+
+Individuals in the dataset were categorized by the following;
+
+* No college: never attended a post-secondary institution.
+* Some college: attended a post-secondary institution but never graduated.
+* 2-year: Graduates from a public, private, or for-profit two-year post-secondary institution.
+* 4-tear: Graduated from a public, private, or for-profit 4-year post-secondary institution.
+* Multiple: Graduated from multiple types of post-secondary institutions.
+
+The chart below provides the proportion of individuals that graduated from each type of post-secondary institution and have meaningful workforce participation in Minnesota but not Southwest. It shows that the proportion of individuals graduating from a 4-year college is significantly higher than other institution types. A third of the individuals that graduate from a 4-year college have meaningful workforce participation in Southwest but not Southwest  5 years after graduating high school. 
+
+<br>
+
+```{r post secondary institution type and meaningful emp mn but not sw}
+meaningful.emp.sw.ps.recode <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, ps.grad.InstitutionSector) %>%
+  mutate(ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("1", "2", "3"), "4-year", as.character(ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("4", "11"), "2-year", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "10", "Multiple", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("Never attended ps"), "No college", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = str_replace(new.ps.grad.InstitutionSector, "Did not grad", "Some college"),
+         new.ps.grad.InstitutionSector = fct_relevel(new.ps.grad.InstitutionSector, "No college", "Some college", "2-year", "4-year", "Multiple"))
+
+
+data <- meaningful.emp.sw.ps.recode %>%
+  select(grad.year.5, grad.year.10, new.ps.grad.InstitutionSector) %>%
+  filter(new.ps.grad.InstitutionSector != "Multiple") %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, new.ps.grad.InstitutionSector, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, new.ps.grad.InstitutionSector) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, new.ps.grad.InstitutionSector) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "Meaningful emp SW"])) / 2) + sum(prop[states != "Meaningful emp SW"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+  filter(states == "Meaningful emp MN") %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = fct_relevel(grad.year, "5 years after hs grad", "10 years after hs grad")) 
+
+plot <- ggplot(data = data, aes(new.ps.grad.InstitutionSector, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = .1)), show.legend = FALSE, size = 5, color = "white") +
+  geom_text(aes(y = prop / 2, label = paste("N = ", comma(n), sep = "")), show.legend = FALSE) +
+  geom_label(aes(x = 4, y = .3, label = "Significantly\nlarger\nproportion"), show.legend = FALSE, fill = "transparent") +
+  labs(x="", y = "", title = "Proportion of individuals with meaningful employment in Minnesota\n but not Southwest by the institution sector from which they graduated", subtitle = "A significantly larger proportion of individuals graduating from a 4-year college have\nmeaningful workforce participation in Minnesota but not Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 15, hjust = 1))
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+
+```
+
+<br>
+
+
+The chart below shows the links between the type of institution sector from which individuals graduated and the type of "employment state" they had five years after graduating high school. Graduating from a 4-year college is by far the highest contributor to meaningful workforce participation in Minnesota but not Southwest with 1,683 individuals. This is nearly half of all the individuals that have meaningful workforce participation in Minnesota but not Southwest.
+
+<br>
+
+```{r ps grad sector by meaningful workforce participation mn not Sw flow}
+flow.5 <- meaningful.emp.sw.ps.recode %>%
+  select(grad.year.5, new.ps.grad.InstitutionSector) %>%
+  filter(grad.year.5 != "Attending ps") %>%
+  filter(grad.year.5 != "After 2019") %>%
+  filter(new.ps.grad.InstitutionSector != "Multiple") %>%
+  group_by(grad.year.5, new.ps.grad.InstitutionSector) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(grad.year.5 = str_replace(grad.year.5, "Meaningful emp SW", "Meaningful workforce SW"),
+         grad.year.5 = str_replace(grad.year.5, "Meaningful emp MN", "Meaningful workforce MN"),
+         grad.year.5 = str_replace(grad.year.5, "No MN emp record, not attending ps", "No MN emp record"),
+         grad.year.5 = str_replace(grad.year.5, "Not meaningful, not attending ps", "Not meaningful workforce"),
+         grad.year.5 = fct_relevel(grad.year.5, "Meaningful workforce SW", "Meaningful workforce MN", "Not meaningful workforce", "No MN emp record"))
+
+plot <- ggplot(data = flow.5, aes(axis1 = new.ps.grad.InstitutionSector, axis2 = grad.year.5, y = n)) +
+  geom_alluvium(aes(fill = grad.year.5)) +
+  geom_stratum(aes(fill = grad.year.5)) +
+  geom_text(stat = "stratum", 
+            aes(label = paste(after_stat(stratum), "\nN = ", comma(after_stat(count)), sep = ""))) +
+  geom_text(stat = "flow", aes(label = comma(n), color = grad.year.5), nudge_x = -.2) +
+  labs(x="", y = "", color="", title = "Flow from post-secondary institution type to different employment\nstates", subtitle = "Due to 2-year graduates being small, the contribution to meaningful workforce participation\nin Southwest isn't as large")+
+  scale_y_continuous(labels=scales::comma)+
+  theme_void() +
+  scale_fill_manual(values = c("#d73027", "grey75", "grey75", "grey75")) +
+  scale_color_manual(values = c("black", "grey75", "grey75", "grey75")) +
+  theme(legend.position = "none",
+        text = element_text(size = 18, family = "Calibri"),
+        plot.title = element_text(face = "bold"))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+
+
+```
+
+<br>
+
+#### Location of post-secondary
+
+Not only does the type of post-secondary institution an individual graduates from have an impact on the Southwest laborforce, the location of this institution also matters. Individuals were broken into the following categories;
+
+* Southwest MN: graduated from a post-secondary institution in Southwest Minnesota.
+* MN - outside Southwest: graduated from a post-secondary institution located in Minnesota but outside of Southwest.
+* Border state: graduated from a post-secondary institution located in South Dakota, North Dakota, or Iowa.
+* Far, far away: graduate from a post-secondary institution located in another states besides the border states.
+* Some college: attended college but did not graduate
+* No college: did not attend college.
+
+The chart below provides the proportion of individuals in each type of post-secondary location category. It shows a significantly higher proportion of individuals who graduated from a post-secondary institution located within Minnesota but outside Southwest have meaningful workforce participation in Minnesota but not Southwest - 40% at 5 years after graduation and 39% at 10 years after graduation.
+
+<br>
+
+```{r post secondary location and meaningful workforce participation mn not sw}
+data <- master %>%
+  select(grad.year.5, grad.year.10, ps.grad.InstitutionSector, ps.grad, ps.state, ps.pr) %>%
+  mutate(ps.loc = ifelse(ps.pr == "Southwest", "Southwest MN", ps.pr),
+         ps.loc = ifelse(!is.na(ps.pr) & ps.pr != "Southwest", "MN - outside Southwest", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", ps.loc),
+         ps.loc = ifelse(ps.state %in% c("SD", "ND", "IA"), "Border State", ps.loc),
+         ps.loc = ifelse(is.na(ps.loc), "Far far away", ps.loc)) %>%
+  select(grad.year.5, grad.year.10, ps.loc) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, ps.loc, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, ps.loc) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, ps.loc) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "Meaningful emp MN"])) / 2) + sum(prop[states != "Meaningful emp MN"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+  filter(states == "Meaningful emp MN") %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = fct_relevel(grad.year, "5 years after hs grad", "10 years after hs grad"),
+         ps.loc = fct_relevel(ps.loc, "No college", "Some college", "Southwest MN", "MN - outside Southwest", "Border State", "Far far away"),
+         data_id = seq(n())) 
+
+plot <- ggplot(data = data, aes(ps.loc, prop, fill = states)) +
+  facet_wrap(~grad.year, scales = "free_y") +
+  geom_bar_interactive(stat = "identity", aes(data_id = data_id, tooltip = paste("Years after graduating hs: ", grad.year, "\nType of college graduated from: ", ps.loc, "\nNumber of individuals: ", comma(n), "\nPercent of individuals: ", percent(prop, accuracy = .1), sep = ""))) +
+    geom_label(aes(label = percent(prop, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  geom_label(aes(x = 4, y = .35, label = "Larger\nproportion"), fill = "transparent") +
+  geom_text(aes(y = prop / 2, label = paste("N =\n", comma(n), sep = "")), show.legend = FALSE) +
+  labs(x="", y = "", title = "Proportion of individuals with meaningful workforce participation in\nMinnesota but not Southwest by the institution sector from which\nthey graduated", subtitle = "A significantly larger proportion of individuals graduating from a  college outside\nSouthwest have meaningful workforce participation in Minnesota but not Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+The chart below shows that colleges located in Minnesota but outside SW are, by far, the largest contributor to individuals having meaningful workforce participation in Minnesota but not Southwest.
+
+<br>
+
+```{r post secondary location by meaningful workforce participation mn not sw flow}
+flow <- master %>%
+  select(grad.year.5, grad.year.10, ps.grad.InstitutionSector, ps.grad, ps.state, ps.pr) %>%
+  mutate(ps.loc = ifelse(ps.pr == "Southwest", "Southwest MN", ps.pr),
+         ps.loc = ifelse(!is.na(ps.pr) & ps.pr != "Southwest", "MN - outside Southwest", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", ps.loc),
+         ps.loc = ifelse(ps.state %in% c("SD", "ND", "IA"), "Border State", ps.loc),
+         ps.loc = ifelse(is.na(ps.loc), "Far far away", ps.loc)) %>%
+  select(grad.year.5, ps.loc) %>%
+  filter(grad.year.5 != "Attending ps") %>%
+  filter(grad.year.5 != "After 2019") %>%
+  filter(ps.loc != "Multiple") %>%
+  group_by(grad.year.5, ps.loc) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  mutate(grad.year.5 = str_replace(grad.year.5, "Meaningful emp SW", "Meaningful workforce SW"),
+         grad.year.5 = str_replace(grad.year.5, "Meaningful emp MN", "Meaningful workforce MN"),
+         grad.year.5 = str_replace(grad.year.5, "No MN emp record, not attending ps", "No MN emp record"),
+         grad.year.5 = str_replace(grad.year.5, "Not meaningful, not attending ps", "Not meaningful workforce"),
+         grad.year.5 = fct_relevel(grad.year.5, "Meaningful workforce SW", "Meaningful workforce MN", "Not meaningful workforce", "No MN emp record"),
+         ps.loc = fct_relevel(ps.loc, "No college", "Some college", "Southwest MN", "MN - outside Southwest", "Border State", "Far far away"))
+
+plot <- ggplot(data = flow, aes(axis1 = ps.loc, axis2 = grad.year.5, y = n)) +
+  geom_alluvium(aes(fill = grad.year.5)) +
+  geom_stratum(aes(fill = grad.year.5)) +
+  geom_text(stat = "stratum", 
+            aes(label = paste(after_stat(stratum), "\nN = ", comma(after_stat(count)), sep = ""))) +
+  geom_text(stat = "flow", aes(label = comma(n), color = grad.year.5), nudge_x = -.2) +
+  labs(x="", y = "", color="", title = "Flow of post secondary grad location by workforce participation", subtitle = "The largest contributor to meaningful workforce participation in Southwest never\ngraduated from college") +
+  scale_y_continuous(labels=scales::comma)+
+  theme_bar+
+  theme_void() +
+  scale_fill_manual(values = c("#d73027", "grey75", "grey75", "grey75")) +
+  scale_color_manual(values = c("grey75", "black", "grey75", "grey75")) +
+  theme(legend.position = "none",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+
+
+```
+
+<br>
+
+Previously we showed that there was significant difference between 2-year and 4-year grads and their proportion that had meaningful workforce participation in Southwest Minnesota. The chart below provides that breakdown with further refinement - differences in 2-year and 4-year in Southwest Minnesota. So the categories are;
+
+* No college: individuals that did not attend a post-secondary institution
+* Some college: individuals that attended but never graduated
+* 2-yr, Southwest: individuals that graduated from a 2-year college in the southwest region.
+* 4-yr, Southwest: individuals that graduated from a 4-year college in the southwest fegion.
+* MN, outside Southwest: individuals that graduated from a college in Minnesota but outside of southwest.
+* Outside MN: individuals that graduated from a college outside of Minnesota.
+
+The chart below shows that a significantly higher proportion of individuals that graduated from a 4-year college in Southwest and in Minnesota had meaningful workforce participation in Minnesota but not Southwest. The proportion of graduates from a 4-year college in Southwest had 32% of their individuals with meaningful employment in Minnesota but not Southwest five years after graduation. It was 34% by ten years after graduating high school.
+
+<br>
+
+```{r proportion post secondary location deeper and meaningful workforce participation mn not sw}
+data <- master %>%
+  select(grad.year.5, grad.year.10, ps.grad.InstitutionSector, ps.grad, ps.state, ps.pr) %>%
+  mutate(ps.loc = ifelse(ps.pr == "Southwest" & ps.grad.InstitutionSector %in% c("4", "11"), "2-yr, SW", ps.pr),
+         ps.loc = ifelse(ps.pr == "Southwest" & ps.grad.InstitutionSector %in% c(1,2,3), "4-yr, SW", ps.loc),
+         ps.loc = ifelse(ps.state != "MN", "Out of state", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", ps.loc),
+         ps.loc = ifelse(ps.loc %in% c("Northwest", "Northeast", "Central", "Seven County Mpls-St Paul", "Southeast"), "MN, outside SW", ps.loc)) %>%
+  filter(ps.grad.InstitutionSector != 10) %>%
+  select(grad.year.5, grad.year.10, ps.loc) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, ps.loc, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, ps.loc) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, ps.loc) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "Meaningful emp SW"])) / 2) + sum(prop[states != "Meaningful emp SW"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+  filter(states == "Meaningful emp MN") %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = fct_relevel(grad.year, "5 years after hs grad", "10 years after hs grad"),
+         ps.loc = fct_relevel(ps.loc, "No college", "Some college", "2-yr, SW", "4-yr, SW", "MN, outside SW", "Out of state"),
+         data_id = seq(n())) 
+
+plot <- ggplot(data = data, aes(ps.loc, prop, fill = states)) +
+  facet_wrap(~grad.year, scales = "free_y") +
+  geom_bar_interactive(stat = "identity", aes(data_id = data_id, tooltip = paste("Years after graduating hs: ", grad.year, "\nType of college graduated from: ", ps.loc, "\nNumber of individuals: ", comma(n), "\nPercent of individuals: ", percent(prop, accuracy = .1), sep = ""))) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE, color = "white") +
+  geom_text(aes(y = .1, label = ps.loc), angle = 90, color = "white", size = 5) +
+  geom_label(aes(x = 4.5, y = .3, label = "Significantly larger\nproportion"), show.legend = FALSE, fill = "transparent") +
+  labs(x="", y = "", title = "Proportion of individuals with meaningful employment in Minnesota\nnot Southwestby the institution sector from which they graduated", subtitle = "A significantly larger proportion of individuals graduating from a Southwest college have\nmeaningful workforce participation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "none",
+        text = element_text(size = 18),
+        axis.text.x = element_blank())
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+### CTE Courses and Programming
+
+It's no secret that career and technical education in high schools has received significantly more attention, and subsequently more investment and resources. It's always been believed that these investments lead to better outcomes in student retainment for rural regions. The analysis shows that this does seem to be true. Throughout the analysis, career and technical education courses and programming had one of the strongest relationships in whether an individual had meaningful employment somewhere in Southwest vs. other employment outcomes.
+
+The chart below compares the total number of courses taken with each state of employment for all individuals that graduated from a high school in Southwest. For those not familiar with boxplots, the bottom side of the box is the 25th percentile of CTE courses taken in that employment state, the middle line is the median and the top line is the 75th percentile. What this chart tells us is that the 25th, median, mean, and 75th percentile of the number of CTE courses taken by individuals who have meaningful employment in Minnesota but not Southwest are significantly lower than the number taken by individuals with meaningful workforce participation in Southwest.
+
+<br>
+
+```{r cte and meaningful workforce participation in mn not sw}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, total.cte.courses.taken) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  select(grad.year, states, total.cte.courses.taken) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  drop_na() %>%
+  group_by(grad.year, states) %>%
+  mutate(q1 = quantile(total.cte.courses.taken, .25),
+         q3 = quantile(total.cte.courses.taken, .75),
+         iqr = IQR(total.cte.courses.taken),
+         low.outlier = q1 - 1.5*iqr,
+         high.outlier = q3 + 1.5*iqr) %>%
+  filter(total.cte.courses.taken > low.outlier,
+         total.cte.courses.taken < high.outlier) %>%
+  ungroup() %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after hs grad"),
+         grad.year = fct_relevel(grad.year, "1 year after hs grad", "5 years after hs grad", "10 years after hs grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) 
+
+labels <- data %>%
+  group_by(grad.year, states) %>%
+  summarize(Min = quantile(total.cte.courses.taken, .0),
+            Q1 = quantile(total.cte.courses.taken, .25),
+            Median = median(total.cte.courses.taken),
+            Q3 = quantile(total.cte.courses.taken, .75),
+            Max = quantile(total.cte.courses.taken, 1),
+            Mean = mean(total.cte.courses.taken)) %>%
+  ungroup()
+
+plot <- ggplot(data, aes(grad.year, total.cte.courses.taken, fill = states)) +
+  geom_boxplot(position = position_dodge(width = .7)) +
+  stat_summary(fun.y = "mean", geom = "point", color = "#1a9850", position = position_dodge(width = .7), size = 3, label = mean, show.legend = FALSE) +
+  annotate(geom = "label",
+           x = 2,
+           y = 25, 
+           label = "Lower 25th percentile\n75th percentile,\nmean and median",
+           size = 5) +
+ annotate(geom = "segment",
+          x = 2, 
+          xend = 1.1, 
+          y = 23, 
+          yend = 9, 
+          arrow = arrow(length = unit(.25, "cm"))) +
+  annotate(geom = "segment",
+           x = 2, 
+           xend = 2.1, 
+           y = 23, 
+           yend = 9, 
+           arrow = arrow(length = unit(.25, "cm"))) +
+    annotate(geom = "segment",
+           x = 2, 
+           xend = 3.1, 
+           y = 23, 
+           yend = 7, 
+           arrow = arrow(length = unit(.25, "cm"))) +
+  labs(x="", y = "", color="", title = "Boxplots of number of CTE courses taken by state", subtitle = "Meaningful employment in Minnesota but not Southwest typically associated with lower\nnumber of CTE courses taken")+
+  scale_y_continuous(labels=scales::comma,
+                     limits = c(0, 30))+
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+### Taking the ACT
+
+Since the post-secondary pathway has an influence on whether an individual has meaningful workforce participation in Southwest, it's not surprising that whether an individual is preparing to go to college in high school also plays a role.
+
+The chart below shows that nearly a third of individuals who did not take the ACT had meaningful workforce participation in southwest at five and ten years after graduating high school.
+
+<br>
+
+```{r took act and meaningful workforce participation in mn not sw}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, took.ACT) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, took.ACT, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, took.ACT) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, took.ACT) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "Meaningful emp MN"])) / 2) + sum(prop[states != "Meaningful emp MN"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "Meaningful emp MN") %>%
+    filter(grad.year != "1 year after grad") %>%
+  mutate(took.ACT = ifelse(took.ACT == "No", "Did not\ntake ACT", "Took ACT"))
+  
+plot <- ggplot(data = data, aes(took.ACT, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE) +
+  geom_label(aes(y = prop / 2, label = paste("N = ", comma(n), sep = "")), show.legend = FALSE, color = "white") +
+  geom_label(aes(x = 2, y = .2, label = "Significantly\nhigher\nproportion"), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals who did and did not take ACT that have\nmeaningful workforce participation in Minnesota but not Southwest", subtitle = "Taking the ACT was associated with higher proportions of individuals having\nmeaningful workforce participation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
 
 
 
