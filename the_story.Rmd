@@ -149,6 +149,8 @@ us_boundary <- read_sf("Data/Shapefiles/US shapefiles/cb_2018_us_state_500k.shp"
   shift_geometry()
 
 states.color = c("Meaningful emp SW" = "#d73027", "Meaningful emp MN" = "#fc8d59", "Attending ps" = "#fee090",  "Not meaningful, not attending ps" = "#e0f3f8", "No MN emp record, not attending ps" = "#91bfdb")
+
+updated.states.color = c("Meaningful emp SW" = "#d73027", "Meaningful emp MN" = "#fc8d59", "Attending ps" = "#fee090",  "Not meaningful, not attending ps" = "#e0f3f8", "No MN emp record" = "#91bfdb")
 ```
 
 ```{r master}
@@ -2471,5 +2473,853 @@ girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
 
 
 
+<br>
 
+# No MN employment record, not attending post-secondary
+
+This is a rather large group in the dataset and there are multiple post-high school paths that these folks could be one but we can't track;
+
+1. Not participating in the labor force, living anywhere.
+2. Working in a federal position
+3. In the military
+4. Working in another state.
+
+Let's first take a look to see how many and the percentage of people that are in this category for each grad year.
+
+The chart below provides the percentage of individuals for each year after graduating high school that have no Minnesota employment record. There is significant growth in the percentage at 5 years after graduating high school where it jumps from being in mid-teens to nearly 30% of the dataset. 
+
+<br>
+
+```{r no mn emp record n}
+
+no.mn.emp.record.prop <- prop.states %>%
+  filter(five.states == "No MN emp record")
+
+plot <- ggplot(no.mn.emp.record.prop, aes(x = as.numeric(grad.year) - 1, pct)) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste("Grad year +X: ", grad.year, "\nEmployment state: ", five.states, "\nNumber in this employment state: ", comma(n), "\nProportion of individuals in this employment state: ", percent(pct, accuracy = .1), sep = ""), fill = five.states)) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "black", size = 5, position = position_dodge(width = .9)) +
+  geom_text(aes(y = pct / 2, label = paste("N = \n", comma(n), sep = "")), show.legend = FALSE) +
+  labs(x="\nYears after graduating high school", y = "", color="", title = "Percent share of individuals in each year after graduating high\nschool with no MN employment record", subtitle = "The proportion grows quickly but stalls 4 years after graduation")+
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = updated.states.color) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+## Factors
+
+Analysis showed that there were a number of factors highlighting significant differences. The most important factors were;
+
+* Post-high school path - in particular, this group was significantly more likely to never attend college.
+* CTE Course - this group was significantly less likely to have CTE experience
+* Post-high school planning - significantly less likely to take the ACT
+* Fringe - significantly more likely to have limited english proficiency, be hispanic or asian, and graduate from a high school in EDR 8.
+
+<br>
+
+### Post-secondary attedance and location
+
+Whether an individual attended a post-secondary institution, the types of institution attended, the location of the post-secondary institution, and the highest credential earned are all strongly related to whether an individual has no mn employment record.
+
+<br>
+
+#### Highest credential earned
+
+When looking at the highest credential earned, there is a significantly larger proportion of individuals with an associate degree or less of a credential with meaningful workforce participation in Southwest Minnesota. 
+
+The highest credential earned is categorized by the following;
+
+* No college: never attended a post-secondary institution.
+* Some college: attended college but never graduated with a credential
+* Less than Associate Degree: individuals that received a certificate or other credential but isn't an Associate degree or higher.
+* Associate Degree: this category includes all individuals that earned only an Associate degree.
+* Bachelor degree or higher: this includes all individuals that earned either a bachelor degree, masters or post-doctoral degree.
+
+<br>
+
+The chart below shows the proportion of individuals that do not have a MN employment record five and ten years after graduating high school by their highest credentials earned in post-secondary. It clearly shows that there is a significantly larger proportion of individuals that never attended college. At ten years after graduating high school, the percentages of individuals having some college or a bachelor's degree or higher do rise quite a bit.
+
+<br>
+
+```{r highest credential earned and no mn emp record}
+data <- master %>%
+  select(grad.year.5, grad.year.10, highest.cred.level) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  mutate(highest.cred.level = str_replace(highest.cred.level, "Bachelor degree", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Master degree or higher", "Bachelor degree or higher"),
+         highest.cred.level = str_replace(highest.cred.level, "Associate degree", "Associate degree or less"),
+         highest.cred.level = str_replace(highest.cred.level, "Less than Associate Degree", "Associate degree or less")) %>%
+  group_by(grad.year, highest.cred.level, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, states) %>%
+  group_by(grad.year, highest.cred.level) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = fct_relevel(grad.year, "5 years after hs grad", "10 years after hs grad"),
+         highest.cred.level = fct_relevel(highest.cred.level, "No college", "Some college", "Associate degree or less", "Bachelor degree or higher")) %>%
+  filter(states == "No MN emp record, not attending ps")
+  
+plot <- ggplot(data = data, aes(highest.cred.level, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = .1)), show.legend = FALSE, color= "white", size = 5) +
+  geom_text(aes(x = 1, y = .3, label = "Signifiantly\nlarger\nproportion"), show.legend = FALSE, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals with no MN employment record in\nMinnesota by highest credential earned", subtitle = "A significantly larger proportion of individuals that never attended college\ndo not have a MN employment record\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "none",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 15, hjust = 1))
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+
+<br>
+
+#### Type of post-secondary institution attended
+
+Very similar to highest credentials earned, the type of institution that an individual graduated from is highly associated with whether someone is likely to have meaningful employment in Southwest Minnesota.
+
+Individuals in the dataset were categorized by the following;
+
+* No college: never attended a post-secondary institution.
+* Some college: attended a post-secondary institution but never graduated.
+* 2-year: Graduates from a public, private, or for-profit two-year post-secondary institution.
+* 4-tear: Graduated from a public, private, or for-profit 4-year post-secondary institution.
+* Multiple: Graduated from multiple types of post-secondary institutions.
+
+The chart below provides the proportion of individuals that graduated from each type of post-secondary institution and do not have a MN employment record in Minnesota. It shows that the proportion of individuals  that never attended college is significantly higher than other institution types. But again, by ten years after graduating high school the percentage of individuals having some college or graduated from a 4-year college increases quite a bit.
+
+<br>
+
+```{r post secondary institution type and no MN emp record}
+meaningful.emp.sw.ps.recode <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, ps.grad.InstitutionSector) %>%
+  mutate(ps.grad.InstitutionSector = as.factor(ps.grad.InstitutionSector),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("1", "2", "3"), "4-year", as.character(ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("4", "11"), "2-year", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector == "10", "Multiple", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = ifelse(ps.grad.InstitutionSector %in% c("Never attended ps"), "No college", as.character(new.ps.grad.InstitutionSector)),
+         new.ps.grad.InstitutionSector = str_replace(new.ps.grad.InstitutionSector, "Did not grad", "Some college"),
+         new.ps.grad.InstitutionSector = fct_relevel(new.ps.grad.InstitutionSector, "No college", "Some college", "2-year", "4-year", "Multiple"))
+
+
+data <- meaningful.emp.sw.ps.recode %>%
+  select(grad.year.5, grad.year.10, new.ps.grad.InstitutionSector) %>%
+  filter(new.ps.grad.InstitutionSector != "Multiple") %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, new.ps.grad.InstitutionSector, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, new.ps.grad.InstitutionSector) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, new.ps.grad.InstitutionSector) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "No MN emp record, not attending ps"])) / 2) + sum(prop[states != "No MN emp record, not attending ps"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+  filter(states == "No MN emp record, not attending ps") %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = fct_relevel(grad.year, "5 years after hs grad", "10 years after hs grad")) 
+
+plot <- ggplot(data = data, aes(new.ps.grad.InstitutionSector, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = .1)), show.legend = FALSE, size = 5, color = "white") +
+  labs(x="", y = "", title = "Proportion of individuals with no MN employment recordm in Minnesota\n by the institution sector from which they graduated", subtitle = "A significantly larger proportion of individuals graduating from a 4-year college have\nmeaningful workforce participation in Minnesota but not Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 15, hjust = 1))
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+
+```
+
+<br>
+
+#### Location of post-secondary
+
+Not only does the type of post-secondary institution an individual graduates from have an impact on the Southwest laborforce, the location of this institution also matters. Individuals were broken into the following categories;
+
+* Southwest MN: graduated from a post-secondary institution in Southwest Minnesota.
+* MN - outside Southwest: graduated from a post-secondary institution located in Minnesota but outside of Southwest.
+* Border state: graduated from a post-secondary institution located in South Dakota, North Dakota, or Iowa.
+* Far, far away: graduate from a post-secondary institution located in another states besides the border states.
+* Some college: attended college but did not graduate
+* No college: did not attend college.
+
+The chart below provides the proportion of individuals in each type of post-secondary location category. It shows a significantly higher proportion of individuals who graduated from a post-secondary institution located in a border state or further away have no Minnesota employment record at five and ten years after graduating high school.
+
+<br>
+
+```{r post secondary location and no mn employment record}
+data <- master %>%
+  select(grad.year.5, grad.year.10, ps.grad.InstitutionSector, ps.grad, ps.state, ps.pr) %>%
+  mutate(ps.loc = ifelse(ps.pr == "Southwest", "Southwest MN", ps.pr),
+         ps.loc = ifelse(!is.na(ps.pr) & ps.pr != "Southwest", "MN - outside Southwest", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", ps.loc),
+         ps.loc = ifelse(ps.state %in% c("SD", "ND", "IA"), "Border State", ps.loc),
+         ps.loc = ifelse(is.na(ps.loc), "Far far away", ps.loc)) %>%
+  select(grad.year.5, grad.year.10, ps.loc) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, ps.loc, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, ps.loc) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, ps.loc) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "No MN emp record, not attending ps"])) / 2) + sum(prop[states != "No MN emp record, not attending ps"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+  filter(states == "No MN emp record, not attending ps") %>%
+  mutate(grad.year = str_replace(grad.year, "grad.year.5", "5 years after hs grad"),
+         grad.year = str_replace(grad.year, "grad.year.10", "10 years after hs grad"),
+         grad.year = fct_relevel(grad.year, "5 years after hs grad", "10 years after hs grad"),
+         ps.loc = fct_relevel(ps.loc, "No college", "Some college", "Southwest MN", "MN - outside Southwest", "Border State", "Far far away"),
+         data_id = seq(n())) 
+
+plot <- ggplot(data = data, aes(ps.loc, prop, fill = states)) +
+  facet_wrap(~grad.year, scales = "free_y") +
+  geom_bar_interactive(stat = "identity", aes(data_id = data_id, tooltip = paste("Years after graduating hs: ", grad.year, "\nType of college graduated from: ", ps.loc, "\nNumber of individuals: ", comma(n), "\nPercent of individuals: ", percent(prop, accuracy = .1), sep = ""))) +
+    geom_label(aes(label = percent(prop, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  geom_text(aes(y = prop / 2, label = paste("N =\n", comma(n), sep = "")), show.legend = FALSE) +
+  labs(x="", y = "", title = "Proportion of individuals with no MN employment record in\nMinnesota by the institution sector from which\nthey graduated", subtitle = "A significantly larger proportion of individuals graduating from a  college located\nin a border state or further away have no Minnesota employment record\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+### CTE Courses and Programming
+
+It's no secret that career and technical education in high schools has received significantly more attention, and subsequently more investment and resources. It's always been believed that these investments lead to better outcomes in student retainment for rural regions. The analysis shows that this does seem to be true. Throughout the analysis, career and technical education courses and programming had one of the strongest relationships in whether an individual had meaningful employment somewhere in Southwest vs. other employment outcomes.
+
+The chart below compares the total number of courses taken with each state of employment for all individuals that graduated from a high school in Southwest. For those not familiar with boxplots, the bottom side of the box is the 25th percentile of CTE courses taken in that employment state, the middle line is the median and the top line is the 75th percentile. What this chart tells us is that the 25th, median, mean, and 75th percentile of the number of CTE courses taken by individuals who have meaningful employment in Minnesota but not Southwest are significantly lower than the number taken by individuals with meaningful workforce participation in Southwest.
+
+<br>
+
+```{r cte achievement and no MN employment record}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, cte.achievement) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, cte.achievement, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, cte.achievement) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, cte.achievement) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "No MN emp record, not attending ps"])) / 2) + sum(prop[states != "No MN emp record, not attending ps"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "No MN emp record, not attending ps") %>%
+  mutate(cte.achievement = fct_relevel(cte.achievement, "No CTE", "CTE Participant", "CTE Concentrator or Completor"))
+
+plot <- ggplot(data = data, aes(cte.achievement, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(y = prop / 2, label = paste(percent(prop, accuracy = 1), "\nN = ", comma(n), sep = "")), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of CTE Achievement that do not have a MN employment record\nparticipation in Southwest", subtitle = "A higher proportion of individuals with no CTE experience do not have a MN employment\nrecord") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = brewer.pal(n = 6, "RdYlBu"),
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18)) +
+  coord_flip()
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+### Taking the ACT
+
+Since the post-secondary pathway has an influence on whether an individual has meaningful workforce participation in Southwest, it's not surprising that whether an individual is preparing to go to college in high school also plays a role.
+
+The chart below shows that nearly a third of individuals who did not take the ACT had meaningful workforce participation in southwest at five and ten years after graduating high school.
+
+<br>
+
+```{r took act and no MN employment record}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, took.ACT) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, took.ACT, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, took.ACT) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, took.ACT) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "No MN emp record, not attending ps"])) / 2) + sum(prop[states != "No MN emp record, not attending ps"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "No MN emp record, not attending ps") %>%
+    filter(grad.year != "1 year after grad") %>%
+  mutate(took.ACT = ifelse(took.ACT == "No", "Did not\ntake ACT", "Took ACT"))
+  
+plot <- ggplot(data = data, aes(took.ACT, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE) +
+  geom_label(aes(y = prop / 2, label = paste("N = ", comma(n), sep = "")), show.legend = FALSE, color = "white") +
+  geom_label(aes(x = 2, y = .2, label = "Significantly\nhigher\nproportion"), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals who did and did not take ACT that have\nmeaningful workforce participation in Minnesota but not Southwest", subtitle = "Taking the ACT was associated with higher proportions of individuals having\nmeaningful workforce participation in Southwest\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+### Fringe variables
+
+This is where there are some interesting results. There were a number of variables that were associated with not having a MN employment record. 
+
+<br>
+
+#### Limited English Proficiency
+
+A significantly higher proportion of individuals categorized as having limited english proficiency did not have a MN employment record, however these are not very large totals.
+
+<br>
+
+```{r limited english and no mn employment record}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, LimitedEnglishProficiencyIndicator) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, LimitedEnglishProficiencyIndicator, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, LimitedEnglishProficiencyIndicator) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, LimitedEnglishProficiencyIndicator) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "No MN emp record, not attending ps"])) / 2) + sum(prop[states != "No MN emp record, not attending ps"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "No MN emp record, not attending ps") %>%
+  mutate(LimitedEnglishProficiencyIndicator = ifelse(LimitedEnglishProficiencyIndicator == "Y", "Limited English", "English"))
+  
+plot <- ggplot(data = data, aes(LimitedEnglishProficiencyIndicator, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE) +
+  geom_label(aes(y = prop / 2, label = paste("N = ", comma(n), sep = "")), show.legend = FALSE, color = "white") +
+  geom_label(aes(x = 2, y = .1, label = "Significantly\nhigher\nproportion"), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals who were categorized as having limited english\nproficiency and did not have MN employment record", subtitle = "A higher proportion of individuals having limited english proficiency did not have a MN\nemployment record\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+
+```
+
+<br>
+
+#### Race and ethnicity
+
+The chart below shows that BIPOC populations typically have higher proportions of individuals with no MN employment record up until 5 years after graduating high school. By ten years after high school, a higher proportion of hispanic and Asian/Pacific Islanders have no MN employment record.
+
+<br>
+
+```{r race and no mn employment record}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, RaceEthnicity) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, RaceEthnicity, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, RaceEthnicity) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, RaceEthnicity) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "No MN emp record, not attending ps"])) / 2) + sum(prop[states != "No MN emp record, not attending ps"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "No MN emp record, not attending ps") 
+
+plot <- ggplot(data = data, aes(RaceEthnicity, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE) +
+  geom_label(aes(y = prop / 2, label = paste("N = ", comma(n), sep = "")), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals within each Race or Ethnicity and did not\nhave MN employment record", subtitle = "A higher proportion of Asian/PI and Hispanic individuals did not have a MN\nemployment record\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+
+```
+
+<br>
+
+#### EDR
+
+The chart below shows that BIPOC populations typically have higher proportions of individuals with no MN employment record up until 5 years after graduating high school. By ten years after high school, a higher proportion of hispanic and Asian/Pacific Islanders have no MN employment record.
+
+<br>
+
+```{r edr and no mn employment record}
+data <- master %>%
+  select(grad.year.1, grad.year.5, grad.year.10, edr) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:3) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, edr, states) %>%
+  summarize(n = n()) %>%
+  ungroup()  %>%
+  group_by(grad.year, edr) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(grad.year = fct_relevel(grad.year, "grad.year.1", "grad.year.5", "grad.year.10")) %>%
+  group_by(grad.year, edr) %>%
+  arrange(desc(states)) %>%
+  mutate(yloc = ((1 - sum(prop[states != "No MN emp record, not attending ps"])) / 2) + sum(prop[states != "No MN emp record, not attending ps"]),
+         cumsum = cumsum(prop),
+         yloc.2 = ((cumsum - lag(cumsum)) / 2) + lag(cumsum)) %>%
+  ungroup() %>%
+    mutate(grad.year = str_replace(grad.year, "grad.year.10", "10 years after grad"),
+           grad.year = str_replace(grad.year, "grad.year.5", "5 years after grad"),
+         grad.year = str_replace(grad.year, "grad.year.1", "1 year after grad"),
+         grad.year = fct_relevel(grad.year, "1 year after grad", "5 years after grad", "10 years after grad"),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps")) %>%
+  filter(states == "No MN emp record, not attending ps") 
+
+plot <- ggplot(data = data, aes(edr, prop, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_bar(stat = "identity", position = position_stack()) +
+  geom_label(aes(label = percent(prop, accuracy = 1)), show.legend = FALSE) +
+  geom_label(aes(y = prop / 2, label = paste("N = ", comma(n), sep = "")), show.legend = FALSE, color = "white") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(x="", y = "", title = "Proportion of individuals within each EDR and did not\nhave MN employment record", subtitle = "A higher proportion of individuals from regions on the border do not have a Minnesota\nemployment record\n") +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 2)) +
+  theme_bar+
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1)) 
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))  
+
+```
+
+<br>
+
+So what does this all translate into? It seems there are a couple of key pieces;
+
+1. Individuals attending post-secondary out of state most likely find employment in that state after graduating.
+2. BIPOC populations, in particular Hispanic, tend to not have MN employment records. This may be due to culture and their tendency to have a stay-at-home parent in the family. 
+3. Individuals from the border EDRs likely feel the pull to attend college and find work across the border.
+
+So, let's see what this looks like. We will start with the individuals that attend post-secondary out of state. We can what percentage of folks that attend post-secondary out-of-state on the percentage that do not have a MN employment record.
+
+The chart below shows that a significantly higher proportion of individuals that graduate from a post-secondary institution located outside of Minnesota do not have a MN employment record at grad year 5 or 10. In fact, in grad year 5, over 1,000 people did not have a MN employment record, yet they graduated from a Southwest high school.
+
+<br>
+
+```{r ps location and do not have mn employment record}
+data <- master %>%
+  select(grad.year.5, grad.year.10, cte.achievement, ps.grad.InstitutionSector, ps.state, ps.pr) %>%
+  mutate(ps.loc = ifelse(ps.pr == "Southwest", "Southwest", ps.pr),
+         ps.loc = ifelse(ps.pr != "Southwest" & ps.state == "MN", "MN, outside SW", ps.loc),
+         ps.loc = ifelse(ps.state %in% c("SD", "ND", "IA"), "Border state", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Never attended ps", "No college", ps.loc),
+         ps.loc = ifelse(ps.grad.InstitutionSector == "Did not grad", "Some college", ps.loc),
+         ps.loc = ifelse(!ps.state %in% c("MN", "SD", "ND", "IA") & !is.na(ps.state), "Far far away", ps.loc)) %>%
+  filter(ps.loc %in% c("Border state", "Far far away")) %>%
+  mutate(ps.loc == "PS out-of-state") %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = seq(n()),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps"),
+         grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10"))
+
+plot <- ggplot(data, aes(states, pct, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(grad.year, "\nEmployment state: ", states, "\nNumber of individuals: ", comma(n), "\nPercent of individuals: ", percent(pct, accuracy = 1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  geom_text(aes(x = 4, y = .4, label = "Significantly\nhigher\nproportion"), show.legend = FALSE) +
+  geom_text(aes(y = pct / 2, label = paste("N =\n", comma(n), sep = "")), show.legend = FALSE) +
+  labs(x="", y = "", color="", title = "Percent share of individuals graduating from post-secondary\nout-of-state by employment state", subtitle = "A higher proportion of individuals that graduate from a post-secondary institution outside\nMinnesota do not have a MN employment record\n")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+The chart below shows the proportion of hispanic individuals by their employment state by 5 adn 10 years after graduating high school. It clearly shows that a higher proportion of hispanic individuals do not have a MN employment record.
+
+<br>
+
+```{r hispanic and states}
+data <- master %>%
+  select(grad.year.5, grad.year.10, RaceEthnicity) %>%
+  filter(RaceEthnicity == "Hispanic") %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = seq(n()),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps"),
+         grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10"))
+
+plot <- ggplot(data, aes(states, pct, fill = states)) +
+  facet_wrap(~grad.year) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(grad.year, "\nEmployment state: ", states, "\nNumber of individuals: ", comma(n), "\nPercent of individuals: ", percent(pct, accuracy = 1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  geom_text(aes(x = 4, y = .25, label = "Significantly\nhigher\nproportion"), show.legend = FALSE) +
+  geom_text(aes(y = pct / 2, label = paste("N =\n", comma(n), sep = "")), show.legend = FALSE) +
+  labs(x="", y = "", color="", title = "Percent share of hispanic individuals by employment state", subtitle = "A higher proportion of hispanic individuals do not have a MN employment record\n")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = states.color,
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+<br>
+
+Lastly, let's look at the proportion of individuals by EDR.
+
+<br>
+
+```{r edr and states}
+data <- master %>%
+  select(grad.year.5, grad.year.10, edr) %>%
+  filter(edr %in% c("EDR 6W- Upper Minnesota Valley", "EDR 8 - Southwest")) %>%
+  pivot_longer(names_to = "grad.year", values_to = "states", 1:2) %>%
+  filter(states != "After 2019") %>%
+  filter(states != "Attending ps") %>%
+  group_by(grad.year, edr, states) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  group_by(grad.year, edr) %>%
+  mutate(pct = n / sum(n)) %>%
+  ungroup() %>%
+  mutate(data_id = seq(n()),
+         states = fct_relevel(states, "Meaningful emp SW", "Meaningful emp MN", "Not meaningful, not attending ps", "No MN emp record, not attending ps"),
+         grad.year = fct_relevel(grad.year, "grad.year.5", "grad.year.10"))
+
+plot <- ggplot(data, aes(states, pct, fill = edr, group = edr)) +
+  facet_wrap(~grad.year) +
+  geom_col_interactive(position = "dodge", aes(data_id = data_id, tooltip = paste(grad.year, "\nEmployment state: ", states, "\nNumber of individuals: ", comma(n), "\nPercent of individuals: ", percent(pct, accuracy = 1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_dodge(width = .9)) +
+  geom_text(aes(x = 4, y = .25, label = "Significantly\nhigher\nproportion"), show.legend = FALSE) +
+  geom_text(aes(y = pct / 2, label = paste("N =\n", comma(n), sep = "")), show.legend = FALSE) +
+  labs(x="", y = "", color="", title = "Percent share of hispanic individuals by employment state", subtitle = "A higher proportion of hispanic individuals do not have a MN employment record\n")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 6, "PuBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = 1))
+
+
+girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+
+```
+
+
+
+
+We are going to have to make some estimates here using multiple data sources. 
+
+1. Use labor force percentages from DEED in the three EDRs.
+2. Use percentage of federal government jobs using DEED data from the three EDRs.
+3. Percentage use in ACS?
+4. Post-secondary census data that Meredith gave me.
+
+## Labor force participation
+
+To estimate the labor force participation of this group I used the average labor force participation rate for;
+
+1. each county in the three research EDRs from 2006 to 2019;
+2. for each age cohort from 20 to 64 years old;
+3. weighted by how the percentage of the population each age cohort was.
+
+The average participation rate is 83%. Therefore, let's take 100% minus 83% and multiply that to the number of people that are in this category for each grad year. The table below provides the number of individuals estimated to be not participatin in the labor force for each grad year.
+
+<br>
+
+```{r no mn emp record not in lf}
+lf.rate <- read_csv("Data/Labor force/Master-lf.csv") %>%
+  group_by(age) %>%
+  summarize(mean.lf.rate = mean(lf.rate)) %>%
+  ungroup()
+
+no.mn.emp.not.lf <- five.states %>%
+  filter(five.states == "No MN emp record") %>%
+  mutate(age = ifelse(grad.year %in% c("grad.year.0", "grad.year.1", "grad.year.2", "grad.year.3", "grad.year.4", "grad.year.5", "grad.year.6"), "20 to 24", "25 to 34")) %>%
+  group_by(grad.year, age) %>%
+  summarize(n = n()) %>%
+  ungroup() %>%
+  left_join(lf.rate, by = c("age")) %>%
+  mutate(not.lf = (1 - mean.lf.rate) * n,
+         not.lf = round(not.lf)) %>%
+  select(grad.year, age, n, mean.lf.rate, not.lf)
+
+no.mn.emp.not.lf
+
+```
+
+<br>
+
+## Estimates of individuals in military
+
+Next, we will attempt to figure out how many of these people are likely in the military. To do this we will take the average percentage of each counties population in EDR 6E, 6W and 8 that were members of the armed forces and multiply that percentage by the remaining number of individuals in the "no MN employment record" category.
+
+The table below provides the number of individuals estimated to be in the armed forces. It ranges from 1 to 4 people.
+
+<br>
+
+```{r n in military}
+military <- read_csv("Data/Military/Master-military.csv") %>%
+  group_by(countyfp) %>%
+  summarize(mean.military.rate = mean(military.pct)) %>%
+  ungroup() %>%
+  left_join(counties.regions, by = "countyfp") %>%
+  filter(edr %in% c("EDR 6W- Upper Minnesota Valley", "EDR 6E- Southwest Central", "EDR 8 - Southwest")) %>%
+  summarize(military.pct = mean(mean.military.rate))
+
+no.mn.emp.not.lf.military <- no.mn.emp.not.lf %>%
+  mutate(military.pct = military$military.pct) %>%
+  mutate(remaining = n - not.lf,
+         n.military = remaining * military.pct,
+         n.military = round(n.military)) 
+  
+no.mn.emp.not.lf.military
+```
+
+<br>
+
+## Federal employment
+
+Next, let's estimate how many individuals in this group may have federal employment and therefore, are not showing up as having an employment record or attending post-secondary. The table below provides the number of individuals estimated to be employed by the federal government, which ranges from 20 to 31 people each grad year.
+
+<br>
+
+```{r n federal workers}
+fed <- read_csv("Data/Government/Master-fed-emp.csv") %>%
+  group_by(countyfp) %>%
+  summarize(mean.federal.rate = mean(fed.pct)) %>%
+  ungroup() %>%
+  left_join(counties.regions, by = "countyfp") %>%
+  filter(edr %in% c("EDR 6W- Upper Minnesota Valley", "EDR 6E- Southwest Central", "EDR 8 - Southwest")) %>%
+  summarize(fed.pct = mean(mean.federal.rate))
+
+no.mn.emp.not.lf.military.fed <- no.mn.emp.not.lf.military %>%
+  mutate(fed.pct = fed$fed.pct) %>%
+  mutate(remaining = n - not.lf - n.military,
+         n.fed = remaining * fed.pct,
+         n.fed = round(n.fed)) 
+  
+no.mn.emp.not.lf.military.fed
+```
+
+<br>
+
+## Working in another state
+
+After subtracting the estimated number of individuals in this dataset that are serving in the armed forces, not participating in the labor force, or have federal positions, we are left with the following number of individuals for each grad year.
+
+The bar chart below shows that a very large majority if individuals without a MN employment record or a post-secondary record are estimated to be working in another state.
+
+<br>
+
+```{r no mn emp record remaining}
+data <- no.mn.emp.not.lf.military.fed %>%
+  mutate(working.other.state = n - not.lf - n.military - n.fed,
+         military.fed.notlf = n - working.other.state) %>%
+  select(grad.year, n, working.other.state, military.fed.notlf) %>%
+  pivot_longer(names_to = "no.mn.emp.record.category", values_to = "people", 3:4) %>%
+  mutate(pct = people / n,
+         data_id = seq(n()))
+
+data.plot <- ggplot(data, aes(grad.year, pct, fill = no.mn.emp.record.category, group = no.mn.emp.record.category)) +
+  geom_col_interactive(position = "stack", aes(data_id = data_id, tooltip = paste(no.mn.emp.record.category, "\nNumber of individuals: ", comma(people), "\nShare of individuals for this grad year: ", percent(pct, accuracy = 1), sep = ""))) +
+  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_stack()) +
+  labs(x="", y = "", color="", title = "Percent share of individuals with no MN employment record")+
+  scale_y_continuous(labels=scales::percent)+
+  theme_bar+
+  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
+                    guide = guide_legend(ncol = 3)) +
+  theme(legend.position = "bottom",
+        text = element_text(size = 18),
+        axis.text.x = element_text(angle = 25, hjust = .9))
+
+
+girafe(ggobj = data.plot, width_svg = 10, height_svg = 10) %>%
+  girafe_options(opts_selection(type = "none"),
+                 opts_sizing(rescale = FALSE))      
+
+```
+
+<br>
+
+In order to examine this group, let's figure out the percentage of individuals that fall into each of the employment states before having no employment record 5 years after graduating high school.
+
+<br>
 
