@@ -2564,7 +2564,6 @@ data <- master %>%
   group_by(grad.year, highest.cred.level, states) %>%
   summarize(n = n()) %>%
   ungroup() %>%
-  group_by(grad.year, states) %>%
   group_by(grad.year, highest.cred.level) %>%
   mutate(prop = n / sum(n)) %>%
   ungroup() %>%
@@ -2653,7 +2652,7 @@ plot <- ggplot(data = data, aes(new.ps.grad.InstitutionSector, prop, fill = stat
   facet_wrap(~grad.year) +
   geom_bar(stat = "identity", position = position_stack()) +
   geom_label(aes(label = percent(prop, accuracy = .1)), show.legend = FALSE, size = 5, color = "white") +
-  labs(x="", y = "", title = "Proportion of individuals with no MN employment recordm in Minnesota\n by the institution sector from which they graduated", subtitle = "A significantly larger proportion of individuals graduating from a 4-year college have\nmeaningful workforce participation in Minnesota but not Southwest\n") +
+  labs(x="", y = "", title = "Proportion of individuals with no MN employment recordm in Minnesota\n by the institution sector from which they graduated", subtitle = "A significantly larger proportion of individuals with no college experience do not\nhave a Minnesota employment record\n") +
   scale_y_continuous(labels=scales::percent) +
   scale_fill_manual(values = states.color,
                     guide = guide_legend(ncol = 2)) +
@@ -3183,143 +3182,46 @@ girafe(ggobj = plot, width_svg = 10, height_svg = 10) %>%
 ```
 
 
+# Estimates on no MN employment record
 
+We know the potential scenarios;
 
-We are going to have to make some estimates here using multiple data sources. 
+1. They could be federally employed
+2. They could be in the military and not employed
+3. Could be self-employed
+4. Not participating in the labor force
+5. Passed away.
 
-1. Use labor force percentages from DEED in the three EDRs.
-2. Use percentage of federal government jobs using DEED data from the three EDRs.
-3. Percentage use in ACS?
-4. Post-secondary census data that Meredith gave me.
+It seems like we could just use the percentage of people that are participating in the labor force at each age group and apply it to our dataset at five years after graduating high school.
 
-## Labor force participation
+The ages that we most likely have in our dataset are 18 - 29. So let's first get a distribution of approximate ages at five years after high school.
 
-To estimate the labor force participation of this group I used the average labor force participation rate for;
+```{r age distribution five years after high school}
+age <- read_csv("Data/SLEDS/Masters/Master.csv") %>%
+  select(PersonID, grad.year) %>%
+  left_join(original, by = "PersonID") %>%
+  select(PersonID, grad.year, grad.year.5) %>%
+  mutate(age = (2019 - grad.year) + 18)
 
-1. each county in the three research EDRs from 2006 to 2019;
-2. for each age cohort from 20 to 64 years old;
-3. weighted by how the percentage of the population each age cohort was.
+age.5 <- age %>%
+  filter(grad.year.5 == "No MN emp record, not attending ps")
+```
 
-The average participation rate is 83%. Therefore, let's take 100% minus 83% and multiply that to the number of people that are in this category for each grad year. The table below provides the number of individuals estimated to be not participatin in the labor force for each grad year.
+At five years after high school, the total number of individuals that did not have a Minnesota employment record was `r comma(nrow(age.5))`. Now, could we just use the average percentage of students that have meaningful workforce participation in Southwest and Minnesota? Sure, let's do it.
 
-<br>
-
-```{r no mn emp record not in lf}
-lf.rate <- read_csv("Data/Labor force/Master-lf.csv") %>%
-  group_by(age) %>%
-  summarize(mean.lf.rate = mean(lf.rate)) %>%
-  ungroup()
-
-no.mn.emp.not.lf <- five.states %>%
-  filter(five.states == "No MN emp record") %>%
-  mutate(age = ifelse(grad.year %in% c("grad.year.0", "grad.year.1", "grad.year.2", "grad.year.3", "grad.year.4", "grad.year.5", "grad.year.6"), "20 to 24", "25 to 34")) %>%
-  group_by(grad.year, age) %>%
+```{r avg prop meaningful workforce in SW and MN}
+meaningful.wf.sw.mn <- master %>%
+  select(grad.year.5) %>%
+  filter(grad.year.5 != "After 2019") %>%
+  group_by(grad.year.5) %>%
   summarize(n = n()) %>%
   ungroup() %>%
-  left_join(lf.rate, by = c("age")) %>%
-  mutate(not.lf = (1 - mean.lf.rate) * n,
-         not.lf = round(not.lf)) %>%
-  select(grad.year, age, n, mean.lf.rate, not.lf)
+  mutate(pct = n / sum(n)) %>%
+  filter(grad.year.5 %in% c("Meaningful emp SW", "Meaningful emp MN")) %>%
+  mutate(avg = mean(pct))
 
-no.mn.emp.not.lf
 
 ```
 
-<br>
-
-## Estimates of individuals in military
-
-Next, we will attempt to figure out how many of these people are likely in the military. To do this we will take the average percentage of each counties population in EDR 6E, 6W and 8 that were members of the armed forces and multiply that percentage by the remaining number of individuals in the "no MN employment record" category.
-
-The table below provides the number of individuals estimated to be in the armed forces. It ranges from 1 to 4 people.
-
-<br>
-
-```{r n in military}
-military <- read_csv("Data/Military/Master-military.csv") %>%
-  group_by(countyfp) %>%
-  summarize(mean.military.rate = mean(military.pct)) %>%
-  ungroup() %>%
-  left_join(counties.regions, by = "countyfp") %>%
-  filter(edr %in% c("EDR 6W- Upper Minnesota Valley", "EDR 6E- Southwest Central", "EDR 8 - Southwest")) %>%
-  summarize(military.pct = mean(mean.military.rate))
-
-no.mn.emp.not.lf.military <- no.mn.emp.not.lf %>%
-  mutate(military.pct = military$military.pct) %>%
-  mutate(remaining = n - not.lf,
-         n.military = remaining * military.pct,
-         n.military = round(n.military)) 
-  
-no.mn.emp.not.lf.military
-```
-
-<br>
-
-## Federal employment
-
-Next, let's estimate how many individuals in this group may have federal employment and therefore, are not showing up as having an employment record or attending post-secondary. The table below provides the number of individuals estimated to be employed by the federal government, which ranges from 20 to 31 people each grad year.
-
-<br>
-
-```{r n federal workers}
-fed <- read_csv("Data/Government/Master-fed-emp.csv") %>%
-  group_by(countyfp) %>%
-  summarize(mean.federal.rate = mean(fed.pct)) %>%
-  ungroup() %>%
-  left_join(counties.regions, by = "countyfp") %>%
-  filter(edr %in% c("EDR 6W- Upper Minnesota Valley", "EDR 6E- Southwest Central", "EDR 8 - Southwest")) %>%
-  summarize(fed.pct = mean(mean.federal.rate))
-
-no.mn.emp.not.lf.military.fed <- no.mn.emp.not.lf.military %>%
-  mutate(fed.pct = fed$fed.pct) %>%
-  mutate(remaining = n - not.lf - n.military,
-         n.fed = remaining * fed.pct,
-         n.fed = round(n.fed)) 
-  
-no.mn.emp.not.lf.military.fed
-```
-
-<br>
-
-## Working in another state
-
-After subtracting the estimated number of individuals in this dataset that are serving in the armed forces, not participating in the labor force, or have federal positions, we are left with the following number of individuals for each grad year.
-
-The bar chart below shows that a very large majority if individuals without a MN employment record or a post-secondary record are estimated to be working in another state.
-
-<br>
-
-```{r no mn emp record remaining}
-data <- no.mn.emp.not.lf.military.fed %>%
-  mutate(working.other.state = n - not.lf - n.military - n.fed,
-         military.fed.notlf = n - working.other.state) %>%
-  select(grad.year, n, working.other.state, military.fed.notlf) %>%
-  pivot_longer(names_to = "no.mn.emp.record.category", values_to = "people", 3:4) %>%
-  mutate(pct = people / n,
-         data_id = seq(n()))
-
-data.plot <- ggplot(data, aes(grad.year, pct, fill = no.mn.emp.record.category, group = no.mn.emp.record.category)) +
-  geom_col_interactive(position = "stack", aes(data_id = data_id, tooltip = paste(no.mn.emp.record.category, "\nNumber of individuals: ", comma(people), "\nShare of individuals for this grad year: ", percent(pct, accuracy = 1), sep = ""))) +
-  geom_label(aes(label = percent(pct, accuracy = .1)), show.legend = FALSE, color = "white", size = 5, position = position_stack()) +
-  labs(x="", y = "", color="", title = "Percent share of individuals with no MN employment record")+
-  scale_y_continuous(labels=scales::percent)+
-  theme_bar+
-  scale_fill_manual(values = brewer.pal(n = 5, "RdYlBu"),
-                    guide = guide_legend(ncol = 3)) +
-  theme(legend.position = "bottom",
-        text = element_text(size = 18),
-        axis.text.x = element_text(angle = 25, hjust = .9))
-
-
-girafe(ggobj = data.plot, width_svg = 10, height_svg = 10) %>%
-  girafe_options(opts_selection(type = "none"),
-                 opts_sizing(rescale = FALSE))      
-
-```
-
-<br>
-
-In order to examine this group, let's figure out the percentage of individuals that fall into each of the employment states before having no employment record 5 years after graduating high school.
-
-<br>
+The average percentage of individuals that had meaningful workforce participation in SW and MN is `r percent(meaningful.wf.sw.mn$avg, accuracy = .1)`. 
 

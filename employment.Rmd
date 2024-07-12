@@ -634,6 +634,8 @@ master.10 <- read_csv("Data/SLEDS/Masters/Master-10.csv")
 master.11 <- master.10 %>%
   left_join(master.personid.grad.cc.cw.naics, by = "PersonID")
 
+names(master.11)
+
 employment.master <- read_csv("Data/SLEDS/Masters/Master-1.csv") %>%
   select(PersonID) %>%
   left_join(master.personid.grad.cc.cw.naics, by = "PersonID")
